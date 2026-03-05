@@ -1,147 +1,101 @@
 <p align="center">
-  <img src="https://github.com/S0lidByte/CineFlow/blob/main/assets/Cineflow-Logo.png" alt="CineFlow" width="300">
+  <img src="https://github.com/S0lidByte/CineFlow/blob/main/assets/Cineflow-Logo.png" alt="CineFlow" width="280">
 </p>
 
-<p align="center">
-  CineFlow is a modern media automation platform designed to stream torrent-based media directly to your media server using Debrid providers and integrations with popular third-party services.
-</p>
+<h3 align="center">Modern media automation — stream torrent-based content directly to your media server.</h3>
 
 <p align="center">
-  Built with performance, flexibility, and automation in mind.
+  <a href="https://github.com/S0lidByte/CineFlow/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/S0lidByte/CineFlow?style=flat-square&color=f5a623"></a>
+  <a href="https://github.com/S0lidByte/CineFlow/issues"><img alt="Issues" src="https://img.shields.io/github/issues/S0lidByte/CineFlow?style=flat-square"></a>
+  <a href="https://github.com/S0lidByte/CineFlow/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/S0lidByte/CineFlow?style=flat-square"></a>
+  <a href="https://github.com/S0lidByte/CineFlow/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/S0lidByte/CineFlow?style=flat-square"></a>
+  <a href="https://todo"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat-square&logo=discord&logoColor=white"></a>
 </p>
 
 ---
 
-## About
+## What is CineFlow?
 
-CineFlow began as a fork of  
-<a href="https://github.com/rivenmedia/riven" target="_blank" rel="noopener noreferrer">Riven</a>.
+CineFlow is a self-hosted media automation platform that bridges Debrid providers, content sources, and scrapers to deliver seamless streaming directly to your media server — no manual downloading required.
 
-While inspired by the original project and its contributors, CineFlow continues development with a new vision, expanded capabilities, and a focus on reliability, modular integrations, and long-term maintainability.
-
-We thank the original Riven developers for their work and contributions to the ecosystem.
-
----
-
-<div align="center">
-
-<a href="https://github.com/S0lidByte/CineFlow/stargazers">
-<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/S0lidByte/CineFlow">
-</a>
-
-<a href="https://github.com/S0lidByte/CineFlow/issues">
-<img alt="Issues" src="https://img.shields.io/github/issues/S0lidByte/CineFlow">
-</a>
-
-<a href="https://github.com/S0lidByte/CineFlow/blob/main/LICENSE">
-<img alt="License" src="https://img.shields.io/github/license/S0lidByte/CineFlow">
-</a>
-
-<a href="https://github.com/S0lidByte/CineFlow/graphs/contributors">
-<img alt="Contributors" src="https://img.shields.io/github/contributors/S0lidByte/CineFlow">
-</a>
-
-<a href="https://todo">
-<img alt="Discord" src="https://img.shields.io/badge/Discord-Community-blue">
-</a>
-
-</div>
+Originally forked from [Riven](https://github.com/rivenmedia/riven), CineFlow has evolved into its own project with a new vision focused on **modularity**, **reliability**, and **long-term maintainability**. We're grateful to the original Riven contributors for their foundational work.
 
 ---
 
 ## Supported Services
 
-| Type | Supported |
-|-----|-----------|
-| **Debrid Providers** | Real Debrid, All Debrid |
+| Category | Services |
+|----------|----------|
+| **Debrid Providers** | Real-Debrid, AllDebrid |
 | **Content Sources** | Plex Watchlist, Overseerr, Mdblist, Listrr, Trakt |
 | **Scrapers** | Comet, Jackett, Torrentio, Orionoid, Mediafusion, Prowlarr, Zilean, Rarbg |
 | **Media Servers** | Plex, Jellyfin, Emby |
 
 ---
 
-<p align="center">
-  Track development progress on our
-  <a href="todo">Project Board</a>.
-</p>
-
-<p align="center">
-  Found a bug or want to request a feature?  
-  Open an issue on our
-  <a href="https://github.com/S0lidByte/CineFlow/issues">Issue Tracker</a>
-  or join the discussion on
-  <a href="https://todo">Discord</a>.
-</p>
-
-<p align="center">
-  CineFlow is actively developed with regular improvements, new integrations, and performance enhancements.
-</p>
-
----
-
-# Table of Contents
+## Table of Contents
 
 - [Self Hosted](#self-hosted)
   - [Installation](#installation)
-  - [Plex](#plex)
-- [CineFlow VFS and Caching](#cineflow-vfs-and-caching)
+  - [Plex Setup](#plex-setup)
+  - [Troubleshooting](#troubleshooting)
+- [VFS & Caching](#cineflow-vfs-and-caching)
 - [Contributing](#contributing)
 - [License](#license)
 
 ---
 
-# Self Hosted
+## Self Hosted
 
-## Installation
+### Installation
 
-Choose a directory on your system that CineFlow will use as its mount point.
+Pick a directory on your host that CineFlow will use as its mount point. Throughout this guide it is referenced as:
 
-For the examples below we will refer to this path as:
-
-
+```
 /path/to/cineflow/mount
+```
 
+#### 1. Configure Docker Compose
 
-### 1. Configure Docker Compose
-
-Copy the contents of `docker-compose.yml` into your local compose file.
-
-Update the volume paths to match your environment.
-
-Example:
+Copy `docker-compose.yml` into your local compose file and update the volume paths to match your environment:
 
 ```yaml
 volumes:
   - /path/to/cineflow/data:/cineflow/data
   - /path/to/cineflow/mount:/mount:rshared,z
+```
 
-When mounting /mount inside containers, always include:
+> **Important:** Always include `:rshared,z` when mounting `/mount` inside containers to ensure correct mount propagation.
 
-:rshared,z
+---
 
-to ensure proper mount propagation.
+#### 2. Create and Share the Mount Directory
 
-2. Create the Mount Directory
+Run these commands once per boot:
 
-Run once per boot:
-
+```bash
 sudo mkdir -p /path/to/cineflow/mount
 sudo mount --bind /path/to/cineflow/mount /path/to/cineflow/mount
 sudo mount --make-rshared /path/to/cineflow/mount
+```
 
 Verify propagation:
 
+```bash
 findmnt -T /path/to/cineflow/mount -o TARGET,PROPAGATION
+```
 
-Expected output:
+Expected output: `shared` or `rshared`
 
-shared
+---
 
-or
+#### 3. Persist on Boot (Optional)
 
-rshared
-Optional: Automatically configure on boot
-Option A — systemd unit
+**Option A — systemd unit**
+
+Create `/etc/systemd/system/cineflow-bind-shared.service`:
+
+```ini
 [Unit]
 Description=Make CineFlow data bind mount shared
 After=local-fs.target
@@ -155,107 +109,103 @@ RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
+```
 
 Enable it:
 
+```bash
 sudo systemctl enable --now cineflow-bind-shared.service
-Option B — fstab entry
+```
+
+**Option B — fstab**
+
+```
 /path/to/cineflow/mount  /path/to/cineflow/mount  none  bind,rshared  0  0
-Plex
-
-Current Plex library requirements:
-
-Type	Categories
-Movies	movies, anime_movies
-Shows	shows, anime_shows
-
-These requirements may become configurable in future versions.
-
-Troubleshooting
-Plex shows empty /mount after CineFlow restart
-
-If Plex temporarily loses visibility of the mount, it is usually caused by mount propagation or startup order.
-
-Verify the following:
-
-Host mount propagation
-sudo mount --bind /path/to/cineflow/mount /path/to/cineflow/mount
-sudo mount --make-rshared /path/to/cineflow/mount
-
-Check propagation:
-
-findmnt -T /path/to/cineflow/mount -o TARGET,PROPAGATION
-Container mount propagation
-
-Inside the Plex container:
-
-docker exec -it plex sh -c 'findmnt -T /mount -o TARGET,PROPAGATION,OPTIONS,FSTYPE'
-
-Expected propagation:
-
-rslave
-
-or
-
-rshared
-Docker compose configuration
-
-Ensure Plex has:
-
-- /path/to/cineflow/mount:/mount:rslave,z
-Clearing stale FUSE mounts
-
-If CineFlow crashes or stops unexpectedly:
-
-sudo fusermount -uz /path/to/cineflow/mount || sudo umount -l /path/to/cineflow/mount
-
-Then restart CineFlow.
-
-CineFlow VFS and Caching
-
-CineFlow includes a virtual filesystem (VFS) designed for efficient streaming, caching, and media organization.
-
-Cache Settings
-Setting	Description
-cache_dir	Directory for cached data
-cache_max_size_mb	Maximum cache size
-chunk_size_mb	Size of CDN request chunks
-fetch_ahead_chunks	Number of chunks prefetched
-ttl_seconds	Optional expiration when using TTL eviction
-
-Default behavior uses LRU eviction, automatically removing the least recently used cache blocks when space is needed.
-
-Contributing
-
-Community contributions are welcome.
-
-Please see:
-
-CONTRIBUTING.md for development setup and guidelines
-
-GitHub Issues for bug reports and feature requests
-
-Discord for discussions and support
-
-Commits should follow the Conventional Commits specification.
-
-License
-
-CineFlow is licensed under the GNU GPLv3 License.
-
-See the LICENSE
- file for details.
-
+```
 
 ---
 
-💡 If you want, I can also make a **much more modern README** (like Stremio/Stash/Radarr style) with:
+### Plex Setup
 
-- Feature section
-- Architecture diagram
-- Quick start
-- Screenshots
-- Clean badges
-- Docker install in 10 seconds
+CineFlow currently expects the following Plex library layout:
 
-That version would make the repo look **10× more professional**.
+| Library Type | Category Names |
+|-------------|----------------|
+| Movies | `movies`, `anime_movies` |
+| Shows | `shows`, `anime_shows` |
+
+> These category names may become fully configurable in a future release.
+
+---
+
+### Troubleshooting
+
+#### Plex shows an empty `/mount` after CineFlow restarts
+
+This is almost always a mount propagation or container startup order issue. Work through the following checks:
+
+**1. Re-apply host mount propagation**
+
+```bash
+sudo mount --bind /path/to/cineflow/mount /path/to/cineflow/mount
+sudo mount --make-rshared /path/to/cineflow/mount
+findmnt -T /path/to/cineflow/mount -o TARGET,PROPAGATION
+```
+
+**2. Check propagation inside the Plex container**
+
+```bash
+docker exec -it plex sh -c 'findmnt -T /mount -o TARGET,PROPAGATION,OPTIONS,FSTYPE'
+```
+
+Expected: `rslave` or `rshared`
+
+**3. Verify your Docker Compose Plex volume**
+
+```yaml
+- /path/to/cineflow/mount:/mount:rslave,z
+```
+
+**4. Clear stale FUSE mounts**
+
+If CineFlow crashed or exited unexpectedly:
+
+```bash
+sudo fusermount -uz /path/to/cineflow/mount || sudo umount -l /path/to/cineflow/mount
+```
+
+Then restart CineFlow.
+
+---
+
+## CineFlow VFS and Caching
+
+CineFlow ships with a built-in virtual filesystem (VFS) optimised for streaming, intelligent caching, and media organisation.
+
+| Setting | Description |
+|---------|-------------|
+| `cache_dir` | Directory where cached data is stored |
+| `cache_max_size_mb` | Maximum total cache size in MB |
+| `chunk_size_mb` | Size of each CDN request chunk |
+| `fetch_ahead_chunks` | Number of chunks prefetched ahead of playback |
+| `ttl_seconds` | Optional TTL-based expiration for cached blocks |
+
+By default, CineFlow uses **LRU eviction** — the least recently used cache blocks are automatically removed when space runs low. Set `ttl_seconds` to switch to time-based expiration instead.
+
+---
+
+## Contributing
+
+Contributions are welcome! Before opening a PR, please read:
+
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — development setup, branch conventions, and code guidelines
+- [GitHub Issues](https://github.com/S0lidByte/CineFlow/issues) — bug reports and feature requests
+- [Discord](https://todo) — questions, discussion, and community support
+
+All commits should follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+---
+
+## License
+
+CineFlow is licensed under the **GNU GPLv3**. See the [`LICENSE`](LICENSE) file for full details.
