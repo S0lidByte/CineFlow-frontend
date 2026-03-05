@@ -43,7 +43,7 @@
     interface SnippetEpisode {
         name?: string;
         number?: number | null;
-        image?: string;
+        image?: string | null;
         overview?: string;
         aired?: string;
         runtime?: number;

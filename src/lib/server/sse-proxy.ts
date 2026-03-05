@@ -80,10 +80,24 @@ export function createSseProxy({ locals, path, eventName, logScope }: SseProxyOp
 
             const decoder = new TextDecoder();
             let buffer = "";
+            // Accumulate `data:` lines for multi-line SSE messages.
+            // Per the SSE spec, multiple `data:` lines are concatenated
+            // with newlines until an empty line marks the message boundary.
+            let dataLines: string[] = [];
 
             while (true) {
                 const { done, value } = await reader.read();
-                if (done) break;
+                if (done) {
+                    // Flush any remaining buffered data lines on stream end
+                    if (dataLines.length > 0) {
+                        const payload = dataLines.join("\n").trim();
+                        dataLines = [];
+                        if (payload) {
+                            emit(eventName, payload);
+                        }
+                    }
+                    break;
+                }
 
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split("\n");
@@ -91,17 +105,26 @@ export function createSseProxy({ locals, path, eventName, logScope }: SseProxyOp
 
                 for (const line of lines) {
                     if (line.startsWith("data: ")) {
-                        const data = line.slice(6).trim();
-                        // Skip empty data lines to prevent JSON.parse crashes on the client
-                        if (!data) continue;
-                        const { error: emitError } = emit(eventName, data);
-                        if (emitError) {
-                            reader.cancel();
-                            return function stop() {
-                                abortController.abort();
-                            };
+                        dataLines.push(line.slice(6));
+                    } else if (line.startsWith("data:")) {
+                        // Handle `data:` with no space (also valid per SSE spec)
+                        dataLines.push(line.slice(5));
+                    } else if (line.trim() === "") {
+                        // Empty line = message boundary → emit accumulated data
+                        if (dataLines.length > 0) {
+                            const payload = dataLines.join("\n").trim();
+                            dataLines = [];
+                            if (!payload) continue;
+                            const { error: emitError } = emit(eventName, payload);
+                            if (emitError) {
+                                reader.cancel();
+                                return function stop() {
+                                    abortController.abort();
+                                };
+                            }
                         }
                     }
+                    // Other SSE fields (event:, id:, retry:) are ignored
                 }
             }
         } catch (e) {
