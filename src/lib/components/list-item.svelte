@@ -2,6 +2,7 @@
     import PortraitCard from "$lib/components/media/portrait-card.svelte";
     import { Badge } from "$lib/components/ui/badge/index.js";
     import { cn } from "$lib/utils";
+    import { resolve } from "$app/paths";
 
     const badgeVariantClasses: Record<string, string> = {
         success: "bg-green-600/90 text-white border-0",
@@ -107,8 +108,7 @@
 {/snippet}
 
 {#if mediaURL}
-    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve - mediaURL is a dynamic prop -->
-    <a href={mediaURL} class={containerClasses}>
+    <a href={resolve(mediaURL as unknown as "/")} class={containerClasses}>
         {@render cardContent()}
     </a>
 {:else}

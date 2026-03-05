@@ -4,6 +4,7 @@
     import { browser } from "$app/environment";
     import { cn } from "$lib/utils";
     import type { Snippet } from "svelte";
+    import { resolve } from "$app/paths";
 
     import { getRatings, type RatingsData } from "$lib/stores/ratings";
 
@@ -115,10 +116,9 @@
                                 {/if}
                             {:then ratingsData}
                                 {#if ratingsData?.scores?.length}
-                                    <!-- eslint-disable svelte/no-navigation-without-resolve -->
                                     {#each ratingsData.scores as score (score.name)}
                                         <a
-                                            href={score.url}
+                                            href={resolve(score.url as unknown as "/")}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             onclick={(e) => e.stopPropagation()}
@@ -132,7 +132,6 @@
                                             <span class="font-medium">{score.score}</span>
                                         </a>
                                     {/each}
-                                    <!-- eslint-enable svelte/no-navigation-without-resolve -->
                                 {:else if initialRating}
                                     {@render ratingBadge(initialRating)}
                                 {/if}

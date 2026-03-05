@@ -1,0 +1,27 @@
+
+E:\Dev\Triven_riven-fork\Triven_frontend\src\lib\components\list-item.svelte
+  117:8  error  Unexpected href link without resolve()  svelte/no-navigation-without-resolve
+
+E:\Dev\Triven_riven-fork\Triven_frontend\src\lib\components\media\landscape-card.svelte
+  126:45  error  Unexpected href link without resolve()  svelte/no-navigation-without-resolve
+
+E:\Dev\Triven_riven-fork\Triven_frontend\src\lib\components\tmdb-now-playing.svelte
+  308:57  error  Unexpected href link without resolve()  svelte/no-navigation-without-resolve
+
+E:\Dev\Triven_riven-fork\Triven_frontend\src\routes\(protected)\calendar\+page.svelte
+  357:14  error  Unexpected goto() call without resolve()  svelte/no-navigation-without-resolve
+  373:14  error  Unexpected goto() call without resolve()  svelte/no-navigation-without-resolve
+  383:14  error  Unexpected goto() call without resolve()  svelte/no-navigation-without-resolve
+
+E:\Dev\Triven_riven-fork\Triven_frontend\src\routes\(protected)\details\media\[id]\[mediaType]\+page.svelte
+    75:26  error  Unexpected replaceState() call without resolve()  svelte/no-navigation-without-resolve
+   795:41  error  Unexpected href link without resolve()            svelte/no-navigation-without-resolve
+  1010:45  error  Unexpected href link without resolve()            svelte/no-navigation-without-resolve
+  1118:53  error  Unexpected href link without resolve()            svelte/no-navigation-without-resolve
+  1145:57  error  Unexpected href link without resolve()            svelte/no-navigation-without-resolve
+
+E:\Dev\Triven_riven-fork\Triven_frontend\src\routes\(protected)\library\+page.svelte
+  94:20  error  Unexpected goto() call without resolve()  svelte/no-navigation-without-resolve
+
+Ô£û 12 problems (12 errors, 0 warnings)
+

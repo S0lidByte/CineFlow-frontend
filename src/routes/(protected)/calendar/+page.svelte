@@ -14,10 +14,12 @@
     import * as Card from "$lib/components/ui/card/index.js";
     import { CalendarDate } from "@internationalized/date";
     import PageShell from "$lib/components/page-shell.svelte";
+    import { resolve } from "$app/paths";
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     import { fly } from "svelte/transition";
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     import { cubicOut } from "svelte/easing";
+
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
 
@@ -347,8 +349,7 @@
             month: String(weekSunday.month),
             day: viewMode === "daily" ? String(target.day) : null
         });
-        // eslint-disable-next-line svelte/no-navigation-without-resolve
-        goto(url, { keepFocus: true })
+        goto(resolve(url as unknown as "/"), { keepFocus: true })
             .catch(() => {})
             .finally(() => {
                 isNavigating = false;
@@ -364,8 +365,7 @@
             month: String(currentDate.month),
             day: mode === "daily" ? String(currentDate.day) : null
         });
-        // eslint-disable-next-line svelte/no-navigation-without-resolve
-        goto(url)
+        goto(resolve(url as unknown as "/"))
             .catch(() => {})
             .finally(() => {
                 isNavigating = false;
@@ -375,8 +375,7 @@
     function goToday() {
         if (isNavigating) return;
         const url = buildUrl({ view: viewMode === "monthly" ? null : viewMode });
-        // eslint-disable-next-line svelte/no-navigation-without-resolve
-        goto(url).catch(() => {});
+        goto(resolve(url as unknown as "/")).catch(() => {});
     }
 
     function formatDayTitle(date: CalendarDate) {

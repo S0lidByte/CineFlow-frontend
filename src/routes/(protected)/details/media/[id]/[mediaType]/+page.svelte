@@ -67,7 +67,10 @@
             playParamCleaned = true;
             const url = new URL(page.url);
             url.searchParams.delete("play");
-            replaceState(url, $state.snapshot(page.state));
+            replaceState(
+                resolve((url.pathname + url.search + url.hash) as unknown as "/"),
+                $state.snapshot(page.state)
+            );
         }
     });
 
@@ -786,9 +789,8 @@
                                     easing: cubicOut
                                 }}>
                                 {#each ratingsData.scores as score (score.name)}
-                                    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                     <a
-                                        href={score.url}
+                                        href={resolve(score.url as unknown as "/")}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         class="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 transition-colors">
@@ -1002,9 +1004,10 @@
                             <Carousel.Content class="-ml-3">
                                 {#each data.mediaDetails.details.cast as member (member.id)}
                                     <Carousel.Item class="basis-auto pl-3">
-                                        <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                         <a
-                                            href="/details/entity/{member.id}/person"
+                                            href={resolve(
+                                                `/details/entity/${member.id}/person` as unknown as "/"
+                                            )}
                                             class="group relative block opacity-80 transition-all duration-300 hover:opacity-100">
                                             <PortraitCard
                                                 title={member.name}
@@ -1109,9 +1112,11 @@
                                             >Links</span>
                                         <div class="flex flex-wrap gap-2">
                                             {#if data.mediaDetails?.details.homepage}
-                                                <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                                 <a
-                                                    href={data.mediaDetails.details.homepage}
+                                                    href={resolve(
+                                                        data.mediaDetails.details
+                                                            .homepage as unknown as "/"
+                                                    )}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     class="text-foreground rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/10"
@@ -1135,9 +1140,10 @@
                                                 )}
                                                 <!-- eslint-disable-next-line svelte/require-each-key -->
                                                 {#each validLinks as [key, value]}
-                                                    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
                                                     <a
-                                                        href="{getExternal(key).url}{value}"
+                                                        href={resolve(
+                                                            `${getExternal(key).url}${value}` as unknown as "/"
+                                                        )}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         class="text-foreground rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/10"

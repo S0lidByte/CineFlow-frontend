@@ -4,6 +4,7 @@
     import { page } from "$app/state";
     import type { PageProps } from "./$types";
     import { fly } from "svelte/transition";
+    import { resolve } from "$app/paths";
     import { cubicOut } from "svelte/easing";
     import * as Form from "$lib/components/ui/form/index.js";
     import { superForm } from "sveltekit-superforms";
@@ -24,7 +25,6 @@
     import Loading2Circle from "@lucide/svelte/icons/loader-2";
     import { toast } from "svelte-sonner";
     import { goto, invalidate } from "$app/navigation";
-    import { resolve } from "$app/paths";
     import PageShell from "$lib/components/page-shell.svelte";
     import { cn } from "$lib/utils";
     import { endPerfMark, perfCount, startPerfMark } from "$lib/perf";
@@ -86,14 +86,12 @@
         url.searchParams.set("page", "1");
         $formData.page = 1;
 
-        /* eslint-disable svelte/no-navigation-without-resolve */
-        await goto((url.pathname + url.search) as Parameters<typeof goto>[0], {
+        await goto(resolve((url.pathname + url.search) as unknown as "/"), {
             keepFocus: true,
             noScroll: true,
             replaceState: true,
             invalidate: [(target) => target.pathname === page.url.pathname]
         });
-        /* eslint-enable svelte/no-navigation-without-resolve */
 
         endPerfMark(mark, {
             reason,

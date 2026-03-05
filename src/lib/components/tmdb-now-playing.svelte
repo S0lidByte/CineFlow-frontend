@@ -23,6 +23,8 @@
         vote_average?: number | null;
         original_language?: string;
         overview?: string;
+        poster_path?: string | null;
+        mediaUrl?: string;
         genre_ids?: number[];
         certification?: string;
     }
@@ -298,7 +300,7 @@
                                             <div class="ml-2 flex items-center gap-4">
                                                 {#each ratings[item.id]!.scores! as score (score.name)}
                                                     <a
-                                                        href={resolve(score.url as any)}
+                                                        href={resolve(score.url as unknown as "/")}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         class="flex items-center gap-1.5 transition-opacity hover:opacity-80"
