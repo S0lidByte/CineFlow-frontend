@@ -24,21 +24,21 @@ Originally forked from [Riven](https://github.com/rivenmedia/riven), CineFlow ha
 
 ## Supported Services
 
-| Category | Services |
-|----------|----------|
-| **Debrid Providers** | Real-Debrid, AllDebrid |
-| **Content Sources** | Plex Watchlist, Overseerr, Mdblist, Listrr, Trakt |
-| **Scrapers** | Comet, Jackett, Torrentio, Orionoid, Mediafusion, Prowlarr, Zilean, Rarbg |
-| **Media Servers** | Plex, Jellyfin, Emby |
+| Category             | Services                                                                  |
+| -------------------- | ------------------------------------------------------------------------- |
+| **Debrid Providers** | Real-Debrid, AllDebrid                                                    |
+| **Content Sources**  | Plex Watchlist, Overseerr, Mdblist, Listrr, Trakt                         |
+| **Scrapers**         | Comet, Jackett, Torrentio, Orionoid, Mediafusion, Prowlarr, Zilean, Rarbg |
+| **Media Servers**    | Plex, Jellyfin, Emby                                                      |
 
 ---
 
 ## Table of Contents
 
 - [Self Hosted](#self-hosted)
-  - [Installation](#installation)
-  - [Plex Setup](#plex-setup)
-  - [Troubleshooting](#troubleshooting)
+    - [Installation](#installation)
+    - [Plex Setup](#plex-setup)
+    - [Troubleshooting](#troubleshooting)
 - [VFS & Caching](#cineflow-vfs-and-caching)
 - [Contributing](#contributing)
 - [License](#license)
@@ -61,8 +61,8 @@ Copy `docker-compose.yml` into your local compose file and update the volume pat
 
 ```yaml
 volumes:
-  - /path/to/cineflow/data:/cineflow/data
-  - /path/to/cineflow/mount:/mount:rshared,z
+    - /path/to/cineflow/data:/cineflow/data
+    - /path/to/cineflow/mount:/mount:rshared,z
 ```
 
 > **Important:** Always include `:rshared,z` when mounting `/mount` inside containers to ensure correct mount propagation.
@@ -129,10 +129,10 @@ sudo systemctl enable --now cineflow-bind-shared.service
 
 CineFlow currently expects the following Plex library layout:
 
-| Library Type | Category Names |
-|-------------|----------------|
-| Movies | `movies`, `anime_movies` |
-| Shows | `shows`, `anime_shows` |
+| Library Type | Category Names           |
+| ------------ | ------------------------ |
+| Movies       | `movies`, `anime_movies` |
+| Shows        | `shows`, `anime_shows`   |
 
 > These category names may become fully configurable in a future release.
 
@@ -182,13 +182,13 @@ Then restart CineFlow.
 
 CineFlow ships with a built-in virtual filesystem (VFS) optimised for streaming, intelligent caching, and media organisation.
 
-| Setting | Description |
-|---------|-------------|
-| `cache_dir` | Directory where cached data is stored |
-| `cache_max_size_mb` | Maximum total cache size in MB |
-| `chunk_size_mb` | Size of each CDN request chunk |
-| `fetch_ahead_chunks` | Number of chunks prefetched ahead of playback |
-| `ttl_seconds` | Optional TTL-based expiration for cached blocks |
+| Setting              | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `cache_dir`          | Directory where cached data is stored           |
+| `cache_max_size_mb`  | Maximum total cache size in MB                  |
+| `chunk_size_mb`      | Size of each CDN request chunk                  |
+| `fetch_ahead_chunks` | Number of chunks prefetched ahead of playback   |
+| `ttl_seconds`        | Optional TTL-based expiration for cached blocks |
 
 By default, CineFlow uses **LRU eviction** — the least recently used cache blocks are automatically removed when space runs low. Set `ttl_seconds` to switch to time-based expiration instead.
 
