@@ -50,6 +50,7 @@
     import ScanSearch from "@lucide/svelte/icons/scan-search";
     import Server from "@lucide/svelte/icons/server";
     import ChevronRight from "@lucide/svelte/icons/chevron-right";
+    import BookOpen from "@lucide/svelte/icons/book-open";
 
     /** Maps the icon name stored in {@link SectionTab.icon} to a Svelte component. */
     const ICON_MAP: Record<string, Component> = {
@@ -59,7 +60,8 @@
         download: Download,
         "file-text": FileText,
         "scan-search": ScanSearch,
-        server: Server
+        server: Server,
+        "book-open": BookOpen
     };
 
     /**
@@ -246,28 +248,48 @@
                     aria-label="Settings sections">
                     {#each $page.data.tabs as tab (tab.id)}
                         {@const IconComponent = ICON_MAP[tab.icon] as Component | undefined}
-                        <button
-                            type="button"
-                            class={cn(
-                                "flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
-                                $page.data.activeTabId === tab.id
-                                    ? "bg-muted text-foreground"
-                                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                            )}
-                            onclick={() => handleTabClick(tab.id)}
-                            aria-current={$page.data.activeTabId === tab.id ? "true" : undefined}>
-                            {#if IconComponent}
-                                <IconComponent class="size-4 shrink-0" />
-                            {/if}
-                            <span>{tab.label}</span>
-                            {#if tab.restartRequired}
-                                <span
-                                    class="ml-auto rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
-                                    title="Changes require a backend restart">
-                                    Restart
-                                </span>
-                            {/if}
-                        </button>
+                        {@const isActive = tab.href
+                            ? $page.url.pathname === resolve(tab.href)
+                            : $page.data.activeTabId === tab.id}
+                        {#if tab.href}
+                            <a
+                                href={resolve(tab.href)}
+                                class={cn(
+                                    "flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
+                                    isActive
+                                        ? "bg-muted text-foreground"
+                                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                )}
+                                aria-current={isActive ? "page" : undefined}>
+                                {#if IconComponent}
+                                    <IconComponent class="size-4 shrink-0" />
+                                {/if}
+                                <span>{tab.label}</span>
+                            </a>
+                        {:else}
+                            <button
+                                type="button"
+                                class={cn(
+                                    "flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
+                                    isActive
+                                        ? "bg-muted text-foreground"
+                                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                )}
+                                onclick={() => handleTabClick(tab.id)}
+                                aria-current={isActive ? "true" : undefined}>
+                                {#if IconComponent}
+                                    <IconComponent class="size-4 shrink-0" />
+                                {/if}
+                                <span>{tab.label}</span>
+                                {#if tab.restartRequired}
+                                    <span
+                                        class="ml-auto rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+                                        title="Changes require a backend restart">
+                                        Restart
+                                    </span>
+                                {/if}
+                            </button>
+                        {/if}
                     {/each}
                 </nav>
 

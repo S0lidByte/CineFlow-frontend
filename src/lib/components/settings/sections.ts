@@ -18,6 +18,12 @@ export interface SectionTab {
     keys: string[];
     /** Whether changes in this section require backend restart to take effect */
     restartRequired?: boolean;
+    /**
+     * If set, clicking this tab navigates to the given href instead of
+     * switching to a SJSF-rendered tab. Used for pages with custom UIs
+     * (e.g. Library Profiles) that live under a separate route.
+     */
+    href?: string;
 }
 
 /** Tab groupings: General, Filesystem, Library Updaters, Downloaders, Content, Scraping, Infra */
@@ -51,6 +57,14 @@ export const SETTINGS_TABS: SectionTab[] = [
         icon: "library",
         description: "Configure library update providers (e.g. Plex, Emby, Jellyfin) and sync intervals.",
         keys: ["updaters"]
+    },
+    {
+        id: "library-profiles",
+        label: "Library Profiles",
+        icon: "book-open",
+        description: "Organize media into separate library folders based on metadata rules.",
+        keys: [],
+        href: "/library-profiles"
     },
     {
         id: "downloaders",

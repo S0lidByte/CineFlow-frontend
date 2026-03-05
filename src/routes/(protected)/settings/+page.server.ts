@@ -1,5 +1,5 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { error, fail } from "@sveltejs/kit";
+import { error, fail, redirect } from "@sveltejs/kit";
 import providers from "$lib/providers";
 import type { InitialFormData } from "@sjsf/sveltekit";
 import { createFormHandler, type FormHandlerOptions } from "@sjsf/sveltekit/server";
@@ -255,6 +255,12 @@ export const load: PageServerLoad = async ({
     const paths = getPathsForTab(tab);
     const keys = paths;
     const schemaCacheKey = getSettingsSchemaCacheKey(locals.backendUrl, tab.id, paths);
+
+    // Link-tabs (e.g. Library Profiles) have no backend keys and are handled by
+    // their own dedicated page — redirect there rather than attempting an empty fetch.
+    if (tab.href) {
+        redirect(302, tab.href);
+    }
 
     logger.info("Settings page load started", {
         tab: tab.id,

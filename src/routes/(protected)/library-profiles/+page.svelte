@@ -212,6 +212,9 @@
                         aria-label="Breadcrumb">
                         <span>Admin</span>
                         <ChevronRight class="size-3.5 shrink-0 opacity-60" />
+                        <a href="/settings" class="hover:text-foreground transition-colors"
+                            >Settings</a>
+                        <ChevronRight class="size-3.5 shrink-0 opacity-60" />
                         <span class="text-foreground">Library Profiles</span>
                     </nav>
                     <div class="mt-1 flex flex-wrap items-center gap-2">
