@@ -448,8 +448,7 @@
 
             <!-- Desktop Segmented Progress (Hidden until Large screens) -->
             <div class="hidden gap-1.5 lg:flex">
-                <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-                {#each data as _item, i (i)}
+                {#each data as item, i (item.id || i)}
                     <button
                         class="relative h-1 w-6 cursor-pointer overflow-hidden rounded-full transition-all duration-300 {i ===
                         currentIndex

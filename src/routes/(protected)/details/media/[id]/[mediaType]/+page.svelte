@@ -40,6 +40,28 @@
 
     let { data }: PageProps = $props();
 
+    interface SnippetEpisode {
+        name?: string;
+        number?: number;
+        image?: string;
+        overview?: string;
+        aired?: string;
+        runtime?: number;
+    }
+
+    interface SnippetRivenEpisode {
+        state?: string;
+        filesystem_entry?: Record<string, unknown>;
+        media_metadata?: {
+            video?: Record<string, unknown>;
+            audio_tracks?: Record<string, unknown>[];
+            filename?: string;
+            quality_source?: string;
+            release_group?: string;
+            media_info?: { size?: number };
+        };
+    }
+
     const isMobile = new IsMobile();
 
     const externalMeta: Record<string, { name: string; url: string }> = {
@@ -314,8 +336,7 @@
     </section>
 {/snippet}
 
-<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-{#snippet episodeTrigger(episode: any, rivenEpisode: any)}
+{#snippet episodeTrigger(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode)}
     <LandscapeCard
         title={episode.name}
         episodeNumber={episode.number ?? undefined}
@@ -340,8 +361,7 @@
     </LandscapeCard>
 {/snippet}
 
-<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-{#snippet episodeMetadata(episode: any, rivenEpisode: any)}
+{#snippet episodeMetadata(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode)}
     <div class="mt-2 flex flex-wrap items-center gap-2">
         <span class="text-muted-foreground font-serif text-sm"
             >{data.mediaDetails?.details.title}</span>
@@ -355,8 +375,7 @@
     </div>
 {/snippet}
 
-<!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
-{#snippet episodeBody(episode: any, rivenEpisode: any)}
+{#snippet episodeBody(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode)}
     <div class="mt-6 flex flex-1 flex-col gap-8 overflow-y-auto px-6 pb-36">
         {#if episode.overview}
             <p class="text-muted-foreground text-base leading-relaxed">
@@ -425,8 +444,7 @@
                                 class="text-primary font-mono text-xs font-semibold tracking-wider uppercase"
                                 >Audio</span>
                             <div class="flex flex-wrap gap-2">
-                                <!-- eslint-disable-next-line svelte/require-each-key -->
-                                {#each meta.audio_tracks as track}
+                                {#each meta.audio_tracks as track, i (i)}
                                     <Badge variant="outline" class="font-mono text-xs"
                                         >{track.codec}{track.channels
                                             ? track.channels === 8
@@ -753,8 +771,7 @@
                         <div
                             class="text-muted-foreground flex items-center gap-x-2.5 text-sm"
                             in:fly|global={{ y: 20, duration: 400, delay: 200, easing: cubicOut }}>
-                            <!-- eslint-disable-next-line svelte/require-each-key -->
-                            {#each details as detail, i}
+                            {#each details as detail, i (i)}
                                 <span>{detail}</span>
                                 {#if i < details.length - 1}<span class="text-border">•</span>{/if}
                             {/each}
@@ -804,8 +821,7 @@
                             </div>
                         {:else if ratingsLoading}
                             <div class="flex gap-4">
-                                <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-                                {#each [1, 2, 3] as _, i (i)}
+                                {#each [1, 2, 3] as i (i)}
                                     <div class="bg-muted h-6 w-14 animate-pulse rounded"></div>
                                 {/each}
                             </div>
@@ -1138,8 +1154,7 @@
                                                 ).filter(
                                                     ([key, value]) => value && getExternal(key)
                                                 )}
-                                                <!-- eslint-disable-next-line svelte/require-each-key -->
-                                                {#each validLinks as [key, value]}
+                                                {#each validLinks as [key, value] (key)}
                                                     <a
                                                         href={resolve(
                                                             `${getExternal(key).url}${value}` as unknown as "/"

@@ -1,0 +1,9 @@
+
+E:\Dev\Triven_riven-fork\Triven_frontend\src\routes\(protected)\details\media\[id]\[mediaType]\+page.svelte
+   447:33  error  Each block should have a key   svelte/require-each-key
+   774:29  error  Each block should have a key   svelte/require-each-key
+   824:53  error  '_' is defined but never used  @typescript-eslint/no-unused-vars
+  1157:49  error  Each block should have a key   svelte/require-each-key
+
+Ô£û 4 problems (4 errors, 0 warnings)
+

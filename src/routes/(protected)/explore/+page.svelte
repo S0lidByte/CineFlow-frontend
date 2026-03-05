@@ -382,8 +382,7 @@
                         <ListItem data={item} indexer={item.indexer} type={item.media_type} />
                     {/each}
                     {#if searchStore.loading}
-                        <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-                        {#each Array(6) as _item, i (i)}
+                        {#each Array.from({ length: 6 }, (_, idx) => idx) as i (i)}
                             <div class="aspect-[2/3] w-full">
                                 <PortraitCardSkeleton />
                             </div>
@@ -393,8 +392,7 @@
             {:else if searchStore.loading}
                 <div
                     class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9">
-                    <!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
-                    {#each Array(12) as _item, i (i)}
+                    {#each Array.from({ length: 12 }, (_, idx) => idx) as i (i)}
                         <div class="aspect-[2/3] w-full">
                             <PortraitCardSkeleton />
                         </div>

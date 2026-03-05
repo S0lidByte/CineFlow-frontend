@@ -584,16 +584,14 @@
                 {#if viewMode === "daily"}
                     <div class="w-full max-w-2xl space-y-3">
                         <!-- Skeleton height: h-32 for daily view -->
-                        <!-- eslint-disable-next-line svelte/require-each-key, @typescript-eslint/no-unused-vars -->
-                        {#each Array(3) as _}
+                        {#each Array.from({ length: 3 }, (_, i) => i) as i (i)}
                             <div class="bg-muted/60 h-12 animate-pulse rounded-md"></div>
                         {/each}
                     </div>
                 {:else if viewMode === "weekly"}
                     <!-- Skeleton height: h-48 for weekly view -->
                     <div class="grid w-full grid-cols-7 gap-1">
-                        <!-- eslint-disable-next-line svelte/require-each-key, @typescript-eslint/no-unused-vars -->
-                        {#each Array(7) as _}
+                        {#each Array.from({ length: 7 }, (_, i) => i) as i (i)}
                             <div class="bg-muted/60 h-48 animate-pulse rounded-md"></div>
                         {/each}
                     </div>
