@@ -42,7 +42,7 @@
 
     interface SnippetEpisode {
         name?: string;
-        number?: number;
+        number?: number | null;
         image?: string;
         overview?: string;
         aired?: string;
@@ -51,13 +51,22 @@
 
     interface SnippetRivenEpisode {
         state?: string;
-        filesystem_entry?: Record<string, unknown>;
+        filesystem_entry?: {
+            file_size?: number;
+        } & Record<string, unknown>;
         media_metadata?: {
             video?: Record<string, unknown>;
-            audio_tracks?: Record<string, unknown>[];
+            audio_tracks?: Array<
+                {
+                    codec?: string;
+                    channels?: number;
+                    language?: string;
+                } & Record<string, unknown>
+            >;
             filename?: string;
             quality_source?: string;
             release_group?: string;
+            is_remux?: boolean;
             media_info?: { size?: number };
         };
     }
@@ -284,7 +293,7 @@
         [
             data.mediaDetails?.details.year,
             data.mediaDetails?.details.formatted_runtime,
-            data.mediaDetails?.details.original_language?.toUpperCase(),
+            data.mediaDetails?.details.original_language?.toUpperCase?.(),
             data.mediaDetails?.details.certification,
             data.mediaDetails?.details.status
         ].filter(Boolean)
@@ -338,10 +347,10 @@
 
 {#snippet episodeTrigger(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode)}
     <LandscapeCard
-        title={episode.name}
+        title={episode.name ?? ""}
         episodeNumber={episode.number ?? undefined}
-        image={episode.image}
-        overview={episode.overview}
+        image={episode.image ?? null}
+        overview={episode.overview ?? ""}
         class="h-full transition-transform duration-300 group-hover:scale-[1.01] group-hover:shadow-lg">
         {#snippet topRight()}
             {#if rivenEpisode?.state}
@@ -371,7 +380,9 @@
         {#if episode.runtime}<Badge variant="outline" class="font-mono text-xs"
                 >{episode.runtime} min</Badge
             >{/if}
-        {#if rivenEpisode}<StatusBadge class="text-xs" state={rivenEpisode.state} />{/if}
+        {#if rivenEpisode}<StatusBadge
+                class="text-xs"
+                state={rivenEpisode.state ?? "Unknown"} />{/if}
     </div>
 {/snippet}
 
@@ -452,7 +463,8 @@
                                                 : track.channels === 6
                                                   ? " 5.1"
                                                   : ` ${track.channels}ch`
-                                            : ""}{track.language
+                                            : ""}{track.language &&
+                                        typeof track.language === "string"
                                             ? ` (${track.language.toUpperCase()})`
                                             : ""}</Badge>
                                 {/each}
@@ -485,7 +497,7 @@
                                 >Size</span>
                             <div class="flex items-center">
                                 <span class="text-muted-foreground font-mono text-xs"
-                                    >{formatSize(fs.file_size)}</span>
+                                    >{formatSize(Number(fs.file_size))}</span>
                             </div>
                         </div>
                     {/if}
