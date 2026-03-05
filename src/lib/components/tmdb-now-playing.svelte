@@ -2,6 +2,7 @@
     import * as Carousel from "$lib/components/ui/carousel/index.js";
     import { fly } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
+    import { resolve } from "$app/paths";
     import { type CarouselAPI } from "$lib/components/ui/carousel/context.js";
     import Autoplay from "embla-carousel-autoplay";
     import { TMDB_IMAGE_BASE_URL, TMDB_GENRES } from "$lib/providers";
@@ -296,9 +297,8 @@
                                         {#if ratings[item.id]?.scores?.length}
                                             <div class="ml-2 flex items-center gap-4">
                                                 {#each ratings[item.id]!.scores! as score (score.name)}
-                                                    <!-- eslint-disable svelte/no-navigation-without-resolve -->
                                                     <a
-                                                        href={score.url}
+                                                        href={resolve(score.url as any)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         class="flex items-center gap-1.5 transition-opacity hover:opacity-80"
@@ -313,7 +313,6 @@
                                                             class="text-xs font-bold text-white drop-shadow-md"
                                                             >{score.score}</span>
                                                     </a>
-                                                    <!-- eslint-enable svelte/no-navigation-without-resolve -->
                                                 {/each}
                                             </div>
                                         {:else if item.vote_average}

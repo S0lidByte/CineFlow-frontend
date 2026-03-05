@@ -7,6 +7,7 @@
     import Search from "@lucide/svelte/icons/search";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
+    import { resolve } from "$app/paths";
     import type { createSidebarStore } from "$lib/stores/global.svelte";
     import { fly } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
@@ -57,13 +58,11 @@
             return;
         }
 
-        /* eslint-disable svelte/no-navigation-without-resolve */
-        await goto(query ? `/explore?query=${encodeURIComponent(query)}` : "/explore", {
+        await goto(resolve(query ? `/explore?query=${encodeURIComponent(query)}` : "/explore"), {
             keepFocus: true,
             noScroll: true,
             replaceState: currentlyExplore
         });
-        /* eslint-enable svelte/no-navigation-without-resolve */
     }
 
     function handleInput() {

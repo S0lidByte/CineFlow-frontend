@@ -67,7 +67,6 @@
             playParamCleaned = true;
             const url = new URL(page.url);
             url.searchParams.delete("play");
-            // eslint-disable-next-line svelte/no-navigation-without-resolve
             replaceState(url, $state.snapshot(page.state));
         }
     });
@@ -474,8 +473,6 @@
         {/if}
     </div>
 {/snippet}
-
-<!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <svelte:head>
     <title>{data.mediaDetails?.details.title} ({data.mediaDetails?.details.year}) - Riven</title>
