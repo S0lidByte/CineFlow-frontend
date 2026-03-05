@@ -57,8 +57,9 @@ function buildSettingsUiSchema(properties: Record<string, unknown>, keys: string
         ui["api_key"] = { "ui:components": { textWidget: "apiKeyWidget" } };
     }
     // library_profiles has its own dedicated page at /library-profiles — hide here to avoid duplication.
+    // The uiSchema key must be nested under "filesystem" since that is the top-level schema property.
     if (keys.includes("filesystem")) {
-        ui["library_profiles"] = { "ui:widget": "hidden" };
+        ui["filesystem"] = { library_profiles: { "ui:widget": "hidden" } };
     }
     return ui as UiSchemaRoot;
 }

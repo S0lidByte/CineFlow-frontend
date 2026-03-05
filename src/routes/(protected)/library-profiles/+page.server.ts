@@ -9,27 +9,10 @@ import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("library-profiles-page-server");
 
-/** The backend settings key for filesystem (which contains library_profiles). */
+/** Top-level AppModel key — library_profiles lives inside filesystem */
 const PATHS = "filesystem";
 
-async function getFilesystemSettings(
-    baseUrl: string,
-    apiKey: string,
-    fetchFn: typeof globalThis.fetch
-): Promise<Record<string, unknown>> {
-    const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
-        baseUrl,
-        headers: { "x-api-key": apiKey },
-        fetch: fetchFn,
-        params: { path: { paths: PATHS } }
-    });
-    if (res.error) {
-        throw new Error("Failed to load filesystem settings");
-    }
-    return res.data as Record<string, unknown>;
-}
-
-async function getLibraryProfilesSchema(
+async function getSchemaForFilesystem(
     baseUrl: string,
     apiKey: string,
     fetchFn: typeof globalThis.fetch
@@ -40,10 +23,49 @@ async function getLibraryProfilesSchema(
         fetch: fetchFn,
         params: { query: { keys: PATHS, title: "Library Profiles" } }
     });
-    if (res.error) {
-        throw new Error("Failed to load library profiles schema");
-    }
+    if (res.error) throw new Error("Failed to load filesystem schema");
     return res.data as Record<string, unknown>;
+}
+
+async function getFilesystemValues(
+    baseUrl: string,
+    apiKey: string,
+    fetchFn: typeof globalThis.fetch
+): Promise<Record<string, unknown>> {
+    const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
+        baseUrl,
+        headers: { "x-api-key": apiKey },
+        fetch: fetchFn,
+        params: { path: { paths: PATHS } }
+    });
+    if (res.error) throw new Error("Failed to load filesystem settings");
+    // Returns { filesystem: { mount_path, library_profiles, ... } }
+    return res.data as Record<string, unknown>;
+}
+
+/**
+ * Build a narrowed UI schema that hides all FilesystemModel fields
+ * except library_profiles, so the SJSF form only renders that section.
+ *
+ * The top-level key must remain "filesystem" because that is what the API
+ * GET returns and what the POST set/{paths} endpoint expects.
+ */
+function buildLibraryProfilesUiSchema(
+    filesystemProperties: Record<string, unknown>
+): UiSchemaRoot {
+    // Show only library_profiles; hide everything else by setting ui:widget hidden
+    const hiddenFields: Record<string, unknown> = {};
+    for (const key of Object.keys(filesystemProperties)) {
+        if (key !== "library_profiles") {
+            hiddenFields[key] = { "ui:widget": "hidden" };
+        }
+    }
+    return {
+        filesystem: {
+            "ui:order": ["library_profiles"],
+            ...hiddenFields
+        }
+    } as UiSchemaRoot;
 }
 
 export const load: PageServerLoad = async ({ fetch, locals }) => {
@@ -58,8 +80,8 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
 
     try {
         [schema, initialValue] = await Promise.all([
-            getLibraryProfilesSchema(locals.backendUrl, locals.apiKey, fetch),
-            getFilesystemSettings(locals.backendUrl, locals.apiKey, fetch)
+            getSchemaForFilesystem(locals.backendUrl, locals.apiKey, fetch),
+            getFilesystemValues(locals.backendUrl, locals.apiKey, fetch)
         ]);
     } catch (e) {
         logger.error("Library profiles page load failed", {
@@ -68,54 +90,39 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
         error(503, "Failed to load library profiles from backend.");
     }
 
-    /**
-     * Narrow the schema to only expose the library_profiles field so the
-     * SJSF form renders just that section (not all of FilesystemModel).
-     */
-    const fullProperties = (schema.properties ?? {}) as Record<string, unknown>;
-    const narrowedSchema: Record<string, unknown> = {
-        ...schema,
-        title: "Library Profiles",
-        properties: {
-            library_profiles: fullProperties["library_profiles"]
-        },
-        required: []
-    };
+    // schema.properties.filesystem = FilesystemModel JSON schema
+    const filesystemProperties = (
+        (schema.properties as Record<string, unknown>)?.["filesystem"] as
+        | Record<string, unknown>
+        | undefined
+    )?.["properties"] as Record<string, unknown> | undefined ?? {};
 
-    const uiSchema: UiSchemaRoot = {
-        "ui:order": ["library_profiles"]
-    } as UiSchemaRoot;
+    const uiSchema = buildLibraryProfilesUiSchema(filesystemProperties);
 
     logger.info("Library profiles page load completed");
 
+    // initialValue = { filesystem: { mount_path, library_profiles, ... } }
+    // Pass the full filesystem value so hidden fields are preserved by SJSF
     return {
         form: {
-            schema: narrowedSchema,
-            initialValue: {
-                library_profiles:
-                    (initialValue["filesystem"] as Record<string, unknown> | undefined)?.[
-                    "library_profiles"
-                    ] ??
-                    initialValue["library_profiles"] ??
-                    {}
-            },
+            schema,
+            initialValue,
             uiSchema
         } satisfies InitialFormData
     };
 };
 
 export const actions = {
-    default: async ({ request, fetch, locals, url }) => {
+    default: async ({ request, fetch, locals }) => {
         if (locals.user?.role !== "admin") {
             error(403, "Forbidden");
         }
 
         logger.info("Library profiles save started");
 
-        // Build a narrowed schema matching what load() returned
-        let fullSchema: Record<string, unknown>;
+        let schema: Record<string, unknown>;
         try {
-            fullSchema = await getLibraryProfilesSchema(locals.backendUrl, locals.apiKey, fetch);
+            schema = await getSchemaForFilesystem(locals.backendUrl, locals.apiKey, fetch);
         } catch (e) {
             logger.error("Failed to fetch schema for save", {
                 error: e instanceof Error ? e.message : String(e)
@@ -123,22 +130,20 @@ export const actions = {
             error(503, "Failed to load schema from backend.");
         }
 
-        const fullProperties = (fullSchema.properties ?? {}) as Record<string, unknown>;
-        const narrowedSchema: Record<string, unknown> = {
-            ...fullSchema,
-            title: "Library Profiles",
-            properties: { library_profiles: fullProperties["library_profiles"] },
-            required: []
-        };
+        const filesystemProperties = (
+            (schema.properties as Record<string, unknown>)?.["filesystem"] as
+            | Record<string, unknown>
+            | undefined
+        )?.["properties"] as Record<string, unknown> | undefined ?? {};
 
-        const uiSchema: UiSchemaRoot = { "ui:order": ["library_profiles"] } as UiSchemaRoot;
+        const uiSchema = buildLibraryProfilesUiSchema(filesystemProperties);
 
         const requestFormData = await request.formData();
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handleForm = createFormHandler<any, true>({
             ...defaults,
-            schema: narrowedSchema,
+            schema,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             uiSchema: uiSchema as any,
             sendData: true
@@ -151,29 +156,10 @@ export const actions = {
             return fail(400, { form });
         }
 
-        /**
-         * We must merge the updated library_profiles back into the full
-         * filesystem settings object to avoid resetting unrelated fields.
-         */
-        let currentFilesystem: Record<string, unknown>;
-        try {
-            const current = await getFilesystemSettings(locals.backendUrl, locals.apiKey, fetch);
-            currentFilesystem = (current["filesystem"] ?? current) as Record<string, unknown>;
-        } catch (e) {
-            logger.error("Failed to fetch current filesystem settings for merge", {
-                error: e instanceof Error ? e.message : String(e)
-            });
-            error(503, "Failed to load current settings for merge.");
-        }
-
-        const updatedData = form.data as Record<string, unknown>;
-        const mergedFilesystem = {
-            ...currentFilesystem,
-            library_profiles: updatedData["library_profiles"]
-        };
-
+        // form.data = { filesystem: { ...full FilesystemModel... } }
+        // POST to set/filesystem — the backend replaces the entire filesystem key
         const res = await providers.riven.POST("/api/v1/settings/set/{paths}", {
-            body: { filesystem: mergedFilesystem },
+            body: form.data as Record<string, unknown>,
             baseUrl: locals.backendUrl,
             headers: { "x-api-key": locals.apiKey },
             fetch,
