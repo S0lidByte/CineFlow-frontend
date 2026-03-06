@@ -12,12 +12,7 @@ const gitignorePath = fileURLToPath(new URL("./.gitignore", import.meta.url));
 export default ts.config(
     includeIgnoreFile(gitignorePath),
     {
-        ignores: [
-            "src/lib/api/**",
-            "src/lib/components/ui/**",
-            // Auto-generated OpenAPI spec file — do not lint
-            "src/lib/providers/trakt.ts"
-        ]
+        ignores: ["src/lib/api/**", "src/lib/components/ui/**"]
     },
     js.configs.recommended,
     ...ts.configs.recommended,
@@ -27,9 +22,12 @@ export default ts.config(
     {
         languageOptions: {
             globals: { ...globals.browser, ...globals.node }
-        },
+        }
+    },
+    {
+        files: ["src/lib/providers/trakt.ts"],
         rules: {
-            "no-undef": "off"
+            "@typescript-eslint/ban-ts-comment": "off"
         }
     },
     {
