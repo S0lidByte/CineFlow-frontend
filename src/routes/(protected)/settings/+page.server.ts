@@ -72,11 +72,8 @@ function buildSettingsUiSchema(properties: Record<string, unknown>, keys: string
     if (keys.includes("api_key")) {
         ui["api_key"] = { "ui:components": { textWidget: "apiKeyWidget" } };
     }
-    // library_profiles has its own dedicated page at /library-profiles — hide here to avoid duplication.
-    // The uiSchema key must be nested under "filesystem" since that is the top-level schema property.
-    if (keys.includes("filesystem")) {
-        ui["filesystem"] = { library_profiles: { "ui:widget": "hidden" } };
-    }
+    // Removed `ui:widget: "hidden"` for `library_profiles` because the property is now fully
+    // pruned from the schema payload itself inside the `load` and `actions` functions.
     return ui as UiSchemaRoot;
 }
 
@@ -339,6 +336,24 @@ export const load: PageServerLoad = async ({
     }
 
     const props = (schema.properties ?? {}) as Record<string, unknown>;
+
+    // Hide library_profiles from the filesystem schema to prevent duplication with the dedicated tab
+    if (props.filesystem) {
+        const fsProps = (props.filesystem as Record<string, unknown>).properties as Record<
+            string,
+            unknown
+        >;
+        if (fsProps && fsProps.library_profiles !== undefined) {
+            delete fsProps.library_profiles;
+        }
+    }
+    if (initialValue && initialValue.filesystem) {
+        const fsVal = initialValue.filesystem as Record<string, unknown>;
+        if (fsVal.library_profiles !== undefined) {
+            delete fsVal.library_profiles;
+        }
+    }
+
     const uiSchema = buildSettingsUiSchema(props, tab.keys) as unknown as UiSchemaRoot;
     setCachedSettingsSchema(schemaCacheKey, schema);
     perfCount("settings.schema.cache.set", 1, {
@@ -434,8 +449,40 @@ export const actions = {
             return fail(400, { form });
         }
 
+        const payload = form.data as Record<string, unknown>;
+
+        // If saving the filesystem tab, we must salvage the existing library_profiles
+        // from the backend so the POST payload doesn't accidentally wipe them out.
+        if (paths.includes("filesystem") && payload.filesystem) {
+            try {
+                const currentRes = await providers.riven.GET("/api/v1/settings/get/{paths}", {
+                    baseUrl: locals.backendUrl,
+                    headers: { "x-api-key": locals.apiKey },
+                    fetch,
+                    params: { path: { paths: "filesystem" } }
+                });
+
+                if (
+                    !currentRes.error &&
+                    currentRes.data &&
+                    (currentRes.data as Record<string, unknown>).filesystem
+                ) {
+                    const currentFs = (currentRes.data as Record<string, unknown>)
+                        .filesystem as Record<string, unknown>;
+                    if (currentFs.library_profiles !== undefined) {
+                        (payload.filesystem as Record<string, unknown>).library_profiles =
+                            currentFs.library_profiles;
+                    }
+                }
+            } catch (e) {
+                logger.error("Failed to salvage library_profiles during filesystem save", {
+                    error: e
+                });
+            }
+        }
+
         const res = await providers.riven.POST("/api/v1/settings/set/{paths}", {
-            body: form.data as Record<string, unknown>,
+            body: payload,
             baseUrl: locals.backendUrl,
             headers: { "x-api-key": locals.apiKey },
             fetch,
