@@ -309,7 +309,11 @@
                             <LibraryProfilesPanel
                                 profiles={$page.data.customData?.profiles ?? {}} />
                         {:else}
-                            <SettingsFormContent {formStore} />
+                            <SettingsFormContent
+                                {formStore}
+                                pageData={$page.data as import("./$types").PageData}
+                                actionData={$page.form ?? undefined}
+                                activeTabId={$page.data.activeTabId} />
                         {/if}
                     {/key}
                 </div>

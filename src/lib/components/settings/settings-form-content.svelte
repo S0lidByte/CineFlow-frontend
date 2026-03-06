@@ -24,8 +24,6 @@
     import { icons } from "@sjsf/lucide-icons";
     import { Alert, AlertDescription, AlertTitle } from "$lib/components/ui/alert/index.js";
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
-    import { get } from "svelte/store";
-    import { page } from "$app/stores";
     import { getTabById } from "./sections";
 
     interface Props {
@@ -35,26 +33,35 @@
          * check `isChanged` and call `reset()` without additional prop drilling.
          */
         formStore: { set: (f: FormState<unknown>) => void };
+        /** The resolved page data from the server. Passed explicitly to survive transition routing. */
+        pageData: PageData;
+        /** The action data from a form submission. */
+        actionData?: ActionData;
+        /** The currently active tab ID. */
+        activeTabId: string;
     }
-    let { formStore }: Props = $props();
+    let { formStore, pageData, actionData, activeTabId }: Props = $props();
 
     setShadcnContext();
 
+    // Use passed data over reactive $page store to prevent undefined crashes mid-navigation
     const meta = createMeta<ActionData, PageData>().form;
 
     /** Tracks the last save outcome to conditionally show the inline error alert. */
     let saveStatus = $state<"idle" | "success" | "error">("idle");
 
+    // svelte-ignore state_referenced_locally
     const { form } = setupSvelteKitForm(meta, {
         ...defaults,
-        schema: $page.data.form.schema,
+        schema: (pageData.form?.schema ?? { type: "object" }) as any,
+        data: pageData.form ? pageData : undefined,
+        action: actionData,
         icons,
         delayedMs: 500,
         timeoutMs: 30000,
         onSuccess: (result: { type: string }) => {
             if (result.type === "success") {
-                const tabId = get(page).url.searchParams.get("tab") ?? "general";
-                const tab = getTabById(tabId);
+                const tab = getTabById(activeTabId);
                 if (tab?.restartRequired) {
                     toast.success("Settings saved. Some changes may take effect after restart.");
                 } else {
