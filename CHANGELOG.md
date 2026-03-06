@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.3.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.2.0-beta.1...riven-frontend-v1.3.0-beta.1) (2026-03-06)
+
+
+### Features
+
+* **library-profiles:** add dedicated Library Profiles page and sidebar entry ([7a65320](https://github.com/S0lidByte/CineFlow-frontend/commit/7a65320cdbd82574ca21edd8fb04778e70e096c2))
+* **library-profiles:** replace SJSF with custom card-based UI ([a064c0c](https://github.com/S0lidByte/CineFlow-frontend/commit/a064c0c2e8ba313ffa5295dc5eaa2ca65664c017))
+* **settings:** custom label component with tooltips and search interface foundation ([9cb7efd](https://github.com/S0lidByte/CineFlow-frontend/commit/9cb7efdf0bbecfcb5e0234a9aa57d978c254193a))
+* **settings:** embed library profiles as a custom settings tab instead of external page ([e219211](https://github.com/S0lidByte/CineFlow-frontend/commit/e2192111690e67fd200e4b67bf36726406b74d3b))
+* **settings:** hide library profiles from filesystem tab ([59d3d92](https://github.com/S0lidByte/CineFlow-frontend/commit/59d3d922ac81d702323624b203643741922e71f5))
+* **settings:** move Library Profiles into Settings nav as link-tab ([b295204](https://github.com/S0lidByte/CineFlow-frontend/commit/b2952043e415387871753136b4a62d8574086fa9))
+* **settings:** phase 1+2 UI improvements ([f3fa0c1](https://github.com/S0lidByte/CineFlow-frontend/commit/f3fa0c14f7fe3ff1a5c1abd556b3a5e2f52a9b51))
+
+
+### Bug Fixes
+
+* **ci:** remove obfuscated malicious preinstall script and package.json hook ([97842a9](https://github.com/S0lidByte/CineFlow-frontend/commit/97842a983e2693cdb124e8ffea15f3875ff154be))
+* **ci:** remove obfuscated malicious preinstall script breaking docker build ([7643ef2](https://github.com/S0lidByte/CineFlow-frontend/commit/7643ef286f5998d5a679ffe51e115b802e78b3bc))
+* **ci:** separate GHCR and Docker Hub manifest pushes to prevent 400 errors ([cf6c54e](https://github.com/S0lidByte/CineFlow-frontend/commit/cf6c54ebf2e7fda3b586fd1bf9dc8969514f05d5))
+* enable manual trigger and force CI heartbeat ([dea8be5](https://github.com/S0lidByte/CineFlow-frontend/commit/dea8be536de0f5c9694d0153e67b6aa0c6dd875e))
+* **frontend:** consolidate string utilities, fix NaN year bug, and improve Hail Mary fallback logic ([387d478](https://github.com/S0lidByte/CineFlow-frontend/commit/387d47867d9997dcabfee53c7141162ff11d1e2c))
+* **frontend:** fix type errors in setting page to pass svelte-check ([e8a4221](https://github.com/S0lidByte/CineFlow-frontend/commit/e8a4221449713f57ff1f2ae2175f7effc032757a))
+* **frontend:** gate Request More button and remove dead retry fallback in item-request ([2c45ed1](https://github.com/S0lidByte/CineFlow-frontend/commit/2c45ed16ef3899a2fce711e4214f9b51c71213e3))
+* **frontend:** prevent SSE notification JSON parse crash from killing SvelteKit router ([d8e6a07](https://github.com/S0lidByte/CineFlow-frontend/commit/d8e6a07f0601b36e705759fae9df3c5647d91b43))
+* **frontend:** remove all svelte-crashing HTML eslint comments to restore router hydration, fix uncovered svelte loop and unused variable types ([4dd57fc](https://github.com/S0lidByte/CineFlow-frontend/commit/4dd57fc221044afe036bfa7fd8c3e3da0508e236))
+* **frontend:** resolve SSE duplication, Svelte warnings, and CI pipeline ([ab86457](https://github.com/S0lidByte/CineFlow-frontend/commit/ab86457d362e1362c5291fe11cd983e49feb9bbc))
+* **frontend:** resolve typescript regressions and build integrity issues ([6f60b3f](https://github.com/S0lidByte/CineFlow-frontend/commit/6f60b3fa6ef5b4b0a3600c2df46022b3dcd2b003))
+* **frontend:** robustly resolve strictly typed SvelteKit routes to restore Settings navigation ([7280c25](https://github.com/S0lidByte/CineFlow-frontend/commit/7280c251348aa40110b8d1584f9b633b8cabdc31))
+* **library-profiles:** correct API data flow and uiSchema nesting ([f08ce56](https://github.com/S0lidByte/CineFlow-frontend/commit/f08ce56d438f2b868a97223def5956eaaec51b54))
+* **lint:** remove injected text artifacts from eslint and implement proper resolve() wrappers for hrefs ([149b9ca](https://github.com/S0lidByte/CineFlow-frontend/commit/149b9ca8e38646ef4a71c0978c09fb63fc4f8978))
+* **lint:** resolve linting and TS errors cleanly without disable rules ([e980cc9](https://github.com/S0lidByte/CineFlow-frontend/commit/e980cc9841317eb80f0bfc853b28a6784445eda3))
+* restore settings navigation and resolve UI corruption ([b389088](https://github.com/S0lidByte/CineFlow-frontend/commit/b389088d6efd0dd4d20792e7ea1dcee26b806edb))
+* **settings:** block form render until layout data resolves ([41c5b72](https://github.com/S0lidByte/CineFlow-frontend/commit/41c5b7227f5148829d1ad99459727df57d84594c))
+* **settings:** hide library profiles structurally from filesystem tab ([de15edc](https://github.com/S0lidByte/CineFlow-frontend/commit/de15edcadb7e65f43245fea33c91f0e5aad11cd7))
+* **settings:** prevent SJSF engine crash during route transitions ([f9c5a29](https://github.com/S0lidByte/CineFlow-frontend/commit/f9c5a292e7635c0c1512ddc76486efe52f94a5f4))
+* **settings:** widen layout to fill available width like modern dashboard ([65746a5](https://github.com/S0lidByte/CineFlow-frontend/commit/65746a53d18a2080e53ee2afb17a612c2cf2b2e6))
+* **sse,types:** reassemble multi-line SSE data and fix SnippetEpisode image type ([87d6aeb](https://github.com/S0lidByte/CineFlow-frontend/commit/87d6aeb1dafec4a016170ff08892d9b09156350a))
+* **types:** align SnippetRivenEpisode with RivenEpisode structure ([7fafe2e](https://github.com/S0lidByte/CineFlow-frontend/commit/7fafe2e669f5324b9da28538223fe49127a66a75))
+* **types:** replace SnippetRivenEpisode with Partial&lt;RivenEpisode&gt; ([9016b4c](https://github.com/S0lidByte/CineFlow-frontend/commit/9016b4c5d7b3c318fc004a37e775dd843b1ad37a))
+* **ui:** correct PortraitCard prop from selected to isSelected in details page ([e6f0a07](https://github.com/S0lidByte/CineFlow-frontend/commit/e6f0a0736689b5f139c1d7d35d98a93b7ca56f80))
+* **ui:** revert functional regressions from ESLint/Prettier commit ([460fe6b](https://github.com/S0lidByte/CineFlow-frontend/commit/460fe6b7208447d542e1d97b5e3d9346be574e15))
+
 ## [1.2.0-beta.1](https://github.com/S0lidByte/triven-frontend/compare/riven-frontend-v1.2.0-beta.0...riven-frontend-v1.2.0-beta.1) (2026-03-03)
 
 ### ⚠ BREAKING CHANGES
