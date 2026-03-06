@@ -2,8 +2,9 @@
 name: Feature request
 about: Suggest an idea for this project
 title: "[FEATURE] Title"
-labels: "enhancement"
-assignees: ""
+labels: enhancement
+assignees: ''
+
 ---
 
 **Describe the feature**
