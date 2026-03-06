@@ -25,6 +25,7 @@
     import { cn } from "$lib/utils";
     import { IsMobile } from "$lib/hooks/is-mobile.svelte";
     import PortraitCard from "$lib/components/media/portrait-card.svelte";
+    import type { RivenEpisode } from "$lib/types/riven";
     import ItemRequest from "$lib/components/media/riven/item-request.svelte";
     import ItemDelete from "$lib/components/media/riven/item-delete.svelte";
     import ItemPause from "$lib/components/media/riven/item-pause.svelte";
@@ -49,26 +50,10 @@
         runtime?: number | null;
     }
 
-    interface SnippetRivenEpisode {
+    interface SnippetRivenEpisode extends Partial<RivenEpisode> {
         state?: string;
-        filesystem_entry?: {
-            file_size?: number;
-        } & Record<string, unknown>;
-        media_metadata?: {
-            video?: Record<string, unknown>;
-            audio_tracks?: Array<
-                {
-                    codec?: string;
-                    channels?: number;
-                    language?: string;
-                } & Record<string, unknown>
-            >;
-            filename?: string;
-            quality_source?: string;
-            release_group?: string;
-            is_remux?: boolean;
-            media_info?: { size?: number };
-        };
+        filesystem_entry?: RivenEpisode["filesystem_entry"];
+        media_metadata?: RivenEpisode["media_metadata"];
     }
 
     const isMobile = new IsMobile();
