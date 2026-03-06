@@ -41,12 +41,12 @@
     let { data }: PageProps = $props();
 
     interface SnippetEpisode {
-        name?: string;
+        name?: string | null;
         number?: number | null;
         image?: string | null;
-        overview?: string;
-        aired?: string;
-        runtime?: number;
+        overview?: string | null;
+        aired?: string | null;
+        runtime?: number | null;
     }
 
     interface SnippetRivenEpisode {
@@ -345,7 +345,7 @@
     </section>
 {/snippet}
 
-{#snippet episodeTrigger(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode)}
+{#snippet episodeTrigger(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode | undefined)}
     <LandscapeCard
         title={episode.name ?? ""}
         episodeNumber={episode.number ?? undefined}
@@ -370,7 +370,7 @@
     </LandscapeCard>
 {/snippet}
 
-{#snippet episodeMetadata(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode)}
+{#snippet episodeMetadata(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode | undefined)}
     <div class="mt-2 flex flex-wrap items-center gap-2">
         <span class="text-muted-foreground font-serif text-sm"
             >{data.mediaDetails?.details.title}</span>
@@ -386,7 +386,7 @@
     </div>
 {/snippet}
 
-{#snippet episodeBody(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode)}
+{#snippet episodeBody(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode | undefined)}
     <div class="mt-6 flex flex-1 flex-col gap-8 overflow-y-auto px-6 pb-36">
         {#if episode.overview}
             <p class="text-muted-foreground text-base leading-relaxed">
