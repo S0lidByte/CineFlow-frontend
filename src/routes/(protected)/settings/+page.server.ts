@@ -338,13 +338,18 @@ export const load: PageServerLoad = async ({
     const props = (schema.properties ?? {}) as Record<string, unknown>;
 
     // Hide library_profiles from the filesystem schema to prevent duplication with the dedicated tab
-    if (props.filesystem) {
-        const fsProps = (props.filesystem as Record<string, unknown>).properties as Record<
-            string,
-            unknown
-        >;
-        if (fsProps && fsProps.library_profiles !== undefined) {
-            delete fsProps.library_profiles;
+    // Pydantic separates nested models into a root `$defs` object and uses `$ref` pointers.
+    // The actual schema properties are in `schema.$defs.FilesystemModel.properties`.
+    if (schema.$defs) {
+        const defs = schema.$defs as Record<string, unknown>;
+        if (defs.FilesystemModel) {
+            const fsModel = defs.FilesystemModel as Record<string, unknown>;
+            if (fsModel.properties) {
+                const fsProps = fsModel.properties as Record<string, unknown>;
+                if (fsProps.library_profiles !== undefined) {
+                    delete fsProps.library_profiles;
+                }
+            }
         }
     }
     if (initialValue && initialValue.filesystem) {

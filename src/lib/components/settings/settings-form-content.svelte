@@ -53,7 +53,7 @@
     // svelte-ignore state_referenced_locally
     const { form } = setupSvelteKitForm(meta, {
         ...defaults,
-        schema: (pageData.form?.schema ?? { type: "object" }) as any,
+        schema: (pageData.form?.schema ?? { type: "object" }) as Record<string, unknown>,
         data: pageData.form ? pageData : { form: { schema: { type: "object" } } },
         action: actionData,
         icons,
