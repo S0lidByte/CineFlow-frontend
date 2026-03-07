@@ -7,7 +7,7 @@ import type {
     TVDBBaseItem
 } from "$lib/providers/parser";
 import type { RivenMediaItem } from "$lib/types/riven";
-import { error, redirect } from "@sveltejs/kit";
+import { error, redirect, type Cookies } from "@sveltejs/kit";
 import { createCustomFetch } from "$lib/custom-fetch";
 import { createScopedLogger } from "$lib/logger";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -16,6 +16,7 @@ import { calculateSimilarity } from "$lib/utils/string";
 import * as dateUtils from "$lib/utils/date";
 
 const logger = createScopedLogger("media-details");
+const TVDB_API_KEY = "6be85335-5c4f-4d8d-b945-d3ed0eb8cdce";
 
 /**
  * Cache for failed ID resolutions to prevent hitting APIs repeatedly for unresolvable content.
@@ -23,6 +24,40 @@ const logger = createScopedLogger("media-details");
  * Note: This is in-memory and per-process.
  */
 const failedResolutionCache = new Map<string, number>();
+
+async function loginToTvdb(customFetch: typeof fetch): Promise<string | null> {
+    try {
+        const tvdbLogin = await providers.tvdb.POST("/login", {
+            body: {
+                apikey: TVDB_API_KEY
+            },
+            fetch: customFetch
+        });
+
+        const token = tvdbLogin.data?.data?.token;
+        if (tvdbLogin.error || !token) {
+            logger.error("Failed to refresh TVDB token", {
+                error: tvdbLogin.error
+            });
+            return null;
+        }
+
+        return token;
+    } catch (err) {
+        logger.error("TVDB login threw unexpectedly", err);
+        return null;
+    }
+}
+
+function setTvdbTokenCookie(cookies: Cookies, token: string, isSecure: boolean): void {
+    cookies.set("tvdb_cookie", token, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isSecure,
+        maxAge: 60 * 60 * 24 * 30 // 30 days
+    });
+}
 
 async function fetchWithStatus<T>(p: Promise<T>): Promise<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,7 +178,7 @@ async function getTraktData(fetch: typeof globalThis.fetch, mediaId: string, isM
     }
 }
 
-export const load = (async ({ fetch, params, cookies, locals, url }) => {
+export const load = (async ({ fetch, params, cookies, locals, request, url }) => {
     const { id, mediaType } = params;
     const customFetch = createCustomFetch(fetch);
 
@@ -216,7 +251,20 @@ export const load = (async ({ fetch, params, cookies, locals, url }) => {
                 } as MediaDetails
             };
         } else if (mediaType === "tv") {
-            const tvdbToken = cookies.get("tvdb_cookie") || "";
+            const isSecure =
+                url.protocol === "https:" || request.headers.get("x-forwarded-proto") === "https";
+
+            let tvdbToken = cookies.get("tvdb_cookie") || "";
+
+            if (!tvdbToken) {
+                const refreshedToken = await loginToTvdb(customFetch);
+                if (!refreshedToken) {
+                    error(503, "TV metadata provider authentication failed. Please try again later.");
+                }
+
+                tvdbToken = refreshedToken;
+                setTvdbTokenCookie(cookies, tvdbToken, isSecure);
+            }
 
             // Check if the ID is already a TVDB ID (passed via query param from library)
             const indexerParam = url.searchParams.get("indexer");
@@ -261,16 +309,15 @@ export const load = (async ({ fetch, params, cookies, locals, url }) => {
                 })
                 .catch(() => null);
 
-            // Fetch TVDB details (episodes + translations separately), Trakt data, and Riven data in parallel
-            const [tvdbEpisodesResult, tvdbTranslationsResult, traktResult, rivenData] =
-                await Promise.all([
+            const fetchTvdbSeriesData = (token: string) =>
+                Promise.all([
                     fetchWithStatus(
                         providers.tvdb.GET(`/series/{id}/extended`, {
                             params: {
                                 path: { id: tvdbId },
                                 query: { meta: "episodes" }
                             },
-                            headers: { Authorization: `Bearer ${tvdbToken}` },
+                            headers: { Authorization: `Bearer ${token}` },
                             fetch: customFetch
                         })
                     ),
@@ -280,13 +327,34 @@ export const load = (async ({ fetch, params, cookies, locals, url }) => {
                                 path: { id: tvdbId },
                                 query: { meta: "translations" }
                             },
-                            headers: { Authorization: `Bearer ${tvdbToken}` },
+                            headers: { Authorization: `Bearer ${token}` },
                             fetch: customFetch
                         })
-                    ),
-                    getTraktData(customFetch, String(tvdbId), false),
-                    rivenPromise
+                    )
                 ]);
+
+            // Fetch TVDB details (episodes + translations separately), Trakt data, and Riven data in parallel
+            const [tvdbResults, traktResult, rivenData] = await Promise.all([
+                fetchTvdbSeriesData(tvdbToken),
+                getTraktData(customFetch, String(tvdbId), false),
+                rivenPromise
+            ]);
+
+            let [tvdbEpisodesResult, tvdbTranslationsResult] = tvdbResults;
+
+            if (tvdbEpisodesResult.status === 401 || tvdbTranslationsResult.status === 401) {
+                logger.warn(`TVDB token likely expired while loading show ${tvdbId}; retrying login`);
+
+                const refreshedToken = await loginToTvdb(customFetch);
+                if (!refreshedToken) {
+                    error(503, "TV metadata provider authentication failed. Please try again later.");
+                }
+
+                tvdbToken = refreshedToken;
+                setTvdbTokenCookie(cookies, tvdbToken, isSecure);
+
+                [tvdbEpisodesResult, tvdbTranslationsResult] = await fetchTvdbSeriesData(tvdbToken);
+            }
 
             const {
                 data: episodesData,
