@@ -37,9 +37,9 @@ export const betterAuthHandler: Handle = async ({ event, resolve }) => {
             return svelteKitHandler({ event, resolve, auth, building });
         } else {
             if (event.url.pathname.startsWith("/api/")) {
-                error(401, "Unauthorized");
+                throw error(401, "Unauthorized");
             }
-            redirect(307, "/auth/login");
+            throw redirect(307, "/auth/login");
         }
     } else {
         return svelteKitHandler({ event, resolve, auth, building });
