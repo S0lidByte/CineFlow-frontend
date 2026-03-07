@@ -259,7 +259,10 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
             if (!tvdbToken) {
                 const refreshedToken = await loginToTvdb(customFetch);
                 if (!refreshedToken) {
-                    error(503, "TV metadata provider authentication failed. Please try again later.");
+                    error(
+                        503,
+                        "TV metadata provider authentication failed. Please try again later."
+                    );
                 }
 
                 tvdbToken = refreshedToken;
@@ -343,11 +346,16 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
             let [tvdbEpisodesResult, tvdbTranslationsResult] = tvdbResults;
 
             if (tvdbEpisodesResult.status === 401 || tvdbTranslationsResult.status === 401) {
-                logger.warn(`TVDB token likely expired while loading show ${tvdbId}; retrying login`);
+                logger.warn(
+                    `TVDB token likely expired while loading show ${tvdbId}; retrying login`
+                );
 
                 const refreshedToken = await loginToTvdb(customFetch);
                 if (!refreshedToken) {
-                    error(503, "TV metadata provider authentication failed. Please try again later.");
+                    error(
+                        503,
+                        "TV metadata provider authentication failed. Please try again later."
+                    );
                 }
 
                 tvdbToken = refreshedToken;
