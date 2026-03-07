@@ -54,6 +54,11 @@
         );
     });
 
+    const unreleasedCount = $derived.by(() => {
+        if (!data.statistics?.states) return "0";
+        return (data.statistics.states.Unreleased ?? 0).toLocaleString();
+    });
+
     const heatmapLegend = [
         { label: "No Activity", color: "var(--muted)" },
         { label: "Low", color: "var(--chart-4)" },
@@ -100,7 +105,7 @@
 <PageShell>
     <h1 class="mb-8 text-3xl font-bold tracking-tight">Media Library Statistics</h1>
 
-    <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {@render KPICard({
             title: "Total Items",
             value: data.statistics?.total_items.toLocaleString(),
@@ -116,6 +121,11 @@
             value: data.statistics?.incomplete_items.toLocaleString(),
             sub: "Pending processing",
             tone: "warning"
+        })}
+        {@render KPICard({
+            title: "Unreleased",
+            value: unreleasedCount,
+            sub: "Not released yet"
         })}
         {@render KPICard({
             title: "Completion Rate",
