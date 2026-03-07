@@ -3,8 +3,18 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 
 const proxyRequest = async (method: string, locals: App.Locals, url: URL, request?: Request) => {
-    // Tighten scope: only proxy to /api/ subpaths of the backend
+    // Tighten scope: only proxy to backend /api/v1/* paths.
+    // Incoming protected route is /(protected)/api/[...backendProxy] -> /api/{...backendProxy}
+    // so enforce the rewritten path starts with /api/v1/ before forwarding.
     const proxyPath = url.pathname.replace(/^\/api\//, "/api/");
+    if (!proxyPath.startsWith("/api/v1/")) {
+        throw error(400, "Invalid proxy path");
+    }
+
+    if (!locals.backendUrl || !locals.apiKey) {
+        throw error(500, "Backend proxy is not configured");
+    }
+
     const targetUrl = new URL(proxyPath, locals.backendUrl);
     targetUrl.search = url.search;
 
