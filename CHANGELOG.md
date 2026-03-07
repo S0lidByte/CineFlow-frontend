@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.0-beta.1...riven-frontend-v1.3.1-beta.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* **sse:** fix formatting issues to resolve lint errors ([a4da73c](https://github.com/S0lidByte/CineFlow-frontend/commit/a4da73cf47483870c303c38ce3ef35030a01e756))
+* **sse:** suppress connection error spam during backend restarts ([6526962](https://github.com/S0lidByte/CineFlow-frontend/commit/652696282382a3193ebaafcaf56c028629debd5f))
+
 ## [1.3.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.2.0-beta.1...riven-frontend-v1.3.0-beta.1) (2026-03-06)
 
 ### Features
