@@ -26,7 +26,8 @@ async function resolveAndRedirect(
     });
 
     if (result.resolved) {
-        throw redirect(307, `/details/media/${result.id}/${options.mediaType}`);
+        const query = options.to === "tvdb" ? "?indexer=tvdb" : "";
+        throw redirect(307, `/details/media/${result.id}/${options.mediaType}${query}`);
     }
 
     // For anilist, return JSON error; for others, throw HTTP error
@@ -61,7 +62,7 @@ export const GET: RequestHandler = async ({ params, fetch, locals }) => {
 
         case "tvdb":
             if (!type) throw error(400, "Media type is required for tvdb");
-            if (type === "tv") throw redirect(307, `/details/media/${id}/tv`);
+            if (type === "tv") throw redirect(307, `/details/media/${id}/tv?indexer=tvdb`);
             throw error(400, "Invalid media type for tvdb");
 
         case "anilist": {
