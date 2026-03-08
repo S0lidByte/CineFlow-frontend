@@ -373,6 +373,46 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
 
             // HAIL MARY Fallback: if indexer=tvdb failed with 404, the ID might be for an Episode, Season, or actually a TMDB ID
             if (episodesStatus === 404 && isAlreadyTvdbId) {
+                // Recovery pass: some incoming links can be mis-flagged as TVDB while carrying TMDB IDs.
+                // Try TMDB -> TVDB resolution first, then canonicalize to /details/media/{tvdbId}/tv.
+                const tmdbCandidateId = Number(id);
+                if (!Number.isNaN(tmdbCandidateId) && tmdbCandidateId > 0) {
+                    const { data: resolvedFromTmdb, error: tmdbResolveError } =
+                        await fetchWithStatus(
+                            resolveId({
+                                from: "tmdb",
+                                to: "tvdb",
+                                id: tmdbCandidateId,
+                                mediaType: "tv",
+                                tvdbToken,
+                                customFetch
+                            })
+                        );
+
+                    if (!tmdbResolveError && resolvedFromTmdb?.resolved) {
+                        const resolvedTvdbId = Number(resolvedFromTmdb.id);
+                        if (
+                            !Number.isNaN(resolvedTvdbId) &&
+                            resolvedTvdbId > 0 &&
+                            resolvedTvdbId !== tmdbCandidateId
+                        ) {
+                            logger.info(
+                                `Recovered mis-flagged TV details URL ${id} -> TVDB ${resolvedTvdbId}`
+                            );
+                            const newUrl = new URL(url);
+                            newUrl.pathname = `/details/media/${resolvedTvdbId}/tv`;
+                            newUrl.searchParams.delete("indexer");
+                            newUrl.searchParams.delete("_retry");
+                            throw redirect(307, newUrl.pathname + newUrl.search);
+                        }
+                    } else if (tmdbResolveError) {
+                        logger.warn(
+                            `TMDB->TVDB recovery failed for candidate ${id}:`,
+                            tmdbResolveError
+                        );
+                    }
+                }
+
                 const cacheKey = `tv:${id}`;
                 const cachedExpiry = failedResolutionCache.get(cacheKey);
                 if (cachedExpiry && Date.now() < cachedExpiry) {
