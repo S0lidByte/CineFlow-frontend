@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.3-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.2-beta.1...riven-frontend-v1.3.3-beta.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* allow frontend build without runtime db url ([ef7a371](https://github.com/S0lidByte/CineFlow-frontend/commit/ef7a3714c599b43bf726d127aa16df64aa7077ac))
+* create sqlite data directory on startup ([09713dd](https://github.com/S0lidByte/CineFlow-frontend/commit/09713dd4d6cbe7f5131483f9d052f81e01cee2ab))
+
 ## [1.3.2-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.1-beta.1...riven-frontend-v1.3.2-beta.1) (2026-05-24)
 
 ### Bug Fixes
