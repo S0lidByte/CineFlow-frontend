@@ -79,7 +79,7 @@
         "vite": "^7.3.2"
     },
     "dependencies": {
-        "@better-auth/passkey": "^1.4.13",
+        "@better-auth/passkey": "^1.6.2",
         "@internationalized/date": "^3.11.0",
         "@sjsf/ajv8-validator": "^3.3.0",
         "@sjsf/form": "^3.3.0",
