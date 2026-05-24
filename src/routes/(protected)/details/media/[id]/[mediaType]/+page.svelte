@@ -236,6 +236,12 @@
     let retryIds = $derived(
         getRetryItemIds(data.riven, data.mediaDetails?.type, data.riven?.id ?? rivenId)
     );
+    let playbackItemId = $derived.by(() => {
+        if (rivenId === null || rivenId === undefined) return undefined;
+
+        const parsed = Number(rivenId);
+        return Number.isFinite(parsed) ? parsed : undefined;
+    });
 
     // For ratings, we need TMDB ID. For TV shows, check external_ids.tmdb first (in case URL has TVDB ID)
     let ratingsId = $derived(
@@ -1410,8 +1416,8 @@
                 <Dialog.Description>Playing {data.mediaDetails?.details.title}</Dialog.Description>
             </Dialog.Header>
             <div class="aspect-video w-full">
-                {#if showVideoPlayer && rivenId}
-                    <VideoPlayer itemId={rivenId} class="h-full w-full" />
+                {#if showVideoPlayer && playbackItemId !== undefined}
+                    <VideoPlayer itemId={playbackItemId} class="h-full w-full" />
                 {/if}
             </div>
         </Dialog.Content>
