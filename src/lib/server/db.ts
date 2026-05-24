@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
 import { env } from "$env/dynamic/private";
+import { building } from "$app/environment";
 import * as schema from "./schema";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,9 +28,11 @@ function ensureSqliteDirectory(databaseUrl: string): string {
     return sqlitePath;
 }
 
-if (!env.DATABASE_URL) {
+const databaseUrl = env.DATABASE_URL ?? (building ? ":memory:" : undefined);
+
+if (!databaseUrl) {
     throw new Error("DATABASE_URL environment variable is required");
 }
 
-const sqlite = new Database(ensureSqliteDirectory(env.DATABASE_URL));
+const sqlite = new Database(ensureSqliteDirectory(databaseUrl));
 export const db = drizzle(sqlite, { schema, logger: env.DATABASE_LOGGING === "true" });
