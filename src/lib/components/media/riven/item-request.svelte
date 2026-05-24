@@ -146,22 +146,11 @@
                     body.episode_numbers = selectedEpisodeNumbersBySeason;
                 }
 
-                // The /auto endpoint accepts season and episode targeting, but local
-                // generated OpenAPI types can drift from the backend schema. Cast through
-                // unknown to avoid unsolvable generic constraint errors from openapi-fetch.
-                type PostFn = (
-                    path: string,
-                    options: { body: object }
-                ) => Promise<{ data?: unknown; error?: unknown; message?: string }>;
-                const response = await (providers.riven.POST as unknown as PostFn)(
-                    "/api/v1/scrape/auto",
-                    {
-                        body: body
-                    }
-                );
+                const response = await providers.riven.POST("/api/v1/scrape/auto", {
+                    body
+                });
 
-                if (response.data || response.message) {
-                    // adjust check based on actual response
+                if (response.data?.message) {
                     toast.success("Media item requested successfully!");
                     open = false;
                 } else {

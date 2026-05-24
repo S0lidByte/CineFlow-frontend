@@ -1305,6 +1305,10 @@ export interface components {
             } | null;
             /** Season Numbers */
             season_numbers?: number[] | null;
+            /** Episode Numbers */
+            episode_numbers?: {
+                [key: string]: number[];
+            } | null;
             /** Min Filesize Override */
             min_filesize_override?: number | null;
             /** Max Filesize Override */
