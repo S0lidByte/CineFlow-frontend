@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.4-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.3-beta.1...riven-frontend-v1.3.4-beta.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* preserve sqlite startup without database url ([6ac83cf](https://github.com/S0lidByte/CineFlow-frontend/commit/6ac83cf577b1b7b6c6167d602698d2ba732ba353))
+
 ## [1.3.3-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.2-beta.1...riven-frontend-v1.3.3-beta.1) (2026-05-24)
 
 ### Bug Fixes
