@@ -15,7 +15,11 @@ function getSqlitePath(databaseUrl: string): string {
     return databaseUrl;
 }
 
-function ensureSqliteDirectory(databaseUrl: string): string {
+function ensureSqliteDirectory(databaseUrl: string | undefined): string | undefined {
+    if (!databaseUrl) {
+        return databaseUrl;
+    }
+
     const sqlitePath = getSqlitePath(databaseUrl);
 
     if (sqlitePath !== ":memory:") {
@@ -29,10 +33,6 @@ function ensureSqliteDirectory(databaseUrl: string): string {
 }
 
 const databaseUrl = env.DATABASE_URL ?? (building ? ":memory:" : undefined);
-
-if (!databaseUrl) {
-    throw new Error("DATABASE_URL environment variable is required");
-}
 
 const sqlite = new Database(ensureSqliteDirectory(databaseUrl));
 export const db = drizzle(sqlite, { schema, logger: env.DATABASE_LOGGING === "true" });
