@@ -38,6 +38,7 @@
     import VideoPlayer from "$lib/components/media/video-player.svelte";
     import { toast } from "svelte-sonner";
     import X from "@lucide/svelte/icons/x";
+    import { getRetryItemIds } from "$lib/utils/riven-retry";
 
     let { data }: PageProps = $props();
 
@@ -232,6 +233,9 @@
     });
 
     let rivenId = $derived(data.riven?.id ?? data.mediaDetails?.details?.id);
+    let retryIds = $derived(
+        getRetryItemIds(data.riven, data.mediaDetails?.type, data.riven?.id ?? rivenId)
+    );
 
     // For ratings, we need TMDB ID. For TV shows, check external_ids.tmdb first (in case URL has TVDB ID)
     let ratingsId = $derived(
@@ -690,7 +694,7 @@
                                     variant="secondary"
                                     class="border-border text-muted-foreground hover:bg-muted hover:text-foreground border bg-transparent px-4"
                                     title={data.mediaDetails?.details.title}
-                                    ids={rivenId ? [rivenId.toString()] : []}>
+                                    ids={retryIds}>
                                     <RefreshCw class="mr-1.5 h-4 w-4" />
                                     Retry
                                 </ItemRetry>
