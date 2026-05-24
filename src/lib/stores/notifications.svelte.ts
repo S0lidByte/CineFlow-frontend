@@ -49,7 +49,10 @@ export class NotificationStore {
             (event.type === "movie" ||
                 event.type === "show" ||
                 event.type === "season" ||
-                event.type === "episode")
+                event.type === "episode") &&
+            (event.year === undefined || typeof event.year === "number") &&
+            (event.duration === undefined || typeof event.duration === "number") &&
+            (event.imdb_id === undefined || typeof event.imdb_id === "string")
         );
     }
 
@@ -160,7 +163,7 @@ export class NotificationStore {
 
             this.#unsubscribe = notificationValue.subscribe((value) => {
                 try {
-                    if (!value) return;
+                    if (value == null) return;
 
                     if (!this.#isNotificationEvent(value)) {
                         logger.warn("Ignoring invalid notification payload", value);

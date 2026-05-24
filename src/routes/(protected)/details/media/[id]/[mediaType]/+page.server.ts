@@ -112,6 +112,57 @@ function assertTVDBShowData(data: unknown): TVDBBaseItem {
     return data as TVDBBaseItem;
 }
 
+type ShowIdentity = {
+    title: string | null;
+    year: number | null;
+};
+
+function asString(value: unknown): string | null {
+    return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function getTmdbShowIdentity(data: unknown): ShowIdentity {
+    const item = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+    return {
+        title: asString(item.name) ?? asString(item.original_name),
+        year: dateUtils.getYearFromISO(asString(item.first_air_date))
+    };
+}
+
+function getTvdbShowIdentity(data: TVDBBaseItem | null | undefined): ShowIdentity {
+    if (!data) {
+        return { title: null, year: null };
+    }
+
+    const translatedTitle =
+        data.translations?.nameTranslations?.find(
+            (title) => title.language === "eng" && !title.isAlias
+        )?.name ??
+        data.translations?.nameTranslations?.find(
+            (title) => title.language === "eng" && title.isAlias
+        )?.name;
+    const rawYear =
+        data.year == null ? dateUtils.getYearFromISO(data.firstAired) : Number(data.year);
+    const year = typeof rawYear === "number" && Number.isFinite(rawYear) ? rawYear : null;
+
+    return {
+        title: translatedTitle ?? data.name ?? null,
+        year
+    };
+}
+
+function showIdentitiesMatch(left: ShowIdentity, right: ShowIdentity): boolean {
+    if (!left.title || !right.title) {
+        return false;
+    }
+
+    const titleMatches = calculateSimilarity(left.title, right.title) >= 0.9;
+    const yearMatches =
+        left.year === null || right.year === null || Math.abs(left.year - right.year) <= 1;
+
+    return titleMatches && yearMatches;
+}
+
 export type MediaDetails =
     | { type: "movie"; details: ParsedMovieDetails }
     | { type: "tv"; details: ParsedShowDetails };
@@ -396,14 +447,52 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
                             resolvedTvdbId > 0 &&
                             resolvedTvdbId !== tmdbCandidateId
                         ) {
-                            logger.info(
-                                `Recovered mis-flagged TV details URL ${id} -> TVDB ${resolvedTvdbId}`
+                            const [tmdbCandidate, resolvedTvdb] = await Promise.all([
+                                fetchWithStatus(
+                                    providers.tmdb.GET("/3/tv/{series_id}", {
+                                        params: { path: { series_id: tmdbCandidateId } },
+                                        fetch: customFetch
+                                    })
+                                ),
+                                fetchWithStatus(
+                                    providers.tvdb.GET("/series/{id}/extended", {
+                                        params: {
+                                            path: { id: resolvedTvdbId },
+                                            query: { meta: "translations" }
+                                        },
+                                        headers: { Authorization: `Bearer ${tvdbToken}` },
+                                        fetch: customFetch
+                                    })
+                                )
+                            ]);
+
+                            const tmdbIdentity = getTmdbShowIdentity(tmdbCandidate.data);
+                            const tvdbIdentity = getTvdbShowIdentity(resolvedTvdb.data?.data);
+
+                            if (
+                                !tmdbCandidate.error &&
+                                !resolvedTvdb.error &&
+                                showIdentitiesMatch(tmdbIdentity, tvdbIdentity)
+                            ) {
+                                logger.info(
+                                    `Recovered mis-flagged TV details URL ${id} -> TVDB ${resolvedTvdbId}`
+                                );
+                                const newUrl = new URL(url);
+                                newUrl.pathname = `/details/media/${resolvedTvdbId}/tv`;
+                                newUrl.searchParams.set("indexer", "tvdb");
+                                newUrl.searchParams.delete("_retry");
+                                throw redirect(307, newUrl.pathname + newUrl.search);
+                            }
+
+                            logger.warn(
+                                `Skipping TMDB->TVDB recovery for ${id}; metadata did not verify`,
+                                {
+                                    tmdbIdentity,
+                                    tvdbIdentity,
+                                    tmdbError: tmdbCandidate.error,
+                                    tvdbError: resolvedTvdb.error
+                                }
                             );
-                            const newUrl = new URL(url);
-                            newUrl.pathname = `/details/media/${resolvedTvdbId}/tv`;
-                            newUrl.searchParams.delete("indexer");
-                            newUrl.searchParams.delete("_retry");
-                            throw redirect(307, newUrl.pathname + newUrl.search);
                         }
                     } else if (tmdbResolveError) {
                         logger.warn(

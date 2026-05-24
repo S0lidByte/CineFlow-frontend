@@ -75,25 +75,24 @@
         const trimmed = value.trim();
         if (!trimmed) return null;
 
+        let candidate: string;
         if (/^https?:\/\//i.test(trimmed)) {
-            return trimmed;
+            candidate = trimmed;
+        } else if (/^\/\//.test(trimmed)) {
+            candidate = `https:${trimmed}`;
+        } else if (/^[a-z0-9.-]+\.[a-z]{2,}(?:\/.*)?$/i.test(trimmed)) {
+            // Accept plain domains like example.com/path and normalize to https
+            candidate = `https://${trimmed}`;
+        } else {
+            return null;
         }
 
-        if (/^\/\//.test(trimmed)) {
-            return `https:${trimmed}`;
+        try {
+            const parsed = new URL(candidate);
+            return parsed.protocol === "http:" || parsed.protocol === "https:" ? candidate : null;
+        } catch {
+            return null;
         }
-
-        // Accept plain domains like example.com/path and normalize to https
-        if (/^[a-z0-9.-]+\.[a-z]{2,}(?:\/.*)?$/i.test(trimmed)) {
-            return `https://${trimmed}`;
-        }
-
-        return null;
-    }
-
-    function openExternal(url: string): void {
-        if (!browser) return;
-        window.open(url, "_blank", "noopener,noreferrer");
     }
 
     let showTrailerOverride = $state(false);
@@ -840,10 +839,12 @@
                                 }}>
                                 {#each ratingsData.scores as score (score.name)}
                                     {@const scoreUrl = toExternalUrl(score.url)}
-                                    {#if scoreUrl}
-                                        <button
-                                            type="button"
-                                            onclick={() => openExternal(scoreUrl)}
+                                    {#if browser && scoreUrl}
+                                        <!-- eslint-disable svelte/no-navigation-without-resolve -->
+                                        <a
+                                            href={scoreUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                             class="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 transition-colors">
                                             {#if score.image}<img
                                                     src="/rating-logos/{score.image}"
@@ -851,7 +852,8 @@
                                                     class="h-6 w-6 object-contain" />{/if}
                                             <span class="text-base font-semibold"
                                                 >{score.score}</span>
-                                        </button>
+                                        </a>
+                                        <!-- eslint-enable svelte/no-navigation-without-resolve -->
                                     {:else}
                                         <div
                                             class="text-muted-foreground inline-flex items-center gap-2">
@@ -1177,12 +1179,15 @@
                                                 {@const homepageUrl = toExternalUrl(
                                                     data.mediaDetails.details.homepage
                                                 )}
-                                                {#if homepageUrl}
-                                                    <button
-                                                        type="button"
-                                                        onclick={() => openExternal(homepageUrl)}
+                                                {#if browser && homepageUrl}
+                                                    <!-- eslint-disable svelte/no-navigation-without-resolve -->
+                                                    <a
+                                                        href={homepageUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
                                                         class="text-foreground rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/10"
-                                                        >Website</button>
+                                                        >Website</a>
+                                                    <!-- eslint-enable svelte/no-navigation-without-resolve -->
                                                 {/if}
                                             {/if}
                                             {#if data.mediaDetails?.details.imdb_id}
@@ -1213,11 +1218,14 @@
                                                     })
                                                     .filter((entry) => entry !== null)}
                                                 {#each validLinks as link (link.key)}
-                                                    <button
-                                                        type="button"
-                                                        onclick={() => openExternal(link.href)}
+                                                    <!-- eslint-disable svelte/no-navigation-without-resolve -->
+                                                    <a
+                                                        href={link.href}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
                                                         class="text-foreground rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/10"
-                                                        >{link.label}</button>
+                                                        >{link.label}</a>
+                                                    <!-- eslint-enable svelte/no-navigation-without-resolve -->
                                                 {/each}
                                             {/if}
                                         </div>

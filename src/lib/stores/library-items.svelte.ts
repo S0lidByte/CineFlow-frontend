@@ -27,6 +27,7 @@ export class ItemStore {
     }
 
     resetScope() {
+        this.clear();
         this.#scopeKey = null;
     }
 

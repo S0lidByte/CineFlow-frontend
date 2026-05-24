@@ -135,15 +135,22 @@
         return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
     }
 
-    function formatMultiSelectSummary(values: string[] | undefined, placeholder: string): string {
-        if (!values || values.length === 0) {
+    function formatMultiSelectSummary(
+        values: string[] | undefined,
+        placeholder: string,
+        defaultValues?: readonly string[]
+    ): string {
+        if (!values || values.length === 0 || sameStringArray(values, defaultValues)) {
             return placeholder;
         }
 
         return values.map((value) => toDisplayLabel(value)).join(", ");
     }
 
-    function sameStringArray(a: string[] | undefined, b: string[] | undefined): boolean {
+    function sameStringArray(
+        a: readonly string[] | undefined,
+        b: readonly string[] | undefined
+    ): boolean {
         const sortedA = [...(a ?? [])].sort();
         const sortedB = [...(b ?? [])].sort();
 
@@ -165,17 +172,23 @@
 
         url.searchParams.delete("type");
         if (!sameStringArray($formData.type, DEFAULT_TYPES)) {
-            $formData.type?.forEach((value) => url.searchParams.append("type", value));
+            $formData.type?.forEach((value) => {
+                url.searchParams.append("type", value);
+            });
         }
 
         url.searchParams.delete("states");
         if (!sameStringArray($formData.states, DEFAULT_STATES)) {
-            $formData.states?.forEach((value) => url.searchParams.append("states", value));
+            $formData.states?.forEach((value) => {
+                url.searchParams.append("states", value);
+            });
         }
 
         url.searchParams.delete("sort");
         if (!sameStringArray($formData.sort, DEFAULT_SORT)) {
-            $formData.sort?.forEach((value) => url.searchParams.append("sort", value));
+            $formData.sort?.forEach((value) => {
+                url.searchParams.append("sort", value);
+            });
         }
 
         if (resetPage) {
@@ -415,7 +428,11 @@
                                 <Select.Trigger
                                     {...props}
                                     class="h-9 border-0 bg-transparent text-zinc-400 hover:bg-white/5 data-[state=open]:bg-white/10 data-[value]:text-white">
-                                    {formatMultiSelectSummary($formData.type, "Type")}
+                                    {formatMultiSelectSummary(
+                                        $formData.type,
+                                        "Type",
+                                        DEFAULT_TYPES
+                                    )}
                                 </Select.Trigger>
                                 <Select.Content class="border-zinc-800 bg-zinc-900">
                                     {#each Object.keys(typeOptions) as option (option)}
@@ -440,7 +457,11 @@
                                 <Select.Trigger
                                     {...props}
                                     class="h-9 border-0 bg-transparent text-zinc-400 hover:bg-white/5 data-[state=open]:bg-white/10 data-[value]:text-white">
-                                    {formatMultiSelectSummary($formData.states, "State")}
+                                    {formatMultiSelectSummary(
+                                        $formData.states,
+                                        "State",
+                                        DEFAULT_STATES
+                                    )}
                                 </Select.Trigger>
                                 <Select.Content class="border-zinc-800 bg-zinc-900">
                                     {#each Object.keys(stateOptions) as option (option)}

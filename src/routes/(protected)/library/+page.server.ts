@@ -32,13 +32,13 @@ function getStateBadge(state: string | null | undefined): {
     text: string;
     variant: "success" | "error" | "default";
 } | null {
-    if (!state) return null;
+    const normalized = state?.trim();
+    if (!normalized) return null;
 
     const labelMap: Record<string, string> = {
         PartiallyCompleted: "Partial"
     };
 
-    const normalized = state.trim();
     const successStates = new Set(["Completed", "Symlinked", "Downloaded"]);
     const errorStates = new Set(["Failed"]);
 
