@@ -23,12 +23,26 @@
             | undefined;
         size?: "default" | "sm" | "lg" | "icon" | "icon-sm" | "icon-lg" | undefined;
         class?: string;
+        disabled?: boolean;
         children?: Snippet;
     }
-    let { title, ids, variant = "ghost", size = "sm", children, ...restProps }: Props = $props();
+    let {
+        title,
+        ids,
+        variant = "ghost",
+        size = "sm",
+        disabled = false,
+        children,
+        ...restProps
+    }: Props = $props();
 
     async function retryMediaItem(ids: (string | null | undefined)[]) {
         const validIds = ids.filter((id): id is string => id !== null && id !== undefined);
+
+        if (validIds.length === 0) {
+            toast.info("No media item to retry.");
+            return;
+        }
 
         const response = await providers.riven.POST("/api/v1/items/retry", {
             body: {
@@ -46,12 +60,16 @@
 
     let open = $state(false);
     let loading = $state(false);
+    let validIdCount = $derived(
+        ids.filter((id): id is string => id !== null && id !== undefined).length
+    );
+    let isDisabled = $derived(disabled || loading || validIdCount === 0);
 </script>
 
 <AlertDialog.Root bind:open>
     <AlertDialog.Trigger>
         {#snippet child({ props })}
-            <Button {variant} {size} {...restProps} {...props}>
+            <Button {variant} {size} disabled={isDisabled} {...restProps} {...props}>
                 {#if children}
                     {@render children()}
                 {:else}
@@ -73,7 +91,7 @@
         <AlertDialog.Footer>
             <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
             <AlertDialog.Action
-                disabled={loading}
+                disabled={isDisabled}
                 onclick={async () => {
                     loading = true;
                     await retryMediaItem(ids);

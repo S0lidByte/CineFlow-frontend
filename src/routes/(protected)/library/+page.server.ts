@@ -17,6 +17,7 @@ interface RivenLibraryItem {
     id: number;
     type: string;
     title: string;
+    state?: string | null;
     tmdb_id?: string | null;
     tvdb_id?: string | null;
     parent_ids?: {
@@ -25,6 +26,31 @@ interface RivenLibraryItem {
     } | null;
     poster_path?: string | null;
     aired_at?: string | null;
+}
+
+function getStateBadge(state: string | null | undefined): {
+    text: string;
+    variant: "success" | "error" | "default";
+} | null {
+    const normalized = state?.trim();
+    if (!normalized) return null;
+
+    const labelMap: Record<string, string> = {
+        PartiallyCompleted: "Partial"
+    };
+
+    const successStates = new Set(["Completed", "Symlinked", "Downloaded"]);
+    const errorStates = new Set(["Failed"]);
+
+    if (successStates.has(normalized)) {
+        return { text: labelMap[normalized] ?? normalized, variant: "success" };
+    }
+
+    if (errorStates.has(normalized)) {
+        return { text: labelMap[normalized] ?? normalized, variant: "error" };
+    }
+
+    return { text: labelMap[normalized] ?? normalized, variant: "default" };
 }
 
 function getItemType(type: string): ItemType {
@@ -74,7 +100,9 @@ function transformItems(items: RivenLibraryItem[]) {
                 year: extractYear(item.aired_at),
                 indexer,
                 type: getItemType(item.type),
-                riven_id: item.id
+                riven_id: item.id,
+                state: item.state ?? null,
+                badge: getStateBadge(item.state)
             };
         })
         .filter((item): item is NonNullable<typeof item> => item !== null);

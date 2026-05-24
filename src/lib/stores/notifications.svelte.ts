@@ -36,6 +36,26 @@ export class NotificationStore {
     // Callback for when a new notification is added (for toast display)
     onNotificationAdded: ((notification: Notification) => void) | null = null;
 
+    #isNotificationEvent(value: unknown): value is NotificationEvent {
+        if (!value || typeof value !== "object") {
+            return false;
+        }
+
+        const event = value as Partial<NotificationEvent>;
+        return (
+            typeof event.title === "string" &&
+            typeof event.log_string === "string" &&
+            typeof event.timestamp === "string" &&
+            (event.type === "movie" ||
+                event.type === "show" ||
+                event.type === "season" ||
+                event.type === "episode") &&
+            (event.year === undefined || typeof event.year === "number") &&
+            (event.duration === undefined || typeof event.duration === "number") &&
+            (event.imdb_id === undefined || typeof event.imdb_id === "string")
+        );
+    }
+
     get notifications() {
         return this.#notifications;
     }
@@ -133,18 +153,24 @@ export class NotificationStore {
 
             const notificationValue = this.#connection
                 .select("notification")
-                .json<NotificationEvent>(({ error, previous }) => {
+                .json<NotificationEvent | null>(({ error }) => {
                     if (error) {
-                        logger.warn("Failed to parse notification:", error);
+                        logger.warn("Failed to parse notification payload", error);
+                        return null;
                     }
-                    return previous;
+                    return null;
                 });
 
             this.#unsubscribe = notificationValue.subscribe((value) => {
                 try {
-                    if (value) {
-                        this.#handleNotificationEvent(value);
+                    if (value == null) return;
+
+                    if (!this.#isNotificationEvent(value)) {
+                        logger.warn("Ignoring invalid notification payload", value);
+                        return;
                     }
+
+                    this.#handleNotificationEvent(value);
                 } catch (e) {
                     logger.error("Failed to handle notification event:", e);
                 }
