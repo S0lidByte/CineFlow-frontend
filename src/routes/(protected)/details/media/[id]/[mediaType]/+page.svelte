@@ -26,6 +26,7 @@
     import { IsMobile } from "$lib/hooks/is-mobile.svelte";
     import PortraitCard from "$lib/components/media/portrait-card.svelte";
     import type { RivenEpisode } from "$lib/types/riven";
+    import type { SeasonInfo } from "$lib/components/media/riven/season-selector.svelte";
     import ItemRequest from "$lib/components/media/riven/item-request.svelte";
     import ItemDelete from "$lib/components/media/riven/item-delete.svelte";
     import ItemPause from "$lib/components/media/riven/item-pause.svelte";
@@ -38,7 +39,6 @@
     import VideoPlayer from "$lib/components/media/video-player.svelte";
     import { toast } from "svelte-sonner";
     import X from "@lucide/svelte/icons/x";
-    import { getRetryItemIds } from "$lib/utils/riven-retry";
 
     let { data }: PageProps = $props();
 
@@ -232,9 +232,6 @@
     });
 
     let rivenId = $derived(data.riven?.id ?? data.mediaDetails?.details?.id);
-    let retryIds = $derived(
-        getRetryItemIds(data.riven, data.mediaDetails?.type, data.riven?.id ?? rivenId)
-    );
     let playbackItemId = $derived.by(() => {
         if (rivenId === null || rivenId === undefined) return undefined;
 
@@ -284,22 +281,71 @@
         return () => controller.abort();
     });
 
-    const seasonData = $derived.by(() => {
+    const availableStates = new Set(["Completed", "Downloaded", "Symlinked"]);
+
+    function getAvailableStatus(state: string | null | undefined) {
+        if (state === "Unreleased") return "Unreleased";
+        return state && availableStates.has(state) ? "Available" : undefined;
+    }
+
+    function getRivenEpisodeNumber(episode: RivenEpisode): number | null {
+        const candidate = episode.episode_number ?? episode.number;
+        if (candidate === null || candidate === undefined) return null;
+
+        const parsed = Number(candidate);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    const seasonData = $derived.by((): SeasonInfo[] => {
         if (data.mediaDetails?.type !== "tv" || !data.mediaDetails?.details?.seasons) return [];
         const details = data.mediaDetails.details as ParsedShowDetails;
-        return details.seasons.map((s) => ({
-            id: s.id,
-            season_number: s.number ?? 0,
-            episode_count:
-                details.episodes?.filter((ep) => ep.seasonNumber === s.number).length ?? 0,
-            name: `Season ${s.number}`,
-            status:
-                data.riven?.seasons?.find((rs) => rs.season_number === s.number)?.state ===
-                "Completed"
-                    ? "Available"
-                    : undefined
-        }));
+        return details.seasons.map((s) => {
+            const seasonNumber = s.number ?? 0;
+            const rivenSeason = data.riven?.seasons?.find(
+                (rs) => rs.season_number === seasonNumber
+            );
+            const episodes =
+                details.episodes
+                    ?.filter((ep) => ep.seasonNumber === seasonNumber && ep.number)
+                    .map((episode) => {
+                        const rivenEpisode = rivenSeason?.episodes?.find(
+                            (candidate) => getRivenEpisodeNumber(candidate) === episode.number
+                        );
+
+                        return {
+                            id: episode.id,
+                            episode_number: episode.number ?? 0,
+                            title: episode.name || `Episode ${episode.number}`,
+                            status: getAvailableStatus(rivenEpisode?.state)
+                        };
+                    }) ?? [];
+
+            const hasRequestableEpisodes = episodes.some(
+                (episode) => episode.status !== "Available" && episode.status !== "Unreleased"
+            );
+
+            return {
+                id: s.id,
+                season_number: seasonNumber,
+                episode_count: episodes.length,
+                name: `Season ${seasonNumber}`,
+                status: hasRequestableEpisodes ? undefined : getAvailableStatus(rivenSeason?.state),
+                episodes
+            };
+        });
     });
+
+    const hasRequestableSeasonData = $derived.by(() =>
+        seasonData.some((season) => {
+            if (season.episodes?.length) {
+                return season.episodes.some(
+                    (episode) => episode.status !== "Available" && episode.status !== "Unreleased"
+                );
+            }
+
+            return season.status !== "Available" && season.status !== "Unreleased";
+        })
+    );
 
     const formatCurrency = (n: number) =>
         new Intl.NumberFormat("en-US", {
@@ -699,12 +745,12 @@
                                     variant="secondary"
                                     class="border-border text-muted-foreground hover:bg-muted hover:text-foreground border bg-transparent px-4"
                                     title={data.mediaDetails?.details.title}
-                                    ids={retryIds}>
+                                    ids={rivenId ? [rivenId.toString()] : []}>
                                     <RefreshCw class="mr-1.5 h-4 w-4" />
                                     Retry
                                 </ItemRetry>
 
-                                {#if data.mediaDetails?.type === "tv" && seasonData.some((s) => s.status !== "Available")}
+                                {#if data.mediaDetails?.type === "tv" && hasRequestableSeasonData}
                                     <ItemRequest
                                         size="default"
                                         variant="secondary"
@@ -714,6 +760,7 @@
                                         mediaType={data.mediaDetails?.type}
                                         externalId={data.mediaDetails?.details?.id?.toString() ??
                                             ""}
+                                        episodeSelection={true}
                                         seasons={seasonData}>
                                         <Download class="mr-1.5 h-4 w-4" />
                                         Request More

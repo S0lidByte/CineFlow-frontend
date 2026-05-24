@@ -40,7 +40,7 @@
         const validIds = ids.filter((id): id is string => id !== null && id !== undefined);
 
         if (validIds.length === 0) {
-            toast.info("No missing episodes to retry.");
+            toast.info("No media item to retry.");
             return;
         }
 
