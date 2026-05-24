@@ -2,10 +2,9 @@
 
 ## [1.3.2-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.1-beta.1...riven-frontend-v1.3.2-beta.1) (2026-05-24)
 
-
 ### Bug Fixes
 
-* sync auto scrape request API type ([68fc272](https://github.com/S0lidByte/CineFlow-frontend/commit/68fc272e2431c930769f67e1bb9b38eefb6fa78a))
+- sync auto scrape request API type ([68fc272](https://github.com/S0lidByte/CineFlow-frontend/commit/68fc272e2431c930769f67e1bb9b38eefb6fa78a))
 
 ## [1.3.1-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.0-beta.1...riven-frontend-v1.3.1-beta.1) (2026-03-07)
 
