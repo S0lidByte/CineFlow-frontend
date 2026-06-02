@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types";
-import providers from "$lib/providers";
+import providers from "$lib/server/providers";
 import { parsePersonDetails, parseCompanyDetails, transformTMDBList } from "$lib/providers/parser";
 import { error, redirect } from "@sveltejs/kit";
 import { createCustomFetch } from "$lib/custom-fetch";

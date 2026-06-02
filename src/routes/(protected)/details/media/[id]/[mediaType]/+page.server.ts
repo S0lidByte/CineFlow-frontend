@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types";
-import providers from "$lib/providers";
+import providers from "$lib/server/providers";
 import type {
     TMDBMovieDetailsExtended,
     ParsedMovieDetails,

@@ -1,4 +1,4 @@
-import providers from "$lib/providers";
+import providers from "$lib/server/providers";
 import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("id-resolver");

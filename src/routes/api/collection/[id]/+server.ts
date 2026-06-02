@@ -1,5 +1,5 @@
 import type { RequestHandler } from "./$types";
-import providers from "$lib/providers";
+import providers from "$lib/server/providers";
 import { parseCollectionDetails } from "$lib/providers/parser";
 import { error, json } from "@sveltejs/kit";
 import { createCustomFetch } from "$lib/custom-fetch";
