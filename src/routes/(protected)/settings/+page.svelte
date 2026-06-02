@@ -209,23 +209,26 @@
 
                     <Tooltip.Root>
                         <Tooltip.Trigger>
-                            <Button
-                                type="button"
-                                class="min-w-[11rem]"
-                                onclick={submitSettingsForm}
-                                disabled={!isDirty || isNavigating}
-                                aria-live="polite">
-                                {#if isNavigating}
-                                    <Loader2 class="size-4 animate-spin" />
-                                    Saving...
-                                {:else if isDirty}
-                                    <AlertCircle class="size-4" />
-                                    Save changes
-                                {:else}
-                                    <Check class="size-4" />
-                                    All changes saved
-                                {/if}
-                            </Button>
+                            {#snippet child({ props })}
+                                <Button
+                                    {...props}
+                                    type="button"
+                                    class="min-w-[11rem]"
+                                    onclick={submitSettingsForm}
+                                    disabled={!isDirty || isNavigating}
+                                    aria-live="polite">
+                                    {#if isNavigating}
+                                        <Loader2 class="size-4 animate-spin" />
+                                        Saving...
+                                    {:else if isDirty}
+                                        <AlertCircle class="size-4" />
+                                        Save changes
+                                    {:else}
+                                        <Check class="size-4" />
+                                        All changes saved
+                                    {/if}
+                                </Button>
+                            {/snippet}
                         </Tooltip.Trigger>
                         <Tooltip.Content side="bottom">
                             Save <Kbd
