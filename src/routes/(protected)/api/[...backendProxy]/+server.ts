@@ -6,7 +6,12 @@ const BACKEND_COMPAT_HEADERS = {
 } as const;
 
 const BODY_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-const FORWARDED_REQUEST_HEADERS = ["accept", "range", "if-none-match", "if-modified-since"] as const;
+const FORWARDED_REQUEST_HEADERS = [
+    "accept",
+    "range",
+    "if-none-match",
+    "if-modified-since"
+] as const;
 const FORWARDED_RESPONSE_HEADERS = [
     "accept-ranges",
     "cache-control",

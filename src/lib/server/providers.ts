@@ -13,13 +13,20 @@ const tmdbReadAccessToken =
     privateEnv.PUBLIC_TMDB_READ_ACCESS_TOKEN ||
     publicEnv.PUBLIC_TMDB_READ_ACCESS_TOKEN ||
     "";
+const backendUrl = privateEnv.BACKEND_URL?.replace(/\/+$/, "") || "";
+const backendApiKey = privateEnv.BACKEND_API_KEY || "";
+const useBackendTMDBProxy = !tmdbReadAccessToken && Boolean(backendUrl && backendApiKey);
 
 export const hasTMDBReadAccessToken = Boolean(tmdbReadAccessToken);
+export const tmdbProviderBaseUrl = useBackendTMDBProxy
+    ? `${backendUrl}/api/v1/tmdb`
+    : "https://api.themoviedb.org";
 
 const tmdbClient = createClient<TMDBPaths>({
-    baseUrl: "https://api.themoviedb.org",
+    baseUrl: tmdbProviderBaseUrl,
     headers: {
         ...(tmdbReadAccessToken ? { Authorization: `Bearer ${tmdbReadAccessToken}` } : {}),
+        ...(useBackendTMDBProxy ? { "x-api-key": backendApiKey } : {}),
         "Content-Type": "application/json;charset=utf-8"
     },
     fetch: customFetch

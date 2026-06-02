@@ -32,9 +32,7 @@ const TMDB_READ_ACCESS_TOKEN = env.PUBLIC_TMDB_READ_ACCESS_TOKEN || "";
 const tmdbClient = createClient<TMDBPaths>({
     baseUrl: "https://api.themoviedb.org",
     headers: {
-        ...(TMDB_READ_ACCESS_TOKEN
-            ? { Authorization: `Bearer ${TMDB_READ_ACCESS_TOKEN}` }
-            : {}),
+        ...(TMDB_READ_ACCESS_TOKEN ? { Authorization: `Bearer ${TMDB_READ_ACCESS_TOKEN}` } : {}),
         "Content-Type": "application/json;charset=utf-8"
     },
     fetch: customFetch
