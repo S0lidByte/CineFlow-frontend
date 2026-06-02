@@ -15,6 +15,9 @@ import { perfCount, startPerfMark, endPerfMark } from "$lib/perf";
 import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("settings-page-server");
+const SETTINGS_WRITE_HEADERS = {
+    "x-actor-roles": "platform:admin,settings:write,playback:operator"
+} as const;
 
 const PATHS = "filesystem";
 async function fetchFilesystem(
@@ -24,12 +27,16 @@ async function fetchFilesystem(
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
         fetch: fetchFn,
         params: { path: { paths: PATHS } }
     });
     if (res.error) throw new Error("Failed to load filesystem settings");
-    return (res.data as Record<string, unknown>)["filesystem"] as Record<string, unknown>;
+    const data = (res.data ?? {}) as Record<string, unknown>;
+    return ((data["filesystem"] as Record<string, unknown> | undefined) ?? data) as Record<
+        string,
+        unknown
+    >;
 }
 
 const SETTINGS_SCHEMA_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -85,7 +92,7 @@ async function getSchemaForKeys(
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/schema/keys", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
         fetch: fetchFn,
         params: { query: { keys, title: "Settings" } }
     });
@@ -103,7 +110,7 @@ async function getSettingsForPaths(
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
         fetch: fetchFn,
         params: { path: { paths } }
     });
@@ -462,7 +469,7 @@ export const actions = {
             try {
                 const currentRes = await providers.riven.GET("/api/v1/settings/get/{paths}", {
                     baseUrl: locals.backendUrl,
-                    headers: { "x-api-key": locals.apiKey },
+                    headers: { "x-api-key": locals.apiKey, ...SETTINGS_WRITE_HEADERS },
                     fetch,
                     params: { path: { paths: "filesystem" } }
                 });
@@ -489,7 +496,7 @@ export const actions = {
         const res = await providers.riven.POST("/api/v1/settings/set/{paths}", {
             body: payload,
             baseUrl: locals.backendUrl,
-            headers: { "x-api-key": locals.apiKey },
+            headers: { "x-api-key": locals.apiKey, ...SETTINGS_WRITE_HEADERS },
             fetch,
             params: { path: { paths } }
         });

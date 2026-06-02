@@ -2,9 +2,9 @@ import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ params, locals, request, fetch, url }) => {
-    const { itemId } = params;
+    const itemId = params.itemId?.trim();
 
-    if (!itemId || isNaN(Number(itemId))) {
+    if (!itemId) {
         error(400, "Invalid item ID");
     }
 

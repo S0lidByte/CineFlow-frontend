@@ -4,6 +4,7 @@ WORKDIR /app
 COPY . .
 RUN apk add --no-cache python3 make g++
 RUN npm install -g pnpm && pnpm install
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN pnpm run build && pnpm prune --prod
 
 # Final Image

@@ -2,6 +2,10 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 
+const BACKEND_COMPAT_HEADERS = {
+    "x-actor-roles": "platform:admin,settings:write,playback:operator"
+} as const;
+
 const proxyRequest = async (method: string, locals: App.Locals, url: URL, request?: Request) => {
     // Tighten scope: only proxy to backend /api/v1/* paths.
     // Incoming protected route is /(protected)/api/[...backendProxy] -> /api/{...backendProxy}
@@ -23,6 +27,7 @@ const proxyRequest = async (method: string, locals: App.Locals, url: URL, reques
             method,
             headers: {
                 "x-api-key": locals.apiKey,
+                ...BACKEND_COMPAT_HEADERS,
                 // Forward the content-type from the original request if it exists
                 "Content-Type": request?.headers.get("Content-Type") || "application/json"
             },
