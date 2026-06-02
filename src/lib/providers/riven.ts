@@ -1305,6 +1305,10 @@ export interface components {
             } | null;
             /** Season Numbers */
             season_numbers?: number[] | null;
+            /** Episode Numbers */
+            episode_numbers?: {
+                [key: string]: number[];
+            } | null;
             /** Min Filesize Override */
             min_filesize_override?: number | null;
             /** Max Filesize Override */
@@ -3024,19 +3028,27 @@ export interface components {
             /** Language */
             language?: string | null;
         };
-        /** SubtitleProviderConfig */
-        SubtitleProviderConfig: {
+        /** OpenSubtitlesProviderConfig */
+        OpenSubtitlesProviderConfig: {
             /**
              * Enabled
              * @description Enable this subtitle provider
              * @default false
              */
             enabled: boolean;
+            /** @description OpenSubtitles username */
+            username?: string;
+            /** @description OpenSubtitles password */
+            password?: string;
+            /** @description OpenSubtitles user agent */
+            user_agent?: string;
+            /** @description Allow fallback to anonymous login when username/password are empty. */
+            allow_anonymous?: boolean;
         };
         /** SubtitleProvidersDict */
         SubtitleProvidersDict: {
             /** @description OpenSubtitles provider configuration */
-            opensubtitles?: components["schemas"]["SubtitleProviderConfig"];
+            opensubtitles?: components["schemas"]["OpenSubtitlesProviderConfig"];
         };
         /**
          * TorrentContainer
