@@ -14,8 +14,11 @@
     import { fly } from "svelte/transition";
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     import { cubicOut } from "svelte/easing";
+    import { resolve } from "$app/paths";
 
     let { data }: { data: PageData } = $props();
+
+    const failedCount = $derived((data.statistics?.states?.Failed ?? 0).toLocaleString());
 
     function transformStatesToArray(states: Record<string, number> | undefined) {
         if (!states) return [];
@@ -76,36 +79,61 @@
     title,
     value,
     sub,
-    tone = "default"
+    tone = "default",
+    href
 }: {
     title: string;
     value: string | undefined;
     sub?: string;
-    tone?: "default" | "warning";
+    tone?: "default" | "warning" | "danger";
+    href?: string;
 })}
-    <Card.Root class={cn("", tone === "warning" && "border-amber-600/30")}>
-        <Card.Header class="pb-2">
-            <Card.Title class="text-sm font-medium text-neutral-300">{title}</Card.Title>
-        </Card.Header>
-        <Card.Content>
-            <div
-                class={cn(
-                    "text-2xl font-semibold tracking-tight",
-                    tone === "warning" ? "text-amber-300" : "text-neutral-50"
-                )}>
-                {value}
-            </div>
-            {#if sub}
-                <p class="mt-1 text-sm text-neutral-400">{sub}</p>
-            {/if}
-        </Card.Content>
-    </Card.Root>
+    {@const cardClass = cn(
+        href && "transition-colors hover:bg-white/[0.03]",
+        tone === "warning" && "border-amber-600/30",
+        tone === "danger" && "border-red-600/30"
+    )}
+    {@const valueClass = cn(
+        "text-2xl font-semibold tracking-tight",
+        tone === "warning" && "text-amber-300",
+        tone === "danger" && "text-red-300",
+        tone === "default" && "text-neutral-50"
+    )}
+    {#if href}
+        <a
+            href={resolve(href as "/")}
+            class="focus-visible:ring-primary/50 block rounded-xl focus-visible:ring-2 focus-visible:outline-none">
+            <Card.Root class={cardClass}>
+                <Card.Header class="pb-2">
+                    <Card.Title class="text-sm font-medium text-neutral-300">{title}</Card.Title>
+                </Card.Header>
+                <Card.Content>
+                    <div class={valueClass}>{value}</div>
+                    {#if sub}
+                        <p class="mt-1 text-sm text-neutral-400">{sub}</p>
+                    {/if}
+                </Card.Content>
+            </Card.Root>
+        </a>
+    {:else}
+        <Card.Root class={cardClass}>
+            <Card.Header class="pb-2">
+                <Card.Title class="text-sm font-medium text-neutral-300">{title}</Card.Title>
+            </Card.Header>
+            <Card.Content>
+                <div class={valueClass}>{value}</div>
+                {#if sub}
+                    <p class="mt-1 text-sm text-neutral-400">{sub}</p>
+                {/if}
+            </Card.Content>
+        </Card.Root>
+    {/if}
 {/snippet}
 
 <PageShell>
     <h1 class="mb-8 text-3xl font-bold tracking-tight">Media Library Statistics</h1>
 
-    <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {@render KPICard({
             title: "Total Items",
             value: data.statistics?.total_items.toLocaleString(),
@@ -119,8 +147,16 @@
         {@render KPICard({
             title: "Incomplete",
             value: data.statistics?.incomplete_items.toLocaleString(),
-            sub: "Pending processing",
-            tone: "warning"
+            sub: "Pending processing — open library",
+            tone: "warning",
+            href: "/library"
+        })}
+        {@render KPICard({
+            title: "Failed",
+            value: failedCount,
+            sub: "Click to filter library",
+            tone: "danger",
+            href: "/library?states=Failed"
         })}
         {@render KPICard({
             title: "Unreleased",

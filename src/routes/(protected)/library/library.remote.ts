@@ -82,3 +82,31 @@ export const remove_items = command(itemIdsSchema, async ({ ids }) => {
 
     return { success: true, count: ids.length };
 });
+
+export const retry_library = command(z.object({}), async () => {
+    const event = getRequestEvent();
+    if (!event) throw new Error("No event found");
+
+    const { backendUrl, apiKey } = event.locals;
+
+    if (!backendUrl || !apiKey) {
+        throw new Error("Backend URL or API key missing");
+    }
+
+    const res = await providers.riven.POST("/api/v1/items/retry_library", {
+        baseUrl: backendUrl,
+        headers: {
+            "x-api-key": apiKey
+        }
+    });
+
+    if (res.error) {
+        throw new Error(res.error as string);
+    }
+
+    return {
+        success: true,
+        count: res.data?.ids?.length ?? 0,
+        message: res.data?.message ?? "Retry queued"
+    };
+});

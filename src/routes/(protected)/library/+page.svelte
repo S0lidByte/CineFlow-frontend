@@ -27,9 +27,11 @@
     import ArrowUpDown from "@lucide/svelte/icons/arrow-up-down";
     import * as Select from "$lib/components/ui/select/index.js";
     import { ItemStore } from "$lib/stores/library-items.svelte";
-    import { reset_items, retry_items, remove_items } from "./library.remote";
+    import { reset_items, retry_items, remove_items, retry_library } from "./library.remote";
     import * as Pagination from "$lib/components/ui/pagination/index.js";
+    import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
     import Loading2Circle from "@lucide/svelte/icons/loader-2";
+    import RefreshCw from "@lucide/svelte/icons/refresh-cw";
     import { toast } from "svelte-sonner";
     import { goto, invalidate } from "$app/navigation";
     import PageShell from "$lib/components/page-shell.svelte";
@@ -251,6 +253,30 @@
         await invalidate((url) => url.pathname === page.url.pathname);
     }
 
+    let retryLibraryOpen = $state(false);
+    let retryLibraryInProgress = $state(false);
+
+    async function runRetryLibrary() {
+        retryLibraryInProgress = true;
+        const mark = startPerfMark("library.retry_library", {});
+        try {
+            const result = await retry_library({});
+            if (result.count === 0) {
+                toast.info(result.message || "No items needed a retry");
+            } else {
+                toast.success(result.message || `Retried ${result.count} items`);
+            }
+            await refreshLibraryData("retry_library");
+            retryLibraryOpen = false;
+        } catch (e) {
+            if (e instanceof Error) toast.error(`Error: ${e.message}`);
+            else toast.error("Failed to retry library items");
+        } finally {
+            retryLibraryInProgress = false;
+            endPerfMark(mark, {});
+        }
+    }
+
     async function search(reason: "text" | "filters" | "clear" = "text") {
         normalizeFilters();
 
@@ -383,11 +409,54 @@
                     class="font-serif text-5xl font-medium tracking-tight text-white/90 md:text-7xl">
                     Library
                 </h1>
-                <div class="flex items-center gap-2 text-zinc-400">
-                    <span class="font-mono text-xs tracking-widest uppercase">Index</span>
-                    <span class="h-px w-8 bg-zinc-800"></span>
-                    <span class="text-primary font-mono text-sm"
-                        >{data.totalItems.toLocaleString()} items</span>
+                <div class="flex flex-wrap items-center gap-3 text-zinc-400">
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-xs tracking-widest uppercase">Index</span>
+                        <span class="h-px w-8 bg-zinc-800"></span>
+                        <span class="text-primary font-mono text-sm"
+                            >{data.totalItems.toLocaleString()} items</span>
+                    </div>
+                    <AlertDialog.Root bind:open={retryLibraryOpen}>
+                        <AlertDialog.Trigger>
+                            {#snippet child({ props })}
+                                <Button
+                                    {...props}
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled={retryLibraryInProgress}
+                                    class="border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10">
+                                    {#if retryLibraryInProgress}
+                                        <Loading2Circle class="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                    {:else}
+                                        <RefreshCw class="mr-1.5 h-3.5 w-3.5" />
+                                    {/if}
+                                    Retry all failed
+                                </Button>
+                            {/snippet}
+                        </AlertDialog.Trigger>
+                        <AlertDialog.Content
+                            class="border border-white/10 bg-zinc-950/95 backdrop-blur-2xl">
+                            <AlertDialog.Header>
+                                <AlertDialog.Title>Retry all failed items?</AlertDialog.Title>
+                                <AlertDialog.Description>
+                                    This queues every failed library item for another
+                                    scrape/download attempt. Selection-based Retry is unchanged.
+                                </AlertDialog.Description>
+                            </AlertDialog.Header>
+                            <AlertDialog.Footer>
+                                <AlertDialog.Cancel disabled={retryLibraryInProgress}
+                                    >Cancel</AlertDialog.Cancel>
+                                <AlertDialog.Action
+                                    disabled={retryLibraryInProgress}
+                                    onclick={runRetryLibrary}>
+                                    {#if retryLibraryInProgress}
+                                        <Loading2Circle class="mr-1 inline-block animate-spin" />
+                                    {/if}
+                                    Retry all failed
+                                </AlertDialog.Action>
+                            </AlertDialog.Footer>
+                        </AlertDialog.Content>
+                    </AlertDialog.Root>
                 </div>
             </div>
 
