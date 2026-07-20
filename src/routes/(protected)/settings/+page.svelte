@@ -72,7 +72,7 @@
     }
 
     /**
-     * Handles a tab button click.
+     * Handles a tab button click or search selection.
      * If the form has unsaved changes, opens a confirmation dialog instead of
      * navigating immediately.
      */
@@ -82,6 +82,7 @@
             tabSwitchTarget = tabId;
             showDiscardConfirm = true;
         } else {
+            formStore.set(null);
             goto(resolve(`/settings?tab=${tabId}`));
         }
     }
@@ -90,6 +91,7 @@
     function confirmDiscardAndSwitch(): void {
         if (tabSwitchTarget) {
             form?.reset();
+            formStore.set(null);
             goto(resolve(`/settings?tab=${tabSwitchTarget}`));
             tabSwitchTarget = null;
         }
@@ -193,59 +195,89 @@
                     </p>
                 </div>
 
-                <!-- Save status + primary Save button -->
-                <div class="mt-2 flex items-center gap-2 md:mt-0">
-                    {#if isDirty}
-                        <div class="flex items-center gap-1.5 text-xs font-medium text-amber-500">
-                            <AlertCircle class="size-3.5" />
-                            Unsaved changes
-                        </div>
-                    {:else}
-                        <div class="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
-                            <Check class="size-3.5" />
-                            All changes saved
-                        </div>
-                    {/if}
+                <!-- Save status + primary Save button (SJSF tabs only) -->
+                {#if !activeTab?.custom}
+                    <div class="mt-2 flex items-center gap-2 md:mt-0">
+                        {#if isNavigating}
+                            <div
+                                class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+                                <Loader2 class="size-3.5 animate-spin" />
+                                Loading section…
+                            </div>
+                        {:else if !form}
+                            <div
+                                class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+                                <Loader2 class="size-3.5 animate-spin" />
+                                Preparing form…
+                            </div>
+                        {:else if isDirty}
+                            <div
+                                class="flex items-center gap-1.5 text-xs font-medium text-amber-500">
+                                <AlertCircle class="size-3.5" />
+                                Unsaved changes
+                            </div>
+                        {:else}
+                            <div
+                                class="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
+                                <Check class="size-3.5" />
+                                All changes saved
+                            </div>
+                        {/if}
 
-                    <Tooltip.Root>
-                        <Tooltip.Trigger>
-                            {#snippet child({ props })}
-                                <Button
-                                    {...props}
-                                    type="button"
-                                    class="min-w-[11rem]"
-                                    onclick={submitSettingsForm}
-                                    disabled={!isDirty || isNavigating}
-                                    aria-live="polite">
-                                    {#if isNavigating}
-                                        <Loader2 class="size-4 animate-spin" />
-                                        Saving...
-                                    {:else if isDirty}
-                                        <AlertCircle class="size-4" />
-                                        Save changes
-                                    {:else}
-                                        <Check class="size-4" />
-                                        All changes saved
-                                    {/if}
-                                </Button>
-                            {/snippet}
-                        </Tooltip.Trigger>
-                        <Tooltip.Content side="bottom">
-                            Save <Kbd
-                                class="border-primary-foreground/20 text-primary-foreground ml-1 bg-transparent"
-                                >{navigator?.platform?.includes("Mac") ? "⌘S" : "Ctrl+S"}</Kbd>
-                        </Tooltip.Content>
-                    </Tooltip.Root>
+                        <Tooltip.Root>
+                            <Tooltip.Trigger>
+                                {#snippet child({ props })}
+                                    <Button
+                                        {...props}
+                                        type="button"
+                                        class="min-w-[11rem]"
+                                        onclick={submitSettingsForm}
+                                        disabled={!form || !isDirty || isNavigating}
+                                        aria-live="polite">
+                                        {#if isNavigating}
+                                            <Loader2 class="size-4 animate-spin" />
+                                            Loading...
+                                        {:else if !form}
+                                            <Loader2 class="size-4 animate-spin" />
+                                            Preparing...
+                                        {:else if isDirty}
+                                            <AlertCircle class="size-4" />
+                                            Save changes
+                                        {:else}
+                                            <Check class="size-4" />
+                                            All changes saved
+                                        {/if}
+                                    </Button>
+                                {/snippet}
+                            </Tooltip.Trigger>
+                            <Tooltip.Content side="bottom">
+                                Save <Kbd
+                                    class="border-primary-foreground/20 text-primary-foreground ml-1 bg-transparent"
+                                    >{navigator?.platform?.includes("Mac") ? "⌘S" : "Ctrl+S"}</Kbd>
+                            </Tooltip.Content>
+                        </Tooltip.Root>
 
-                    <button
-                        class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors md:flex"
-                        onclick={() => (searchOpen = true)}>
-                        <SearchIcon class="size-3.5" />
-                        Search settings
-                        <Kbd class="ml-1"
-                            >{navigator?.platform?.includes("Mac") ? "⌘K" : "Ctrl+K"}</Kbd>
-                    </button>
-                </div>
+                        <button
+                            class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors md:flex"
+                            onclick={() => (searchOpen = true)}>
+                            <SearchIcon class="size-3.5" />
+                            Search settings
+                            <Kbd class="ml-1"
+                                >{navigator?.platform?.includes("Mac") ? "⌘K" : "Ctrl+K"}</Kbd>
+                        </button>
+                    </div>
+                {:else}
+                    <div class="mt-2 flex items-center gap-2 md:mt-0">
+                        <button
+                            class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors md:flex"
+                            onclick={() => (searchOpen = true)}>
+                            <SearchIcon class="size-3.5" />
+                            Search settings
+                            <Kbd class="ml-1"
+                                >{navigator?.platform?.includes("Mac") ? "⌘K" : "Ctrl+K"}</Kbd>
+                        </button>
+                    </div>
+                {/if}
 
                 <div class="mt-4 flex items-center justify-between md:hidden">
                     <button
@@ -370,9 +402,9 @@
                         <Button size="sm" onclick={submitSettingsForm} disabled={isNavigating}>
                             {#if isNavigating}
                                 <Loader2 class="size-4 animate-spin" />
-                                Saving...
+                                Loading...
                             {:else}
-                                Save (Ctrl+S)
+                                Save ({navigator?.platform?.includes("Mac") ? "⌘S" : "Ctrl+S"})
                             {/if}
                         </Button>
                     </div>
@@ -399,6 +431,6 @@
         </AlertDialog>
 
         <!-- ── Settings Command Palette ────────────────────────────────────── -->
-        <SettingsSearch bind:open={searchOpen} />
+        <SettingsSearch bind:open={searchOpen} onNavigate={handleTabClick} />
     </Tooltip.Provider>
 </PageShell>
