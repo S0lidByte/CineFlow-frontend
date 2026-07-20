@@ -10,10 +10,7 @@
     import * as Command from "$lib/components/ui/command/index.js";
     import { ICON_MAP } from "./icon-map.js";
     import { getTabById } from "./sections.js";
-    import {
-        filterSearchEntries,
-        type SettingsSearchEntry
-    } from "./settings-field-index.js";
+    import { filterSearchEntries, type SettingsSearchEntry } from "./settings-field-index.js";
 
     interface Props {
         open: boolean;
@@ -44,7 +41,10 @@
     }
 </script>
 
-<Command.Dialog bind:open title="Settings Search" description="Jump to any settings section or field">
+<Command.Dialog
+    bind:open
+    title="Settings Search"
+    description="Jump to any settings section or field">
     <Command.Input placeholder="Search settings, deny keys, fields…" bind:value={query} />
     <Command.List>
         <Command.Empty>No matching settings.</Command.Empty>

@@ -45,7 +45,10 @@ const fakeSchema = {
                 }
             }
         },
-        scraping: { type: "object", properties: { after_2d: { type: "number", title: "After 2d" } } }
+        scraping: {
+            type: "object",
+            properties: { after_2d: { type: "number", title: "After 2d" } }
+        }
     }
 };
 
@@ -61,7 +64,8 @@ if (!ddp.some((e) => e.path?.includes("dolby_digital_plus"))) {
 const remux = filterSearchEntries(index, "quality_remux");
 if (!remux.length) throw new Error("remux shortcut fail");
 const sectionsOnly = filterSearchEntries(index, "");
-if (!sectionsOnly.every((e) => e.kind === "section")) throw new Error("empty query should be sections");
+if (!sectionsOnly.every((e) => e.kind === "section"))
+    throw new Error("empty query should be sections");
 console.log("FE_INDEX_OK", {
     entries: index.length,
     ddpHits: ddp.length,

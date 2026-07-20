@@ -27,8 +27,11 @@ const SETTINGS_WRITE_HEADERS = {
 } as const;
 
 const FULL_SCHEMA_CACHE_TTL_MS = 10 * 60 * 1000;
-let fullSchemaCache: { schema: Record<string, unknown>; expiresAt: number; backendUrl: string } | null =
-    null;
+let fullSchemaCache: {
+    schema: Record<string, unknown>;
+    expiresAt: number;
+    backendUrl: string;
+} | null = null;
 
 async function getFullSettingsSchema(
     baseUrl: string,
@@ -158,18 +161,14 @@ function sanitizeSettingsSchemaTitles(schema: Record<string, unknown>): void {
 
         if (typeof obj.title === "string" && isNoiseSchemaTitle(obj.title)) {
             if (propertyKey) {
-                obj.title = propertyKey
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (c) => c.toUpperCase());
+                obj.title = propertyKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
             } else {
                 delete obj.title;
             }
         }
 
         if (obj.properties && typeof obj.properties === "object") {
-            for (const [key, value] of Object.entries(
-                obj.properties as Record<string, unknown>
-            )) {
+            for (const [key, value] of Object.entries(obj.properties as Record<string, unknown>)) {
                 visit(value, key);
             }
         }

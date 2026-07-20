@@ -110,12 +110,16 @@
         );
 
         fieldsets.forEach((fs) => {
-            const legend = fs.querySelector<HTMLElement>(':scope > legend[data-slot="field-legend"]');
+            const legend = fs.querySelector<HTMLElement>(
+                ':scope > legend[data-slot="field-legend"]'
+            );
             const content = fs.querySelector<HTMLElement>(':scope > [data-slot="field-group"]');
             if (!legend || !content) return;
             if (legend.dataset.settingsCollapsible === "1") return;
 
-            const childFieldsets = content.querySelectorAll(':scope fieldset[data-slot="field-set"]');
+            const childFieldsets = content.querySelectorAll(
+                ':scope fieldset[data-slot="field-set"]'
+            );
             // Only wrap groups that contain nested objects (real sections), not leaf attribute bags.
             if (childFieldsets.length === 0 && activeTabId !== "ranking") return;
             if (childFieldsets.length === 0) {
@@ -249,11 +253,11 @@
         /* Nested object / array fields span full width */
         :global(.settings-form [data-slot="field"]:has([data-slot="field"])),
         :global(.settings-form [data-slot="field-group"] > fieldset[data-slot="field-set"]),
-        :global(.settings-form [data-layout="object-property"]:has(fieldset[data-slot="field-set"])),
         :global(
-            .settings-form
-                [data-slot="field-group"]
-                > [data-slot="field"]:has([data-slot="field"])
+            .settings-form [data-layout="object-property"]:has(fieldset[data-slot="field-set"])
+        ),
+        :global(
+            .settings-form [data-slot="field-group"] > [data-slot="field"]:has([data-slot="field"])
         ) {
             grid-column: 1 / -1;
         }
@@ -380,9 +384,9 @@
         :global(
             .settings-form
                 [data-layout="object-field"]
-                > [data-layout="object-properties"]:has(> [data-layout="object-property"]:nth-child(3)):not(
-                    :has(> [data-layout="object-property"]:nth-child(4))
-                )
+                > [data-layout="object-properties"]:has(
+                    > [data-layout="object-property"]:nth-child(3)
+                ):not(:has(> [data-layout="object-property"]:nth-child(4)))
         ) {
             grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(4.5rem, 0.7fr) !important;
             gap: 0.5rem;

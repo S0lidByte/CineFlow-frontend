@@ -18,69 +18,73 @@ export interface SettingsSearchEntry {
     keywords?: string[];
 }
 
-const RANKING_DENY_KEYWORDS: { path: string; label: string; description: string; keywords: string[] }[] =
-    [
-        {
-            path: "ranking.custom_ranks.audio.dolby_digital_plus",
-            label: "Dolby Digital Plus (DDP)",
-            description: "Disney+/Amazon WEB-DL audio. Log: denied by: audio_dolby_digital_plus",
-            keywords: ["audio_dolby_digital_plus", "ddp", "dd+", "denied"]
-        },
-        {
-            path: "ranking.custom_ranks.audio.dolby_digital",
-            label: "Dolby Digital (DD/AC3)",
-            description: "Log: denied by: audio_dolby_digital",
-            keywords: ["audio_dolby_digital", "ac3", "dd5", "denied"]
-        },
-        {
-            path: "ranking.custom_ranks.audio.atmos",
-            label: "Dolby Atmos",
-            description: "Log: denied by: audio_atmos",
-            keywords: ["audio_atmos", "denied"]
-        },
-        {
-            path: "ranking.custom_ranks.quality.remux",
-            label: "Remux",
-            description: "Log: denied by: quality_remux",
-            keywords: ["quality_remux", "denied"]
-        },
-        {
-            path: "ranking.custom_ranks.extras.dubbed",
-            label: "Dubbed / Dual / MULTi",
-            description: "Log: denied by: extras_dubbed",
-            keywords: ["extras_dubbed", "multi", "dual", "denied"]
-        },
-        {
-            path: "ranking.custom_ranks.extras.site",
-            label: "Site tags (YTS, RARBG)",
-            description: "Log: denied by: extras_site",
-            keywords: ["extras_site", "yts", "rarbg", "denied"]
-        },
-        {
-            path: "ranking.custom_ranks.rips.dvdrip",
-            label: "DVDRip",
-            description: "Log: denied by: rips_dvdrip",
-            keywords: ["rips_dvdrip", "denied"]
-        },
-        {
-            path: "ranking.custom_ranks.rips.bdrip",
-            label: "BDRip",
-            description: "Log: denied by: rips_bdrip",
-            keywords: ["rips_bdrip", "denied"]
-        },
-        {
-            path: "ranking.options.remove_all_trash",
-            label: "Remove all trash",
-            description: "Enable trash heuristics and trash custom_ranks fetch rules",
-            keywords: ["trash", "remove_all_trash"]
-        },
-        {
-            path: "ranking.options.remove_ranks_under",
-            label: "Minimum rank threshold",
-            description: "Log: does not meet the minimum rank requirement",
-            keywords: ["remove_ranks_under", "minimum rank"]
-        }
-    ];
+const RANKING_DENY_KEYWORDS: {
+    path: string;
+    label: string;
+    description: string;
+    keywords: string[];
+}[] = [
+    {
+        path: "ranking.custom_ranks.audio.dolby_digital_plus",
+        label: "Dolby Digital Plus (DDP)",
+        description: "Disney+/Amazon WEB-DL audio. Log: denied by: audio_dolby_digital_plus",
+        keywords: ["audio_dolby_digital_plus", "ddp", "dd+", "denied"]
+    },
+    {
+        path: "ranking.custom_ranks.audio.dolby_digital",
+        label: "Dolby Digital (DD/AC3)",
+        description: "Log: denied by: audio_dolby_digital",
+        keywords: ["audio_dolby_digital", "ac3", "dd5", "denied"]
+    },
+    {
+        path: "ranking.custom_ranks.audio.atmos",
+        label: "Dolby Atmos",
+        description: "Log: denied by: audio_atmos",
+        keywords: ["audio_atmos", "denied"]
+    },
+    {
+        path: "ranking.custom_ranks.quality.remux",
+        label: "Remux",
+        description: "Log: denied by: quality_remux",
+        keywords: ["quality_remux", "denied"]
+    },
+    {
+        path: "ranking.custom_ranks.extras.dubbed",
+        label: "Dubbed / Dual / MULTi",
+        description: "Log: denied by: extras_dubbed",
+        keywords: ["extras_dubbed", "multi", "dual", "denied"]
+    },
+    {
+        path: "ranking.custom_ranks.extras.site",
+        label: "Site tags (YTS, RARBG)",
+        description: "Log: denied by: extras_site",
+        keywords: ["extras_site", "yts", "rarbg", "denied"]
+    },
+    {
+        path: "ranking.custom_ranks.rips.dvdrip",
+        label: "DVDRip",
+        description: "Log: denied by: rips_dvdrip",
+        keywords: ["rips_dvdrip", "denied"]
+    },
+    {
+        path: "ranking.custom_ranks.rips.bdrip",
+        label: "BDRip",
+        description: "Log: denied by: rips_bdrip",
+        keywords: ["rips_bdrip", "denied"]
+    },
+    {
+        path: "ranking.options.remove_all_trash",
+        label: "Remove all trash",
+        description: "Enable trash heuristics and trash custom_ranks fetch rules",
+        keywords: ["trash", "remove_all_trash"]
+    },
+    {
+        path: "ranking.options.remove_ranks_under",
+        label: "Minimum rank threshold",
+        description: "Log: does not meet the minimum rank requirement",
+        keywords: ["remove_ranks_under", "minimum rank"]
+    }
+];
 
 function humanizeKey(key: string): string {
     return key
@@ -122,10 +126,8 @@ function walkSchemaFields(
         const tabId = getTabIdForSettingsKey(topKey);
         if (!tabId) continue;
 
-        const title =
-            (typeof prop.title === "string" && prop.title) || humanizeKey(key);
-        const description =
-            (typeof prop.description === "string" && prop.description) || "";
+        const title = (typeof prop.title === "string" && prop.title) || humanizeKey(key);
+        const description = (typeof prop.description === "string" && prop.description) || "";
 
         out.push({
             id: `field:${path}`,
@@ -177,9 +179,7 @@ export function buildRankingShortcutEntries(): SettingsSearchEntry[] {
     }));
 }
 
-export function mergeSearchEntries(
-    ...groups: SettingsSearchEntry[][]
-): SettingsSearchEntry[] {
+export function mergeSearchEntries(...groups: SettingsSearchEntry[][]): SettingsSearchEntry[] {
     const byId = new Map<string, SettingsSearchEntry>();
     for (const group of groups) {
         for (const entry of group) {
@@ -283,7 +283,9 @@ export function highlightAndScrollToField(focusPath: string): boolean {
             ancestor.matches?.('fieldset[data-slot="field-set"][data-collapsed]') ||
             (ancestor.tagName === "FIELDSET" && ancestor.hasAttribute("data-collapsed"))
         ) {
-            const content = ancestor.querySelector<HTMLElement>(':scope > [data-slot="field-group"]');
+            const content = ancestor.querySelector<HTMLElement>(
+                ':scope > [data-slot="field-group"]'
+            );
             const legend = ancestor.querySelector<HTMLElement>(
                 ':scope > legend[data-slot="field-legend"]'
             );

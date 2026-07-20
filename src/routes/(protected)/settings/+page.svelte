@@ -386,14 +386,15 @@
 
                     {#if $page.data.activeTabId === "ranking"}
                         <div
-                            class="border-border/60 bg-muted/30 mb-4 rounded-lg border px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                            class="border-border/60 bg-muted/30 text-muted-foreground mb-4 rounded-lg border px-3 py-2.5 text-xs leading-relaxed">
                             <span class="text-foreground font-medium">How rejects map:</span>
                             DEBUG logs use
                             <code class="text-foreground/90">denied by: category_attribute</code>
                             (example:
                             <code class="text-foreground/90">audio_dolby_digital_plus</code>). Use
                             <kbd class="bg-background/80 rounded border px-1 py-0.5 text-[10px]"
-                                >Ctrl+K</kbd> and search
+                                >Ctrl+K</kbd>
+                            and search
                             <code class="text-foreground/90">ddp</code> to jump to that control.
                             Open a category, then set <span class="text-foreground">Fetch</span> /
                             <span class="text-foreground">Rank</span> per attribute.
