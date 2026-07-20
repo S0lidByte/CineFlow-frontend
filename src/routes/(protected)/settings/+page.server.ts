@@ -71,6 +71,24 @@ function setCachedSettingsSchema(cacheKey: string, schema: Record<string, unknow
     });
 }
 
+/** Remove library_profiles from filesystem schema defs so the dedicated tab owns that field. */
+function pruneLibraryProfilesFromSchema(schema: Record<string, unknown>): void {
+    if (!schema.$defs) return;
+    const defs = schema.$defs as Record<string, unknown>;
+    const fsModel = defs.FilesystemModel as Record<string, unknown> | undefined;
+    const fsProps = fsModel?.properties as Record<string, unknown> | undefined;
+    if (fsProps && fsProps.library_profiles !== undefined) {
+        delete fsProps.library_profiles;
+    }
+}
+
+function pruneLibraryProfilesFromValue(initialValue: Record<string, unknown>): void {
+    const fsVal = initialValue.filesystem as Record<string, unknown> | undefined;
+    if (fsVal && fsVal.library_profiles !== undefined) {
+        delete fsVal.library_profiles;
+    }
+}
+
 function buildSettingsUiSchema(properties: Record<string, unknown>, keys: string[]): UiSchemaRoot {
     const order = keys.filter((k) => properties[k] !== undefined);
     const ui: Record<string, unknown> = {
@@ -346,25 +364,8 @@ export const load: PageServerLoad = async ({
 
     // Hide library_profiles from the filesystem schema to prevent duplication with the dedicated tab
     // Pydantic separates nested models into a root `$defs` object and uses `$ref` pointers.
-    // The actual schema properties are in `schema.$defs.FilesystemModel.properties`.
-    if (schema.$defs) {
-        const defs = schema.$defs as Record<string, unknown>;
-        if (defs.FilesystemModel) {
-            const fsModel = defs.FilesystemModel as Record<string, unknown>;
-            if (fsModel.properties) {
-                const fsProps = fsModel.properties as Record<string, unknown>;
-                if (fsProps.library_profiles !== undefined) {
-                    delete fsProps.library_profiles;
-                }
-            }
-        }
-    }
-    if (initialValue && initialValue.filesystem) {
-        const fsVal = initialValue.filesystem as Record<string, unknown>;
-        if (fsVal.library_profiles !== undefined) {
-            delete fsVal.library_profiles;
-        }
-    }
+    pruneLibraryProfilesFromSchema(schema);
+    pruneLibraryProfilesFromValue(initialValue);
 
     const uiSchema = buildSettingsUiSchema(props, tab.keys) as unknown as UiSchemaRoot;
     setCachedSettingsSchema(schemaCacheKey, schema);
@@ -431,6 +432,7 @@ export const actions = {
         } else {
             perfCount("settings.schema.cache.miss", 1, { tab: tab.id });
             schema = await getSchemaForKeys(locals.backendUrl, locals.apiKey, paths, fetch);
+            pruneLibraryProfilesFromSchema(schema);
             setCachedSettingsSchema(schemaCacheKey, schema);
             perfCount("settings.schema.cache.set", 1, { tab: tab.id });
         }
@@ -475,21 +477,39 @@ export const actions = {
                 });
 
                 if (
-                    !currentRes.error &&
-                    currentRes.data &&
-                    (currentRes.data as Record<string, unknown>).filesystem
+                    currentRes.error ||
+                    !currentRes.data ||
+                    !(currentRes.data as Record<string, unknown>).filesystem
                 ) {
-                    const currentFs = (currentRes.data as Record<string, unknown>)
-                        .filesystem as Record<string, unknown>;
-                    if (currentFs.library_profiles !== undefined) {
-                        (payload.filesystem as Record<string, unknown>).library_profiles =
-                            currentFs.library_profiles;
-                    }
+                    logger.error("Failed to salvage library_profiles during filesystem save", {
+                        error: currentRes.error ?? "missing filesystem payload"
+                    });
+                    endPerfMark(mark, {
+                        tab: tab.id,
+                        valid: true,
+                        success: false
+                    });
+                    return fail(500, { form });
+                }
+
+                const currentFs = (currentRes.data as Record<string, unknown>).filesystem as Record<
+                    string,
+                    unknown
+                >;
+                if (currentFs.library_profiles !== undefined) {
+                    (payload.filesystem as Record<string, unknown>).library_profiles =
+                        currentFs.library_profiles;
                 }
             } catch (e) {
                 logger.error("Failed to salvage library_profiles during filesystem save", {
                     error: e
                 });
+                endPerfMark(mark, {
+                    tab: tab.id,
+                    valid: true,
+                    success: false
+                });
+                return fail(500, { form });
             }
         }
 

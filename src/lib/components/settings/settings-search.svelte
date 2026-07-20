@@ -15,9 +15,11 @@
 
     interface Props {
         open: boolean;
+        /** Prefer over direct goto so the parent can enforce unsaved-change guards. */
+        onNavigate?: (tabId: string) => void;
     }
 
-    let { open = $bindable(false) }: Props = $props();
+    let { open = $bindable(false), onNavigate }: Props = $props();
 
     let query = $state("");
 
@@ -34,7 +36,11 @@
     function selectTab(tabId: string): void {
         open = false;
         query = "";
-        goto(resolve(`/settings?tab=${tabId}`));
+        if (onNavigate) {
+            onNavigate(tabId);
+        } else {
+            goto(resolve(`/settings?tab=${tabId}`));
+        }
     }
 </script>
 

@@ -49,7 +49,8 @@
     let localProfiles = $state<Record<string, LibraryProfile>>(
         structuredClone(untrack(() => profiles))
     );
-    const initialJson = $derived(JSON.stringify(profiles));
+    /** Baseline used for dirty detection; updated after a successful save. */
+    let baselineJson = $state(JSON.stringify(untrack(() => profiles)));
 
     // Track which cards are expanded
     let expanded = $state<Record<string, boolean>>({});
@@ -69,7 +70,7 @@
     let isSaving = $state(false);
 
     // Dirty tracking
-    const isDirty = $derived(JSON.stringify(localProfiles) !== initialJson);
+    const isDirty = $derived(JSON.stringify(localProfiles) !== baselineJson);
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
     function profileKeys(): string[] {
@@ -173,6 +174,7 @@
             result.type === "success" ||
             (result.type === "failure" && (result.data as Record<string, unknown>)?.success)
         ) {
+            baselineJson = JSON.stringify(localProfiles);
             toast.success("Library profiles saved");
         } else {
             toast.error("Failed to save library profiles");
@@ -820,8 +822,11 @@
                         size="sm"
                         onclick={() => document.getElementById("save-form-submit")?.click()}
                         disabled={isSaving}>
-                        {#if isSaving}<Loader2 class="size-4 animate-spin" /> Saving...{:else}Save
-                            (Ctrl+S){/if}
+                        {#if isSaving}<Loader2 class="size-4 animate-spin" /> Saving...{:else}Save ({navigator?.platform?.includes(
+                                "Mac"
+                            )
+                                ? "⌘S"
+                                : "Ctrl+S"}){/if}
                     </Button>
                 </div>
             {/if}
