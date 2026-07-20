@@ -5,10 +5,13 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import PortraitCardSkeleton from "$lib/components/media/portrait-card-skeleton.svelte";
     import { SearchStore } from "$lib/services/search-store.svelte";
+    import { FilterStore } from "$lib/services/filter-store.svelte";
+    import FilterPopover from "$lib/components/filter-popover.svelte";
     import AnimatedToggle from "$lib/components/animated-toggle.svelte";
     import SearchIcon from "@lucide/svelte/icons/search";
     import Sparkles from "@lucide/svelte/icons/sparkles";
     import Info from "@lucide/svelte/icons/info";
+    import XIcon from "@lucide/svelte/icons/x";
     import { scale, fly } from "svelte/transition";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
@@ -16,6 +19,36 @@
     let { data } = $props();
 
     const searchStore = getContext<SearchStore>("searchStore");
+    const filterStore = getContext<FilterStore>("filterStore");
+
+    let filtersSupported = $derived(
+        searchStore.mediaType === "movie" ||
+            searchStore.mediaType === "tv" ||
+            searchStore.mediaType === "both"
+    );
+
+    function applyFilters() {
+        const mediaType =
+            searchStore.mediaType === "movie" || searchStore.mediaType === "tv"
+                ? searchStore.mediaType
+                : undefined;
+        const params = filterStore.buildParams(mediaType);
+        searchStore.setFilters(params, true);
+    }
+
+    function clearFilters() {
+        filterStore.reset();
+        searchStore.clearFilters();
+        searchStore.search();
+    }
+
+    function handleMediaTypeChange(value: "both" | "movie" | "tv" | "person" | "company") {
+        if (value === "person" || value === "company") {
+            filterStore.reset();
+            searchStore.clearFilters();
+        }
+        searchStore.setMediaType(value);
+    }
 
     let currentExampleIndex = $state(0);
     let currentHeroIndex = $state(0);
@@ -187,8 +220,8 @@
                     </div>
                 </div>
 
-                <!-- Desktop filter tabs -->
-                <div class="hidden md:block">
+                <!-- Desktop filter tabs + discovery filters -->
+                <div class="hidden items-center gap-2 md:flex">
                     <AnimatedToggle
                         options={[
                             { label: "All", value: "both" },
@@ -199,27 +232,50 @@
                         ]}
                         value={searchStore.mediaType}
                         onchange={(value) =>
-                            searchStore.setMediaType(
+                            handleMediaTypeChange(
                                 value as "both" | "movie" | "tv" | "person" | "company"
                             )} />
+                    {#if filtersSupported}
+                        <div class="bg-border mx-1 h-6 w-px"></div>
+                        <FilterPopover onApply={applyFilters} />
+                        {#if filterStore.hasActiveFilters}
+                            <Button variant="ghost" size="sm" onclick={clearFilters} class="gap-1">
+                                <XIcon class="size-4" />
+                                Clear
+                            </Button>
+                        {/if}
+                    {/if}
                 </div>
             </div>
 
             <!-- Mobile filter tabs - inline below header -->
-            <div class="-mx-1 block overflow-x-auto md:hidden">
-                <AnimatedToggle
-                    options={[
-                        { label: "All", value: "both" },
-                        { label: "Movies", value: "movie" },
-                        { label: "TV Shows", value: "tv" },
-                        { label: "People", value: "person" },
-                        { label: "Studios", value: "company" }
-                    ]}
-                    value={searchStore.mediaType}
-                    onchange={(value) =>
-                        searchStore.setMediaType(
-                            value as "both" | "movie" | "tv" | "person" | "company"
-                        )} />
+            <div class="flex flex-col gap-2 md:hidden">
+                <div class="-mx-1 overflow-x-auto">
+                    <AnimatedToggle
+                        options={[
+                            { label: "All", value: "both" },
+                            { label: "Movies", value: "movie" },
+                            { label: "TV Shows", value: "tv" },
+                            { label: "People", value: "person" },
+                            { label: "Studios", value: "company" }
+                        ]}
+                        value={searchStore.mediaType}
+                        onchange={(value) =>
+                            handleMediaTypeChange(
+                                value as "both" | "movie" | "tv" | "person" | "company"
+                            )} />
+                </div>
+                {#if filtersSupported}
+                    <div class="flex items-center gap-2">
+                        <FilterPopover onApply={applyFilters} />
+                        {#if filterStore.hasActiveFilters}
+                            <Button variant="ghost" size="sm" onclick={clearFilters} class="gap-1">
+                                <XIcon class="size-4" />
+                                Clear
+                            </Button>
+                        {/if}
+                    </div>
+                {/if}
             </div>
 
             <!-- Warnings -->

@@ -33,6 +33,7 @@
     import ItemReset from "$lib/components/media/riven/item-reset.svelte";
     import ItemRetry from "$lib/components/media/riven/item-retry.svelte";
     import ItemManualScrape from "$lib/components/media/riven/item-manual-scrape.svelte";
+    import ItemStreams from "$lib/components/media/riven/item-streams.svelte";
     import CollectionSheet from "$lib/components/media/collection-sheet.svelte";
     import LandscapeCard from "$lib/components/media/landscape-card.svelte";
     import StatusBadge from "$lib/components/media/status-badge.svelte";
@@ -845,6 +846,10 @@
                                 </Dialog.Root>
                             {/if}
                         </div>
+
+                        {#if data.riven?.id != null && playbackItemId != null}
+                            <ItemStreams itemId={playbackItemId} />
+                        {/if}
 
                         <!-- Metadata -->
                         <div
