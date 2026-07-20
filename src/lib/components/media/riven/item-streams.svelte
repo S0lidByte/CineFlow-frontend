@@ -8,6 +8,7 @@
     import Undo2 from "@lucide/svelte/icons/undo-2";
     import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
     import ChevronDown from "@lucide/svelte/icons/chevron-down";
+    import { SvelteSet } from "svelte/reactivity";
     import { createScopedLogger } from "$lib/logger";
 
     const logger = createScopedLogger("item-streams");
@@ -29,23 +30,34 @@
     let { itemId }: Props = $props();
 
     let loading = $state(true);
-    let actionId = $state<number | null>(null);
+    let inFlightIds = new SvelteSet<number>();
     let resetting = $state(false);
     let open = $state(false);
     let streams = $state<StreamRow[]>([]);
     let blacklisted = $state<StreamRow[]>([]);
+    let loadGeneration = 0;
 
     function asStreamRows(value: unknown): StreamRow[] {
         if (!Array.isArray(value)) return [];
         return value.filter((row): row is StreamRow => typeof row === "object" && row !== null);
     }
 
+    function beginAction(streamId: number) {
+        inFlightIds.add(streamId);
+    }
+
+    function endAction(streamId: number) {
+        inFlightIds.delete(streamId);
+    }
+
     async function loadStreams() {
+        const generation = ++loadGeneration;
         loading = true;
         try {
             const res = await providers.riven.GET("/api/v1/items/{item_id}/streams", {
                 params: { path: { item_id: itemId } }
             });
+            if (generation !== loadGeneration) return;
             if (res.error) {
                 logger.error("Failed to load streams", res.error);
                 toast.error("Failed to load streams");
@@ -56,10 +68,13 @@
             streams = asStreamRows(res.data?.streams);
             blacklisted = asStreamRows(res.data?.blacklisted_streams);
         } catch (e) {
+            if (generation !== loadGeneration) return;
             logger.error("Stream load error", e);
             toast.error("Failed to load streams");
         } finally {
-            loading = false;
+            if (generation === loadGeneration) {
+                loading = false;
+            }
         }
     }
 
@@ -70,7 +85,7 @@
     });
 
     async function blacklistStream(streamId: number) {
-        actionId = streamId;
+        beginAction(streamId);
         try {
             const res = await providers.riven.POST(
                 "/api/v1/items/{item_id}/streams/{stream_id}/blacklist",
@@ -84,13 +99,16 @@
             }
             toast.success("Stream blacklisted");
             await loadStreams();
+        } catch (e) {
+            logger.error("Blacklist stream error", e);
+            toast.error("Failed to blacklist stream");
         } finally {
-            actionId = null;
+            endAction(streamId);
         }
     }
 
     async function unblacklistStream(streamId: number) {
-        actionId = streamId;
+        beginAction(streamId);
         try {
             const res = await providers.riven.POST(
                 "/api/v1/items/{item_id}/streams/{stream_id}/unblacklist",
@@ -104,8 +122,11 @@
             }
             toast.success("Stream restored");
             await loadStreams();
+        } catch (e) {
+            logger.error("Unblacklist stream error", e);
+            toast.error("Failed to unblacklist stream");
         } finally {
-            actionId = null;
+            endAction(streamId);
         }
     }
 
@@ -121,6 +142,9 @@
             }
             toast.success("Stream blacklist cleared");
             await loadStreams();
+        } catch (e) {
+            logger.error("Reset streams error", e);
+            toast.error("Failed to reset streams");
         } finally {
             resetting = false;
         }
@@ -199,10 +223,10 @@
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            disabled={actionId === stream.id}
+                                            disabled={inFlightIds.has(stream.id)}
                                             onclick={() => blacklistStream(stream.id!)}
                                             class="text-red-300 hover:bg-red-500/10 hover:text-red-200">
-                                            {#if actionId === stream.id}
+                                            {#if inFlightIds.has(stream.id)}
                                                 <Loader2 class="size-3.5 animate-spin" />
                                             {:else}
                                                 <Ban class="size-3.5" />
@@ -241,10 +265,10 @@
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            disabled={actionId === stream.id}
+                                            disabled={inFlightIds.has(stream.id)}
                                             onclick={() => unblacklistStream(stream.id!)}
                                             class="text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200">
-                                            {#if actionId === stream.id}
+                                            {#if inFlightIds.has(stream.id)}
                                                 <Loader2 class="size-3.5 animate-spin" />
                                             {:else}
                                                 <Undo2 class="size-3.5" />
