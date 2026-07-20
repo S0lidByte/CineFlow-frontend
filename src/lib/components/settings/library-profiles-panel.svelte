@@ -1,5 +1,6 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
+    import { browser } from "$app/environment";
     import { Button } from "$lib/components/ui/button/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
@@ -71,6 +72,11 @@
 
     // Dirty tracking
     const isDirty = $derived(JSON.stringify(localProfiles) !== baselineJson);
+    const saveShortcutLabel = $derived(
+        browser && typeof navigator !== "undefined" && navigator.platform?.includes("Mac")
+            ? "⌘S"
+            : "Ctrl+S"
+    );
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
     function profileKeys(): string[] {
@@ -170,11 +176,17 @@
     // ─── Save ─────────────────────────────────────────────────────────────────
     function handleSaveResult(result: { type: string; data?: unknown }) {
         isSaving = false;
-        if (
-            result.type === "success" ||
-            (result.type === "failure" && (result.data as Record<string, unknown>)?.success)
-        ) {
-            baselineJson = JSON.stringify(localProfiles);
+        const payload = (result.data ?? {}) as {
+            success?: boolean;
+            profiles?: Record<string, LibraryProfile>;
+        };
+        if (result.type === "success" || (result.type === "failure" && payload.success)) {
+            if (payload.profiles && typeof payload.profiles === "object") {
+                localProfiles = structuredClone(payload.profiles);
+                baselineJson = JSON.stringify(payload.profiles);
+            } else {
+                baselineJson = JSON.stringify(localProfiles);
+            }
             toast.success("Library profiles saved");
         } else {
             toast.error("Failed to save library profiles");
@@ -822,11 +834,7 @@
                         size="sm"
                         onclick={() => document.getElementById("save-form-submit")?.click()}
                         disabled={isSaving}>
-                        {#if isSaving}<Loader2 class="size-4 animate-spin" /> Saving...{:else}Save ({navigator?.platform?.includes(
-                                "Mac"
-                            )
-                                ? "⌘S"
-                                : "Ctrl+S"}){/if}
+                        {#if isSaving}<Loader2 class="size-4 animate-spin" /> Saving...{:else}Save ({saveShortcutLabel}){/if}
                     </Button>
                 </div>
             {/if}

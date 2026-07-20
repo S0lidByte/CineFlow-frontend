@@ -476,10 +476,13 @@ export const actions = {
                     params: { path: { paths: "filesystem" } }
                 });
 
+                const isRecord = (value: unknown): value is Record<string, unknown> =>
+                    typeof value === "object" && value !== null && !Array.isArray(value);
+
                 if (
                     currentRes.error ||
-                    !currentRes.data ||
-                    !(currentRes.data as Record<string, unknown>).filesystem
+                    !isRecord(currentRes.data) ||
+                    !isRecord(currentRes.data.filesystem)
                 ) {
                     logger.error("Failed to salvage library_profiles during filesystem save", {
                         error: currentRes.error ?? "missing filesystem payload"
@@ -492,10 +495,7 @@ export const actions = {
                     return fail(500, { form });
                 }
 
-                const currentFs = (currentRes.data as Record<string, unknown>).filesystem as Record<
-                    string,
-                    unknown
-                >;
+                const currentFs = currentRes.data.filesystem;
                 if (currentFs.library_profiles !== undefined) {
                     (payload.filesystem as Record<string, unknown>).library_profiles =
                         currentFs.library_profiles;
