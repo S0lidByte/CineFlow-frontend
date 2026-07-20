@@ -227,8 +227,9 @@
         grid-template-columns: 1fr;
     }
 
-    :global(.settings-form [data-slot="field-group"]) {
-        display: grid;
+    :global(.settings-form [data-slot="field-group"]),
+    :global(.settings-form [data-layout="object-properties"]) {
+        display: grid !important;
         gap: 0.65rem;
         grid-template-columns: 1fr;
     }
@@ -239,7 +240,8 @@
             gap: 0.75rem;
         }
 
-        :global(.settings-form [data-slot="field-group"]) {
+        :global(.settings-form [data-slot="field-group"]),
+        :global(.settings-form [data-layout="object-properties"]) {
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 0.65rem;
         }
@@ -247,7 +249,12 @@
         /* Nested object / array fields span full width */
         :global(.settings-form [data-slot="field"]:has([data-slot="field"])),
         :global(.settings-form [data-slot="field-group"] > fieldset[data-slot="field-set"]),
-        :global(.settings-form [data-slot="field-group"] > [data-slot="field"]:has([data-slot="field"])) {
+        :global(.settings-form [data-layout="object-property"]:has(fieldset[data-slot="field-set"])),
+        :global(
+            .settings-form
+                [data-slot="field-group"]
+                > [data-slot="field"]:has([data-slot="field"])
+        ) {
             grid-column: 1 / -1;
         }
 
@@ -349,5 +356,36 @@
         transition:
             box-shadow 0.25s ease,
             border-color 0.25s ease;
+    }
+
+    /**
+     * Compact Ranking attribute objects: SJSF already uses
+     * object-property grids; force Fetch / Custom Rank / Rank onto one row.
+     */
+    @media (min-width: 900px) {
+        :global(
+            .settings-form
+                [data-layout="object-field"]
+                > [data-layout="object-properties"]
+                > [data-layout="object-property"]:has(
+                    [data-layout="object-field"]
+                        > [data-layout="object-properties"]
+                        > [data-layout="object-property"]:nth-child(3)
+                )
+        ) {
+            /* keep attribute wrappers full width inside category */
+            grid-column: 1 / -1;
+        }
+
+        :global(
+            .settings-form
+                [data-layout="object-field"]
+                > [data-layout="object-properties"]:has(> [data-layout="object-property"]:nth-child(3)):not(
+                    :has(> [data-layout="object-property"]:nth-child(4))
+                )
+        ) {
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(4.5rem, 0.7fr) !important;
+            gap: 0.5rem;
+        }
     }
 </style>
