@@ -430,17 +430,18 @@
                                     {:else}
                                         <RefreshCw class="mr-1.5 h-3.5 w-3.5" />
                                     {/if}
-                                    Retry all failed
+                                    Retry incomplete
                                 </Button>
                             {/snippet}
                         </AlertDialog.Trigger>
                         <AlertDialog.Content
                             class="border border-white/10 bg-zinc-950/95 backdrop-blur-2xl">
                             <AlertDialog.Header>
-                                <AlertDialog.Title>Retry all failed items?</AlertDialog.Title>
+                                <AlertDialog.Title>Retry incomplete items?</AlertDialog.Title>
                                 <AlertDialog.Description>
-                                    This queues every failed library item for another
-                                    scrape/download attempt. Selection-based Retry is unchanged.
+                                    This requeues movie/show items that are still in progress
+                                    (excludes Completed, Failed, Unreleased, and Paused).
+                                    Selection-based Retry is unchanged.
                                 </AlertDialog.Description>
                             </AlertDialog.Header>
                             <AlertDialog.Footer>
@@ -452,7 +453,7 @@
                                     {#if retryLibraryInProgress}
                                         <Loading2Circle class="mr-1 inline-block animate-spin" />
                                     {/if}
-                                    Retry all failed
+                                    Retry incomplete
                                 </AlertDialog.Action>
                             </AlertDialog.Footer>
                         </AlertDialog.Content>
