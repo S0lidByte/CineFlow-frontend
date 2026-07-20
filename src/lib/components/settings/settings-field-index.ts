@@ -276,6 +276,24 @@ export function highlightAndScrollToField(focusPath: string): boolean {
     const el = findFieldElement(focusPath);
     if (!el) return false;
 
+    // Expand any collapsed ancestor fieldsets so the target is visible.
+    let ancestor: HTMLElement | null = el;
+    while (ancestor) {
+        if (
+            ancestor.matches?.('fieldset[data-slot="field-set"][data-collapsed]') ||
+            (ancestor.tagName === "FIELDSET" && ancestor.hasAttribute("data-collapsed"))
+        ) {
+            const content = ancestor.querySelector<HTMLElement>(':scope > [data-slot="field-group"]');
+            const legend = ancestor.querySelector<HTMLElement>(
+                ':scope > legend[data-slot="field-legend"]'
+            );
+            ancestor.removeAttribute("data-collapsed");
+            if (content) content.hidden = false;
+            legend?.setAttribute("aria-expanded", "true");
+        }
+        ancestor = ancestor.parentElement;
+    }
+
     document
         .querySelectorAll(".settings-form [data-settings-focus='true']")
         .forEach((node) => node.removeAttribute("data-settings-focus"));
