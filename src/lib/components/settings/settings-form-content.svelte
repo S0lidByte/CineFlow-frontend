@@ -117,32 +117,67 @@
 
     :global(.settings-form) {
         display: grid;
-        gap: 0.875rem;
+        gap: 0.65rem;
+        grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+        :global(.settings-form) {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        /* Nested object / array fields span full width */
+        :global(.settings-form [data-slot="field"]:has([data-slot="field"])) {
+            grid-column: 1 / -1;
+        }
+
+        /* Root schema wrappers and long textareas also span full width */
+        :global(.settings-form > form > [data-slot="field"]) {
+            grid-column: 1 / -1;
+        }
+    }
+
+    /* Soften object legends into section dividers instead of model-name banners */
+    :global(.settings-form legend[data-slot="field-legend"]) {
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        margin-bottom: 0.4rem;
+        color: color-mix(in oklab, var(--color-foreground) 82%, transparent);
     }
 
     :global(.settings-form [data-slot="field"]) {
-        border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
-        border-radius: 0.625rem;
-        background: color-mix(in oklab, var(--color-card) 92%, transparent);
-        padding: 0.75rem 0.875rem;
+        border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+        border-radius: 0.5rem;
+        background: color-mix(in oklab, var(--color-card) 88%, transparent);
+        padding: 0.55rem 0.7rem;
+        min-width: 0;
+    }
+
+    /* Nested groups: lighter chrome so the page is not a wall of identical cards */
+    :global(.settings-form [data-slot="field"] [data-slot="field"]) {
+        background: color-mix(in oklab, var(--color-background) 55%, transparent);
+        border-color: color-mix(in oklab, var(--color-border) 55%, transparent);
     }
 
     :global(.settings-form [data-slot="field-label"]) {
         font-weight: 600;
+        font-size: 0.875rem;
         color: color-mix(in oklab, var(--color-foreground) 90%, transparent);
     }
 
     :global(.settings-form [data-slot="field-description"]) {
         color: var(--color-muted-foreground);
-        font-size: 0.78rem;
-        line-height: 1.4;
-        margin-top: 0.15rem;
+        font-size: 0.74rem;
+        line-height: 1.35;
+        margin-top: 0.1rem;
     }
 
     :global(.settings-form [data-slot="input"]),
     :global(.settings-form [data-slot="textarea"]),
     :global(.settings-form [data-slot="select-trigger"]) {
-        min-height: 2.2rem;
+        min-height: 2rem;
     }
 
     :global(.settings-form :focus-visible) {
@@ -153,5 +188,15 @@
     :global(.settings-form [data-slot="field-error"]) {
         font-size: 0.78rem;
         margin-top: 0.25rem;
+    }
+
+    :global(.settings-form [data-settings-focus="true"]) {
+        border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+        box-shadow:
+            0 0 0 2px color-mix(in oklab, var(--color-primary) 35%, transparent),
+            0 0 0 6px color-mix(in oklab, var(--color-primary) 12%, transparent);
+        transition:
+            box-shadow 0.25s ease,
+            border-color 0.25s ease;
     }
 </style>
