@@ -4,7 +4,6 @@
     import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
     import Loader2 from "@lucide/svelte/icons/loader-2";
-    import type { ScrapeSeasonRequest } from "$lib/types";
     import SeasonSelector, { type SeasonInfo } from "./season-selector.svelte";
     import { createScopedLogger } from "$lib/logger";
     import { type Snippet } from "svelte";
@@ -19,6 +18,7 @@
         seasons?: SeasonInfo[];
         buttonLabel?: string;
         externalId?: string; // TVDB or TMDB ID for scraping
+        episodeSelection?: boolean;
         variant?:
             | "ghost"
             | "default"
@@ -38,6 +38,7 @@
         seasons = [],
         buttonLabel = "Request",
         externalId,
+        episodeSelection = false,
         variant = "ghost",
         size = "sm",
         class: className = "",
@@ -57,6 +58,8 @@
      */
     // eslint-disable-next-line svelte/no-unnecessary-state-wrap -- $state() required because selectedSeasons is reassigned on dialog close
     let selectedSeasons = $state(new SvelteSet<number>());
+    // eslint-disable-next-line svelte/no-unnecessary-state-wrap -- $state() required because selectedEpisodes is reassigned on dialog close
+    let selectedEpisodes = $state(new SvelteSet<string>());
 
     const sortedSelectedSeasonNumbers = $derived.by(() =>
         Array.from(selectedSeasons)
@@ -64,15 +67,52 @@
             .sort((a, b) => a - b)
     );
 
-    const requestableSeasons = $derived.by(() =>
-        seasons
-            .filter((s) => s.status !== "Available")
-            .map((s) => s.season_number)
-            .filter((n) => Number.isInteger(n))
-            .sort((a, b) => a - b)
-    );
+    const selectedEpisodeNumbersBySeason = $derived.by(() => {
+        const bySeason: Record<string, number[]> = {};
 
-    const hasRequestableSeasons = $derived(requestableSeasons.length > 0);
+        for (const key of selectedEpisodes) {
+            const [seasonPart, episodePart] = key.split(":");
+            const seasonNumber = Number(seasonPart);
+            const episodeNumber = Number(episodePart);
+            if (!Number.isInteger(seasonNumber) || !Number.isInteger(episodeNumber)) continue;
+
+            const seasonKey = seasonNumber.toString();
+            bySeason[seasonKey] ??= [];
+            bySeason[seasonKey].push(episodeNumber);
+        }
+
+        for (const episodeNumbers of Object.values(bySeason)) {
+            episodeNumbers.sort((a, b) => a - b);
+        }
+
+        return bySeason;
+    });
+
+    const selectedEpisodeSeasonCount = $derived(Object.keys(selectedEpisodeNumbersBySeason).length);
+
+    const requestableSelectionCount = $derived.by(() => {
+        let count = 0;
+        for (const season of seasons) {
+            if (season.episodes?.length) {
+                if (episodeSelection) {
+                    count += season.episodes.filter(
+                        (episode) =>
+                            episode.status !== "Available" && episode.status !== "Unreleased"
+                    ).length;
+                } else if (season.status !== "Available" && season.status !== "Unreleased") {
+                    count += 1;
+                }
+            } else if (season.status !== "Available" && season.status !== "Unreleased") {
+                count += 1;
+            }
+        }
+        return count;
+    });
+
+    const hasRequestableSelections = $derived(requestableSelectionCount > 0);
+    const hasSelectedTvTargets = $derived(
+        sortedSelectedSeasonNumbers.length > 0 || selectedEpisodeSeasonCount > 0
+    );
 
     /**
      * Requests a media item via the Riven backend.
@@ -87,34 +127,30 @@
         const validIds = ids.filter((id): id is string => id !== null && id !== undefined);
 
         try {
-            if (
-                mediaType === "tv" &&
-                seasons.length > 0 &&
-                sortedSelectedSeasonNumbers.length > 0 &&
-                externalId
-            ) {
-                const body: ScrapeSeasonRequest = {
+            if (mediaType === "tv" && seasons.length > 0 && hasSelectedTvTargets && externalId) {
+                const body: {
+                    media_type: "tv";
+                    tvdb_id: string;
+                    season_numbers?: number[];
+                    episode_numbers?: Record<string, number[]>;
+                } = {
                     media_type: "tv",
-                    tvdb_id: externalId,
-                    season_numbers: sortedSelectedSeasonNumbers
+                    tvdb_id: externalId
                 };
 
-                // The /auto endpoint accepts season_numbers but the generated OpenAPI type
-                // for this path does not include season_numbers. Cast through unknown to avoid
-                // unsolvable generic constraint errors from openapi-fetch internals.
-                type PostFn = (
-                    path: string,
-                    options: { body: object }
-                ) => Promise<{ data?: unknown; error?: unknown; message?: string }>;
-                const response = await (providers.riven.POST as unknown as PostFn)(
-                    "/api/v1/scrape/auto",
-                    {
-                        body: body
-                    }
-                );
+                if (sortedSelectedSeasonNumbers.length > 0) {
+                    body.season_numbers = sortedSelectedSeasonNumbers;
+                }
 
-                if (response.data || response.message) {
-                    // adjust check based on actual response
+                if (selectedEpisodeSeasonCount > 0) {
+                    body.episode_numbers = selectedEpisodeNumbersBySeason;
+                }
+
+                const response = await providers.riven.POST("/api/v1/scrape/auto", {
+                    body
+                });
+
+                if (response.data?.message) {
                     toast.success("Media item requested successfully!");
                     open = false;
                 } else {
@@ -171,7 +207,13 @@
         </AlertDialog.Header>
 
         {#if mediaType === "tv" && seasons.length > 0}
-            <SeasonSelector {seasons} {open} bind:selectedSeasons class="my-4" />
+            <SeasonSelector
+                {seasons}
+                {open}
+                {episodeSelection}
+                bind:selectedSeasons
+                bind:selectedEpisodes
+                class="my-4 max-h-[50vh] overflow-y-auto pr-1" />
         {:else}
             <div class="text-muted-foreground py-4 text-sm">
                 This request will be approved automatically.
@@ -184,8 +226,8 @@
                 disabled={loading ||
                     (mediaType === "tv" &&
                         seasons.length > 0 &&
-                        hasRequestableSeasons &&
-                        sortedSelectedSeasonNumbers.length === 0)}
+                        hasRequestableSelections &&
+                        !hasSelectedTvTargets)}
                 onclick={async () => {
                     loading = true;
                     await addMediaItem(ids, mediaType);

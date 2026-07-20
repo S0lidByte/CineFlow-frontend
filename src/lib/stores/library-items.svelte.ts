@@ -1,5 +1,6 @@
 export class ItemStore {
     #selectedItems = $state<number[]>([]);
+    #scopeKey = $state<string | null>(null);
 
     get items() {
         return this.#selectedItems;
@@ -11,6 +12,23 @@ export class ItemStore {
 
     clear() {
         this.#selectedItems = [];
+    }
+
+    syncScope(scopeKey: string) {
+        if (this.#scopeKey === null) {
+            this.#scopeKey = scopeKey;
+            return;
+        }
+
+        if (this.#scopeKey !== scopeKey) {
+            this.clear();
+            this.#scopeKey = scopeKey;
+        }
+    }
+
+    resetScope() {
+        this.clear();
+        this.#scopeKey = null;
     }
 
     has(id: number): boolean {

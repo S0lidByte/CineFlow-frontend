@@ -26,6 +26,7 @@
     import { IsMobile } from "$lib/hooks/is-mobile.svelte";
     import PortraitCard from "$lib/components/media/portrait-card.svelte";
     import type { RivenEpisode } from "$lib/types/riven";
+    import type { SeasonInfo } from "$lib/components/media/riven/season-selector.svelte";
     import ItemRequest from "$lib/components/media/riven/item-request.svelte";
     import ItemDelete from "$lib/components/media/riven/item-delete.svelte";
     import ItemPause from "$lib/components/media/riven/item-pause.svelte";
@@ -68,6 +69,31 @@
         eidr: { name: "EIDR", url: "https://ui.eidr.org/view/content?id=" }
     };
     const getExternal = (key: string) => externalMeta[key.replace("_id", "")];
+
+    function toExternalUrl(value: string | null | undefined): string | null {
+        if (!value) return null;
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+
+        let candidate: string;
+        if (/^https?:\/\//i.test(trimmed)) {
+            candidate = trimmed;
+        } else if (/^\/\//.test(trimmed)) {
+            candidate = `https:${trimmed}`;
+        } else if (/^[a-z0-9.-]+\.[a-z]{2,}(?:\/.*)?$/i.test(trimmed)) {
+            // Accept plain domains like example.com/path and normalize to https
+            candidate = `https://${trimmed}`;
+        } else {
+            return null;
+        }
+
+        try {
+            const parsed = new URL(candidate);
+            return parsed.protocol === "http:" || parsed.protocol === "https:" ? candidate : null;
+        } catch {
+            return null;
+        }
+    }
 
     let showTrailerOverride = $state(false);
     const showTrailer = $derived(showTrailerOverride && data.mediaDetails?.details?.trailer);
@@ -206,6 +232,12 @@
     });
 
     let rivenId = $derived(data.riven?.id ?? data.mediaDetails?.details?.id);
+    let playbackItemId = $derived.by(() => {
+        if (rivenId === null || rivenId === undefined) return undefined;
+
+        const parsed = Number(rivenId);
+        return Number.isFinite(parsed) ? parsed : undefined;
+    });
 
     // For ratings, we need TMDB ID. For TV shows, check external_ids.tmdb first (in case URL has TVDB ID)
     let ratingsId = $derived(
@@ -249,22 +281,71 @@
         return () => controller.abort();
     });
 
-    const seasonData = $derived.by(() => {
+    const availableStates = new Set(["Completed", "Downloaded", "Symlinked"]);
+
+    function getAvailableStatus(state: string | null | undefined) {
+        if (state === "Unreleased") return "Unreleased";
+        return state && availableStates.has(state) ? "Available" : undefined;
+    }
+
+    function getRivenEpisodeNumber(episode: RivenEpisode): number | null {
+        const candidate = episode.episode_number ?? episode.number;
+        if (candidate === null || candidate === undefined) return null;
+
+        const parsed = Number(candidate);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    const seasonData = $derived.by((): SeasonInfo[] => {
         if (data.mediaDetails?.type !== "tv" || !data.mediaDetails?.details?.seasons) return [];
         const details = data.mediaDetails.details as ParsedShowDetails;
-        return details.seasons.map((s) => ({
-            id: s.id,
-            season_number: s.number ?? 0,
-            episode_count:
-                details.episodes?.filter((ep) => ep.seasonNumber === s.number).length ?? 0,
-            name: `Season ${s.number}`,
-            status:
-                data.riven?.seasons?.find((rs) => rs.season_number === s.number)?.state ===
-                "Completed"
-                    ? "Available"
-                    : undefined
-        }));
+        return details.seasons.map((s) => {
+            const seasonNumber = s.number ?? 0;
+            const rivenSeason = data.riven?.seasons?.find(
+                (rs) => rs.season_number === seasonNumber
+            );
+            const episodes =
+                details.episodes
+                    ?.filter((ep) => ep.seasonNumber === seasonNumber && ep.number)
+                    .map((episode) => {
+                        const rivenEpisode = rivenSeason?.episodes?.find(
+                            (candidate) => getRivenEpisodeNumber(candidate) === episode.number
+                        );
+
+                        return {
+                            id: episode.id,
+                            episode_number: episode.number ?? 0,
+                            title: episode.name || `Episode ${episode.number}`,
+                            status: getAvailableStatus(rivenEpisode?.state)
+                        };
+                    }) ?? [];
+
+            const hasRequestableEpisodes = episodes.some(
+                (episode) => episode.status !== "Available" && episode.status !== "Unreleased"
+            );
+
+            return {
+                id: s.id,
+                season_number: seasonNumber,
+                episode_count: episodes.length,
+                name: `Season ${seasonNumber}`,
+                status: hasRequestableEpisodes ? undefined : getAvailableStatus(rivenSeason?.state),
+                episodes
+            };
+        });
     });
+
+    const hasRequestableSeasonData = $derived.by(() =>
+        seasonData.some((season) => {
+            if (season.episodes?.length) {
+                return season.episodes.some(
+                    (episode) => episode.status !== "Available" && episode.status !== "Unreleased"
+                );
+            }
+
+            return season.status !== "Available" && season.status !== "Unreleased";
+        })
+    );
 
     const formatCurrency = (n: number) =>
         new Intl.NumberFormat("en-US", {
@@ -669,7 +750,7 @@
                                     Retry
                                 </ItemRetry>
 
-                                {#if data.mediaDetails?.type === "tv" && seasonData.some((s) => s.status !== "Available")}
+                                {#if data.mediaDetails?.type === "tv" && hasRequestableSeasonData}
                                     <ItemRequest
                                         size="default"
                                         variant="secondary"
@@ -679,6 +760,7 @@
                                         mediaType={data.mediaDetails?.type}
                                         externalId={data.mediaDetails?.details?.id?.toString() ??
                                             ""}
+                                        episodeSelection={true}
                                         seasons={seasonData}>
                                         <Download class="mr-1.5 h-4 w-4" />
                                         Request More
@@ -803,17 +885,33 @@
                                     easing: cubicOut
                                 }}>
                                 {#each ratingsData.scores as score (score.name)}
-                                    <a
-                                        href={resolve(score.url as unknown as "/")}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 transition-colors">
-                                        {#if score.image}<img
-                                                src="/rating-logos/{score.image}"
-                                                alt={score.name}
-                                                class="h-6 w-6 object-contain" />{/if}
-                                        <span class="text-base font-semibold">{score.score}</span>
-                                    </a>
+                                    {@const scoreUrl = toExternalUrl(score.url)}
+                                    {#if browser && scoreUrl}
+                                        <!-- eslint-disable svelte/no-navigation-without-resolve -->
+                                        <a
+                                            href={scoreUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 transition-colors">
+                                            {#if score.image}<img
+                                                    src="/rating-logos/{score.image}"
+                                                    alt={score.name}
+                                                    class="h-6 w-6 object-contain" />{/if}
+                                            <span class="text-base font-semibold"
+                                                >{score.score}</span>
+                                        </a>
+                                        <!-- eslint-enable svelte/no-navigation-without-resolve -->
+                                    {:else}
+                                        <div
+                                            class="text-muted-foreground inline-flex items-center gap-2">
+                                            {#if score.image}<img
+                                                    src="/rating-logos/{score.image}"
+                                                    alt={score.name}
+                                                    class="h-6 w-6 object-contain" />{/if}
+                                            <span class="text-base font-semibold"
+                                                >{score.score}</span>
+                                        </div>
+                                    {/if}
                                 {/each}
                             </div>
                         {:else if ratingsLoading}
@@ -1125,15 +1223,19 @@
                                             >Links</span>
                                         <div class="flex flex-wrap gap-2">
                                             {#if data.mediaDetails?.details.homepage}
-                                                <a
-                                                    href={resolve(
-                                                        data.mediaDetails.details
-                                                            .homepage as unknown as "/"
-                                                    )}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    class="text-foreground rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/10"
-                                                    >Website</a>
+                                                {@const homepageUrl = toExternalUrl(
+                                                    data.mediaDetails.details.homepage
+                                                )}
+                                                {#if browser && homepageUrl}
+                                                    <!-- eslint-disable svelte/no-navigation-without-resolve -->
+                                                    <a
+                                                        href={homepageUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="text-foreground rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/10"
+                                                        >Website</a>
+                                                    <!-- eslint-enable svelte/no-navigation-without-resolve -->
+                                                {/if}
                                             {/if}
                                             {#if data.mediaDetails?.details.imdb_id}
                                                 <a
@@ -1148,18 +1250,29 @@
                                             {#if data.mediaDetails?.details.external_ids}
                                                 {@const validLinks = Object.entries(
                                                     data.mediaDetails.details.external_ids
-                                                ).filter(
-                                                    ([key, value]) => value && getExternal(key)
-                                                )}
-                                                {#each validLinks as [key, value] (key)}
+                                                )
+                                                    .map(([key, value]) => {
+                                                        const external = getExternal(key);
+                                                        const href = external
+                                                            ? toExternalUrl(
+                                                                  `${external.url}${value}`
+                                                              )
+                                                            : null;
+
+                                                        return external && value && href
+                                                            ? { key, label: external.name, href }
+                                                            : null;
+                                                    })
+                                                    .filter((entry) => entry !== null)}
+                                                {#each validLinks as link (link.key)}
+                                                    <!-- eslint-disable svelte/no-navigation-without-resolve -->
                                                     <a
-                                                        href={resolve(
-                                                            `${getExternal(key).url}${value}` as unknown as "/"
-                                                        )}
+                                                        href={link.href}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         class="text-foreground rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/10"
-                                                        >{getExternal(key).name}</a>
+                                                        >{link.label}</a>
+                                                    <!-- eslint-enable svelte/no-navigation-without-resolve -->
                                                 {/each}
                                             {/if}
                                         </div>
@@ -1358,8 +1471,8 @@
                 <Dialog.Description>Playing {data.mediaDetails?.details.title}</Dialog.Description>
             </Dialog.Header>
             <div class="aspect-video w-full">
-                {#if showVideoPlayer && rivenId}
-                    <VideoPlayer itemId={rivenId} class="h-full w-full" />
+                {#if showVideoPlayer && playbackItemId !== undefined}
+                    <VideoPlayer itemId={playbackItemId} class="h-full w-full" />
                 {/if}
             </div>
         </Dialog.Content>

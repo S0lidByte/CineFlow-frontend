@@ -12,12 +12,19 @@
     import { Input } from "$lib/components/ui/input/index.js";
 
     import ListItem from "$lib/components/list-item.svelte";
-    import { itemsSearchSchema, typeOptions, stateOptions } from "$lib/schemas/items";
+    import {
+        itemsSearchSchema,
+        typeOptions,
+        stateOptions,
+        sortOptions,
+        type ItemsSearchSchema
+    } from "$lib/schemas/items";
     import Trash from "@lucide/svelte/icons/trash";
     import Search from "@lucide/svelte/icons/search";
     import X from "@lucide/svelte/icons/x";
     import { Button } from "$lib/components/ui/button/index.js";
     import ListChecks from "@lucide/svelte/icons/list-checks";
+    import ArrowUpDown from "@lucide/svelte/icons/arrow-up-down";
     import * as Select from "$lib/components/ui/select/index.js";
     import { ItemStore } from "$lib/stores/library-items.svelte";
     import { reset_items, retry_items, remove_items } from "./library.remote";
@@ -50,6 +57,194 @@
 
     const SEARCH_DEBOUNCE_MS = 300;
     const FILTER_DEBOUNCE_MS = 180;
+    const DEFAULT_LIMIT = 24;
+    const ALL_STATE = "All";
+    const DEFAULT_TYPES: ItemsSearchSchema["type"] = ["movie", "show"];
+    const DEFAULT_STATES: ItemsSearchSchema["states"] = [ALL_STATE];
+    const DEFAULT_SORT: ItemsSearchSchema["sort"] = ["date_desc"];
+
+    const sortLabelMap: Record<ItemsSearchSchema["sort"][number], string> = {
+        date_desc: "Date ↓",
+        date_asc: "Date ↑",
+        title_asc: "Title A-Z",
+        title_desc: "Title Z-A"
+    };
+
+    function stableUnique(values: string[]): string[] {
+        return [...new Set(values)];
+    }
+
+    function normalizeTypeSelection(values: string[] | undefined): ItemsSearchSchema["type"] {
+        const allowed = new Set(Object.keys(typeOptions));
+        const normalized = stableUnique((values ?? []).filter((value) => allowed.has(value)));
+
+        return normalized.length > 0
+            ? (normalized as ItemsSearchSchema["type"])
+            : [...DEFAULT_TYPES];
+    }
+
+    function normalizeSortSelection(values: string[] | undefined): ItemsSearchSchema["sort"] {
+        const allowed = new Set(Object.keys(sortOptions));
+        const normalized = stableUnique((values ?? []).filter((value) => allowed.has(value)));
+        const selected = normalized[0];
+
+        if (!selected) {
+            return [...DEFAULT_SORT];
+        }
+
+        return [selected as ItemsSearchSchema["sort"][number]];
+    }
+
+    function normalizeStateSelection(
+        values: string[] | undefined,
+        previousValues: string[] | undefined
+    ): ItemsSearchSchema["states"] {
+        const allowed = new Set(Object.keys(stateOptions));
+        const previous = previousValues ?? DEFAULT_STATES;
+        const normalized = stableUnique((values ?? []).filter((value) => allowed.has(value)));
+
+        if (normalized.length === 0) {
+            return [...DEFAULT_STATES];
+        }
+
+        if (normalized.includes(ALL_STATE) && normalized.length > 1) {
+            // All was already active and user selected specific state(s): remove All.
+            if (previous.includes(ALL_STATE)) {
+                return normalized.filter(
+                    (value) => value !== ALL_STATE
+                ) as ItemsSearchSchema["states"];
+            }
+
+            // Specific states were active and user selected All: All becomes exclusive.
+            return [...DEFAULT_STATES];
+        }
+
+        return normalized as ItemsSearchSchema["states"];
+    }
+
+    function normalizeFilters() {
+        const previousStates = $formData.states;
+        $formData.type = normalizeTypeSelection($formData.type);
+        $formData.states = normalizeStateSelection($formData.states, previousStates);
+        $formData.sort = normalizeSortSelection($formData.sort);
+    }
+
+    function toDisplayLabel(value: string): string {
+        if (!value) return value;
+        const withSpaces = value.replace(/([A-Z])/g, " $1").trim();
+        return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+    }
+
+    function formatMultiSelectSummary(
+        values: string[] | undefined,
+        placeholder: string,
+        defaultValues?: readonly string[]
+    ): string {
+        if (!values || values.length === 0 || sameStringArray(values, defaultValues)) {
+            return placeholder;
+        }
+
+        return values.map((value) => toDisplayLabel(value)).join(", ");
+    }
+
+    function sameStringArray(
+        a: readonly string[] | undefined,
+        b: readonly string[] | undefined
+    ): boolean {
+        const sortedA = [...(a ?? [])].sort();
+        const sortedB = [...(b ?? [])].sort();
+
+        if (sortedA.length !== sortedB.length) {
+            return false;
+        }
+
+        return sortedA.every((value, index) => value === sortedB[index]);
+    }
+
+    function buildQueryUrl(resetPage: boolean): URL {
+        const url = new URL(page.url);
+
+        if ($formData.search?.trim()) {
+            url.searchParams.set("search", $formData.search.trim());
+        } else {
+            url.searchParams.delete("search");
+        }
+
+        url.searchParams.delete("type");
+        if (!sameStringArray($formData.type, DEFAULT_TYPES)) {
+            $formData.type?.forEach((value) => {
+                url.searchParams.append("type", value);
+            });
+        }
+
+        url.searchParams.delete("states");
+        if (!sameStringArray($formData.states, DEFAULT_STATES)) {
+            $formData.states?.forEach((value) => {
+                url.searchParams.append("states", value);
+            });
+        }
+
+        url.searchParams.delete("sort");
+        if (!sameStringArray($formData.sort, DEFAULT_SORT)) {
+            $formData.sort?.forEach((value) => {
+                url.searchParams.append("sort", value);
+            });
+        }
+
+        if (resetPage) {
+            $formData.page = 1;
+        }
+
+        if (($formData.page ?? 1) > 1) {
+            url.searchParams.set("page", String($formData.page));
+        } else {
+            url.searchParams.delete("page");
+        }
+
+        if (($formData.limit ?? DEFAULT_LIMIT) !== DEFAULT_LIMIT) {
+            url.searchParams.set("limit", String($formData.limit));
+        } else {
+            url.searchParams.delete("limit");
+        }
+
+        return url;
+    }
+
+    function getSelectionScopeKey(): string {
+        const search = ($formData.search ?? "").trim().toLowerCase();
+        const type = [...($formData.type ?? DEFAULT_TYPES)].sort().join(",");
+        const states = [...($formData.states ?? DEFAULT_STATES)].sort().join(",");
+        const sort = [...($formData.sort ?? DEFAULT_SORT)].sort().join(",");
+        const pageNumber = $formData.page ?? 1;
+        const limitValue = $formData.limit ?? DEFAULT_LIMIT;
+
+        return `${search}|${type}|${states}|${sort}|${pageNumber}|${limitValue}`;
+    }
+
+    const selectionScopeKey = $derived.by(() => getSelectionScopeKey());
+    const currentSortLabel = $derived.by(() => {
+        const currentSort = ($formData.sort?.[0] ??
+            "date_desc") as ItemsSearchSchema["sort"][number];
+        return sortLabelMap[currentSort] ?? sortLabelMap.date_desc;
+    });
+    const activeTypeFilters = $derived.by(() =>
+        sameStringArray($formData.type, DEFAULT_TYPES) ? [] : ($formData.type ?? [])
+    );
+    const activeStateFilters = $derived.by(() =>
+        ($formData.states ?? []).filter((value) => value !== ALL_STATE)
+    );
+    const hasCustomSort = $derived.by(() => !sameStringArray($formData.sort, DEFAULT_SORT));
+    const hasAnyActiveFilters = $derived.by(
+        () =>
+            Boolean($formData.search?.trim()) ||
+            activeTypeFilters.length > 0 ||
+            activeStateFilters.length > 0 ||
+            hasCustomSort
+    );
+
+    $effect(() => {
+        itemsStore.syncScope(selectionScopeKey);
+    });
 
     async function refreshLibraryData(action: string) {
         perfCount("library.refresh", 1, { action });
@@ -57,34 +252,17 @@
     }
 
     async function search(reason: "text" | "filters" | "clear" = "text") {
+        normalizeFilters();
+
         const mark = startPerfMark("library.search.navigate", {
             reason,
             hasSearch: Boolean($formData.search),
             typeCount: $formData.type?.length ?? 0,
-            stateCount: $formData.states?.length ?? 0
+            stateCount: $formData.states?.length ?? 0,
+            sortCount: $formData.sort?.length ?? 0
         });
 
-        const url = new URL(page.url);
-
-        if ($formData.search) {
-            url.searchParams.set("search", $formData.search);
-        } else {
-            url.searchParams.delete("search");
-        }
-
-        url.searchParams.delete("type");
-        if ($formData.type?.length) {
-            $formData.type.forEach((t) => url.searchParams.append("type", t));
-        }
-
-        url.searchParams.delete("states");
-        if ($formData.states?.length) {
-            $formData.states.forEach((s) => url.searchParams.append("states", s));
-        }
-
-        // Reset to page 1 on search/filter change
-        url.searchParams.set("page", "1");
-        $formData.page = 1;
+        const url = buildQueryUrl(true);
 
         await goto(resolve((url.pathname + url.search) as unknown as "/"), {
             keepFocus: true,
@@ -97,8 +275,70 @@
             reason,
             hasSearch: Boolean($formData.search),
             typeCount: $formData.type?.length ?? 0,
-            stateCount: $formData.states?.length ?? 0
+            stateCount: $formData.states?.length ?? 0,
+            sortCount: $formData.sort?.length ?? 0
         });
+    }
+
+    async function submitPagination() {
+        normalizeFilters();
+        const url = buildQueryUrl(false);
+
+        await goto(resolve((url.pathname + url.search) as unknown as "/"), {
+            keepFocus: true,
+            noScroll: true,
+            replaceState: true,
+            invalidate: [(target) => target.pathname === page.url.pathname]
+        });
+    }
+
+    function handleTypeChange(values: string[] | undefined) {
+        $formData.type = normalizeTypeSelection(values);
+        scheduleFilterSearch();
+    }
+
+    function handleStateChange(values: string[] | undefined) {
+        const previousStates = $formData.states;
+        $formData.states = normalizeStateSelection(values, previousStates);
+        scheduleFilterSearch();
+    }
+
+    function handleSortChange(value: string) {
+        $formData.sort = normalizeSortSelection(value ? [value] : undefined);
+        scheduleFilterSearch();
+    }
+
+    async function clearAllFilters() {
+        $formData.search = undefined;
+        $formData.type = [...DEFAULT_TYPES];
+        $formData.states = [...DEFAULT_STATES];
+        $formData.sort = [...DEFAULT_SORT];
+        $formData.page = 1;
+        itemsStore.clear();
+        itemsStore.resetScope();
+        await search("clear");
+    }
+
+    async function clearSortFilter() {
+        $formData.sort = [...DEFAULT_SORT];
+        await search("filters");
+    }
+
+    async function removeSearchFilter() {
+        $formData.search = undefined;
+        await search("filters");
+    }
+
+    async function removeTypeFilter(value: ItemsSearchSchema["type"][number]) {
+        const next = ($formData.type ?? []).filter((entry) => entry !== value);
+        $formData.type = normalizeTypeSelection(next);
+        await search("filters");
+    }
+
+    async function removeStateFilter(value: ItemsSearchSchema["states"][number]) {
+        const next = ($formData.states ?? []).filter((entry) => entry !== value);
+        $formData.states = normalizeStateSelection(next, $formData.states);
+        await search("filters");
     }
 
     function scheduleFilterSearch() {
@@ -183,19 +423,22 @@
                             <Select.Root
                                 type="multiple"
                                 bind:value={$formData.type}
-                                onValueChange={async () => {
-                                    await tick();
-                                    scheduleFilterSearch();
-                                }}
+                                onValueChange={handleTypeChange}
                                 name={props.name}>
                                 <Select.Trigger
                                     {...props}
                                     class="h-9 border-0 bg-transparent text-zinc-400 hover:bg-white/5 data-[state=open]:bg-white/10 data-[value]:text-white">
-                                    {$formData.type?.length ? $formData.type.join(", ") : "Type"}
+                                    {formatMultiSelectSummary(
+                                        $formData.type,
+                                        "Type",
+                                        DEFAULT_TYPES
+                                    )}
                                 </Select.Trigger>
                                 <Select.Content class="border-zinc-800 bg-zinc-900">
                                     {#each Object.keys(typeOptions) as option (option)}
-                                        <Select.Item value={option} label={option} />
+                                        <Select.Item
+                                            value={option}
+                                            label={toDisplayLabel(option)} />
                                     {/each}
                                 </Select.Content>
                             </Select.Root>
@@ -209,21 +452,46 @@
                             <Select.Root
                                 type="multiple"
                                 bind:value={$formData.states}
-                                onValueChange={async () => {
-                                    await tick();
-                                    scheduleFilterSearch();
-                                }}
+                                onValueChange={handleStateChange}
                                 name={props.name}>
                                 <Select.Trigger
                                     {...props}
                                     class="h-9 border-0 bg-transparent text-zinc-400 hover:bg-white/5 data-[state=open]:bg-white/10 data-[value]:text-white">
-                                    {$formData.states?.length
-                                        ? $formData.states.join(", ")
-                                        : "State"}
+                                    {formatMultiSelectSummary(
+                                        $formData.states,
+                                        "State",
+                                        DEFAULT_STATES
+                                    )}
                                 </Select.Trigger>
                                 <Select.Content class="border-zinc-800 bg-zinc-900">
                                     {#each Object.keys(stateOptions) as option (option)}
-                                        <Select.Item value={option} label={option} />
+                                        <Select.Item
+                                            value={option}
+                                            label={toDisplayLabel(option)} />
+                                    {/each}
+                                </Select.Content>
+                            </Select.Root>
+                        {/snippet}
+                    </Form.Control>
+                </Form.Field>
+
+                <Form.Field {form} name="sort" class="min-w-[140px] space-y-0">
+                    <Form.Control>
+                        {#snippet children({ props })}
+                            <Select.Root
+                                type="single"
+                                value={$formData.sort?.[0] ?? DEFAULT_SORT[0]}
+                                onValueChange={handleSortChange}
+                                name={props.name}>
+                                <Select.Trigger
+                                    {...props}
+                                    class="h-9 border-0 bg-transparent text-zinc-400 hover:bg-white/5 data-[state=open]:bg-white/10 data-[value]:text-white">
+                                    <ArrowUpDown class="h-3.5 w-3.5" />
+                                    <span>{currentSortLabel}</span>
+                                </Select.Trigger>
+                                <Select.Content class="border-zinc-800 bg-zinc-900">
+                                    {#each Object.entries(sortLabelMap) as [value, label] (value)}
+                                        <Select.Item {value} {label}>{label}</Select.Item>
                                     {/each}
                                 </Select.Content>
                             </Select.Root>
@@ -235,6 +503,63 @@
                 <input type="hidden" name="limit" value={$formData.limit} />
             </form>
         </header>
+
+        {#if hasAnyActiveFilters}
+            <div class="-mt-4 flex flex-wrap items-center gap-2">
+                {#if $formData.search?.trim()}
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onclick={removeSearchFilter}
+                        class="h-8 gap-1 border border-white/10 bg-zinc-900/60 text-xs hover:bg-white/10">
+                        Search: {$formData.search.trim()}
+                        <X class="h-3 w-3" />
+                    </Button>
+                {/if}
+
+                {#each activeTypeFilters as type (type)}
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onclick={() => removeTypeFilter(type as ItemsSearchSchema["type"][number])}
+                        class="h-8 gap-1 border border-white/10 bg-zinc-900/60 text-xs hover:bg-white/10">
+                        Type: {toDisplayLabel(type)}
+                        <X class="h-3 w-3" />
+                    </Button>
+                {/each}
+
+                {#each activeStateFilters as state (state)}
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onclick={() =>
+                            removeStateFilter(state as ItemsSearchSchema["states"][number])}
+                        class="h-8 gap-1 border border-white/10 bg-zinc-900/60 text-xs hover:bg-white/10">
+                        State: {toDisplayLabel(state)}
+                        <X class="h-3 w-3" />
+                    </Button>
+                {/each}
+
+                {#if hasCustomSort}
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onclick={clearSortFilter}
+                        class="h-8 gap-1 border border-white/10 bg-zinc-900/60 text-xs hover:bg-white/10">
+                        Sort: {currentSortLabel}
+                        <X class="h-3 w-3" />
+                    </Button>
+                {/if}
+
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onclick={clearAllFilters}
+                    class="h-8 text-xs text-zinc-300 hover:bg-white/10 hover:text-white">
+                    Clear all
+                </Button>
+            </div>
+        {/if}
 
         <!-- Content Grid -->
         {#if data.totalItems > 0}
@@ -267,7 +592,7 @@
                                 <Pagination.PrevButton
                                     onclick={async () => {
                                         await tick();
-                                        formElement.requestSubmit();
+                                        await submitPagination();
                                     }}
                                     class="border-white/10 hover:bg-white/10" />
                             </Pagination.Item>
@@ -281,7 +606,7 @@
                                             isActive={currentPage === page.value}
                                             onclick={async () => {
                                                 await tick();
-                                                formElement.requestSubmit();
+                                                await submitPagination();
                                             }}
                                             class="data-[selected]:bg-primary data-[selected]:text-primary-foreground border-transparent hover:bg-white/10">
                                             {page.value}
@@ -293,7 +618,7 @@
                                 <Pagination.NextButton
                                     onclick={async () => {
                                         await tick();
-                                        formElement.requestSubmit();
+                                        await submitPagination();
                                     }}
                                     class="border-white/10 hover:bg-white/10" />
                             </Pagination.Item>
@@ -317,7 +642,7 @@
                 </div>
                 <Button
                     variant="outline"
-                    onclick={() => goto(resolve("/library"), { keepFocus: true, noScroll: true })}
+                    onclick={clearAllFilters}
                     class="border-white/10 hover:bg-white/5">
                     Clear all filters
                 </Button>
