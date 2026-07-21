@@ -7,6 +7,7 @@
      */
     import type { ComponentProps } from "@sjsf/form";
 
-    // Accept SJSF props; intentionally render nothing.
-    let { children: _children, config: _config }: ComponentProps["submitButton"] = $props();
+    // Accept SJSF props for theme contract; intentionally unused (no UI).
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- theme contract
+    const props: ComponentProps["submitButton"] = $props();
 </script>
