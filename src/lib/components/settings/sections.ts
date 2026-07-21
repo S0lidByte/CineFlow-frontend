@@ -26,7 +26,7 @@ export interface SectionTab {
     custom?: boolean;
 }
 
-/** Tab groupings: General, Filesystem, Library Updaters, Downloaders, Content, Scraping, Infra */
+/** Tab groupings: General, Filesystem, Library Updaters, Downloaders, Content, Scraping, Ranking, Infra */
 export const SETTINGS_TABS: SectionTab[] = [
     {
         id: "general",
@@ -40,6 +40,7 @@ export const SETTINGS_TABS: SectionTab[] = [
             "enable_network_tracing",
             "enable_stream_tracing",
             "retry_interval",
+            "retry_library_batch_size",
             "tracemalloc"
         ]
     },
@@ -85,8 +86,16 @@ export const SETTINGS_TABS: SectionTab[] = [
         id: "scraping",
         label: "Scraping",
         icon: "scan-search",
-        description: "Scraper sources, indexers, ranking rules, and torrent filtering options.",
-        keys: ["scraping", "ranking", "indexer"]
+        description: "Scraper sources, indexers, and scrape scheduling options.",
+        keys: ["scraping", "indexer"]
+    },
+    {
+        id: "ranking",
+        label: "Ranking",
+        icon: "list-ordered",
+        description:
+            "RTN quality filters and ranks. Log rejects map to denied by: <category>_<attribute> (e.g. audio_dolby_digital_plus).",
+        keys: ["ranking"]
     },
     {
         id: "infra",
@@ -99,6 +108,12 @@ export const SETTINGS_TABS: SectionTab[] = [
 ];
 
 export const DEFAULT_TAB_ID: SectionTabId = SETTINGS_TABS[0].id;
+
+/** Map a top-level AppModel key to its settings tab id. */
+export function getTabIdForSettingsKey(key: string): SectionTabId | undefined {
+    const tab = SETTINGS_TABS.find((t) => t.keys.includes(key));
+    return tab?.id;
+}
 
 export function getTabById(id: SectionTabId): SectionTab | undefined {
     return SETTINGS_TABS.find((t) => t.id === id);

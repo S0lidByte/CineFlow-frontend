@@ -11,6 +11,13 @@ import {
     getTabById,
     SETTINGS_TABS
 } from "$lib/components/settings/sections";
+import {
+    buildFieldIndexFromSchema,
+    buildRankingShortcutEntries,
+    buildSectionSearchEntries,
+    mergeSearchEntries,
+    type SettingsSearchEntry
+} from "$lib/components/settings/settings-field-index";
 import { perfCount, startPerfMark, endPerfMark } from "$lib/perf";
 import { createScopedLogger } from "$lib/logger";
 
@@ -18,6 +25,55 @@ const logger = createScopedLogger("settings-page-server");
 const SETTINGS_WRITE_HEADERS = {
     "x-actor-roles": "platform:admin,settings:write,playback:operator"
 } as const;
+
+const FULL_SCHEMA_CACHE_TTL_MS = 10 * 60 * 1000;
+let fullSchemaCache: {
+    schema: Record<string, unknown>;
+    expiresAt: number;
+    backendUrl: string;
+} | null = null;
+
+async function getFullSettingsSchema(
+    baseUrl: string,
+    apiKey: string,
+    fetchFn: typeof globalThis.fetch
+): Promise<Record<string, unknown> | null> {
+    if (
+        fullSchemaCache &&
+        fullSchemaCache.backendUrl === baseUrl &&
+        fullSchemaCache.expiresAt > Date.now()
+    ) {
+        return fullSchemaCache.schema;
+    }
+
+    const res = await providers.riven.GET("/api/v1/settings/schema", {
+        baseUrl,
+        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
+        fetch: fetchFn
+    });
+    if (res.error || !res.data) {
+        logger.warn("Failed to load full settings schema for search index", {
+            error: res.error
+        });
+        return null;
+    }
+
+    const schema = res.data as Record<string, unknown>;
+    fullSchemaCache = {
+        schema,
+        backendUrl: baseUrl,
+        expiresAt: Date.now() + FULL_SCHEMA_CACHE_TTL_MS
+    };
+    return schema;
+}
+
+function buildSearchIndex(fullSchema: Record<string, unknown> | null): SettingsSearchEntry[] {
+    return mergeSearchEntries(
+        buildSectionSearchEntries(),
+        buildRankingShortcutEntries(),
+        buildFieldIndexFromSchema(fullSchema)
+    );
+}
 
 const PATHS = "filesystem";
 async function fetchFilesystem(
@@ -89,14 +145,69 @@ function pruneLibraryProfilesFromValue(initialValue: Record<string, unknown>): v
     }
 }
 
+/** Pydantic/OpenAPI model class names that should not appear as UI headings. */
+function isNoiseSchemaTitle(title: string): boolean {
+    return title === "Settings" || /Model$/i.test(title);
+}
+
+/**
+ * Strip noisy schema titles (ScraperModel, RTNSettingsModel, …) and replace
+ * top-level property titles with humanized key labels. Mutates in place.
+ */
+function sanitizeSettingsSchemaTitles(schema: Record<string, unknown>): void {
+    const visit = (node: unknown, propertyKey?: string): void => {
+        if (!node || typeof node !== "object" || Array.isArray(node)) return;
+        const obj = node as Record<string, unknown>;
+
+        if (typeof obj.title === "string" && isNoiseSchemaTitle(obj.title)) {
+            if (propertyKey) {
+                obj.title = propertyKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+            } else {
+                delete obj.title;
+            }
+        }
+
+        if (obj.properties && typeof obj.properties === "object") {
+            for (const [key, value] of Object.entries(obj.properties as Record<string, unknown>)) {
+                visit(value, key);
+            }
+        }
+
+        if (obj.$defs && typeof obj.$defs === "object") {
+            for (const value of Object.values(obj.$defs as Record<string, unknown>)) {
+                visit(value);
+            }
+        }
+
+        if (obj.definitions && typeof obj.definitions === "object") {
+            for (const value of Object.values(obj.definitions as Record<string, unknown>)) {
+                visit(value);
+            }
+        }
+
+        if (obj.items) visit(obj.items);
+        if (Array.isArray(obj.anyOf)) obj.anyOf.forEach((v) => visit(v));
+        if (Array.isArray(obj.oneOf)) obj.oneOf.forEach((v) => visit(v));
+        if (Array.isArray(obj.allOf)) obj.allOf.forEach((v) => visit(v));
+    };
+
+    visit(schema);
+    if (typeof schema.title === "string" && isNoiseSchemaTitle(schema.title)) {
+        delete schema.title;
+    }
+}
+
 function buildSettingsUiSchema(properties: Record<string, unknown>, keys: string[]): UiSchemaRoot {
     const order = keys.filter((k) => properties[k] !== undefined);
     const ui: Record<string, unknown> = {
-        "ui:order": order.length > 0 ? order : undefined
+        "ui:order": order.length > 0 ? order : undefined,
+        // Page shell already shows the section title — hide root schema model name.
+        "ui:options": { title: false, description: false }
     };
     if (keys.includes("api_key")) {
         ui["api_key"] = { "ui:components": { textWidget: "apiKeyWidget" } };
     }
+
     // Removed `ui:widget: "hidden"` for `library_profiles` because the property is now fully
     // pruned from the schema payload itself inside the `load` and `actions` functions.
     return ui as UiSchemaRoot;
@@ -298,12 +409,17 @@ export const load: PageServerLoad = async ({
     if (tab.custom) {
         if (tab.id === "library-profiles") {
             try {
-                const filesystem = await fetchFilesystem(locals.backendUrl, locals.apiKey, fetch);
+                const [filesystem, fullSchema] = await Promise.all([
+                    fetchFilesystem(locals.backendUrl, locals.apiKey, fetch),
+                    getFullSettingsSchema(locals.backendUrl, locals.apiKey, fetch)
+                ]);
                 const profiles = (filesystem["library_profiles"] ?? {}) as Record<string, unknown>;
                 return {
                     tabs: SETTINGS_TABS,
                     activeTabId: tab.id,
                     paths,
+                    searchIndex: buildSearchIndex(fullSchema),
+                    focusPath: url.searchParams.get("focus") ?? null,
                     customData: {
                         profiles
                     }
@@ -330,15 +446,13 @@ export const load: PageServerLoad = async ({
 
     let schema: Record<string, unknown>;
     let initialValue: Record<string, unknown>;
+    let fullSchema: Record<string, unknown> | null = null;
 
     try {
-        [schema, initialValue] = await loadSettingsDataWithRetry(
-            fetch,
-            locals.backendUrl,
-            locals.apiKey,
-            keys,
-            paths
-        );
+        [[schema, initialValue], fullSchema] = await Promise.all([
+            loadSettingsDataWithRetry(fetch, locals.backendUrl, locals.apiKey, keys, paths),
+            getFullSettingsSchema(locals.backendUrl, locals.apiKey, fetch)
+        ]);
     } catch (e) {
         logger.error("Settings page load failed", {
             tab: tab.id,
@@ -360,13 +474,13 @@ export const load: PageServerLoad = async ({
         });
     }
 
-    const props = (schema.properties ?? {}) as Record<string, unknown>;
-
     // Hide library_profiles from the filesystem schema to prevent duplication with the dedicated tab
     // Pydantic separates nested models into a root `$defs` object and uses `$ref` pointers.
     pruneLibraryProfilesFromSchema(schema);
     pruneLibraryProfilesFromValue(initialValue);
+    sanitizeSettingsSchemaTitles(schema);
 
+    const props = (schema.properties ?? {}) as Record<string, unknown>;
     const uiSchema = buildSettingsUiSchema(props, tab.keys) as unknown as UiSchemaRoot;
     setCachedSettingsSchema(schemaCacheKey, schema);
     perfCount("settings.schema.cache.set", 1, {
@@ -388,6 +502,8 @@ export const load: PageServerLoad = async ({
         tabs: SETTINGS_TABS,
         activeTabId: tab.id,
         paths,
+        searchIndex: buildSearchIndex(fullSchema),
+        focusPath: url.searchParams.get("focus") ?? null,
         form: {
             schema,
             initialValue,
@@ -433,6 +549,7 @@ export const actions = {
             perfCount("settings.schema.cache.miss", 1, { tab: tab.id });
             schema = await getSchemaForKeys(locals.backendUrl, locals.apiKey, paths, fetch);
             pruneLibraryProfilesFromSchema(schema);
+            sanitizeSettingsSchemaTitles(schema);
             setCachedSettingsSchema(schemaCacheKey, schema);
             perfCount("settings.schema.cache.set", 1, { tab: tab.id });
         }

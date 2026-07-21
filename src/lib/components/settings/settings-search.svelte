@@ -3,66 +3,87 @@
      * Settings search command palette.
      *
      * Opens via Ctrl/Cmd+K or the search trigger button in the settings header.
-     * Fuzzy-filters over the static SETTINGS_TABS metadata (label + description)
-     * and navigates to the selected tab's URL on selection or Enter.
+     * Filters over sections and schema fields; selecting a field navigates to its
+     * tab and focuses the matching form card.
      */
     import type { Component } from "svelte";
     import * as Command from "$lib/components/ui/command/index.js";
-    import { SETTINGS_TABS } from "./sections.js";
     import { ICON_MAP } from "./icon-map.js";
-    import { goto } from "$app/navigation";
-    import { resolve } from "$app/paths";
+    import { getTabById } from "./sections.js";
+    import { filterSearchEntries, type SettingsSearchEntry } from "./settings-field-index.js";
 
     interface Props {
         open: boolean;
         /** Prefer over direct goto so the parent can enforce unsaved-change guards. */
-        onNavigate?: (tabId: string) => void;
+        onNavigate?: (tabId: string, focusPath?: string) => void;
+        /** Prebuilt section + field index from the page loader. */
+        entries?: SettingsSearchEntry[];
     }
 
-    let { open = $bindable(false), onNavigate }: Props = $props();
+    let { open = $bindable(false), onNavigate, entries = [] }: Props = $props();
 
     let query = $state("");
 
-    const filtered = $derived(
-        query === ""
-            ? SETTINGS_TABS
-            : SETTINGS_TABS.filter(
-                  (t) =>
-                      t.label.toLowerCase().includes(query.toLowerCase()) ||
-                      t.description.toLowerCase().includes(query.toLowerCase())
-              )
-    );
+    const filtered = $derived(filterSearchEntries(entries, query));
 
-    function selectTab(tabId: string): void {
+    const sections = $derived(filtered.filter((e) => e.kind === "section"));
+    const fields = $derived(filtered.filter((e) => e.kind === "field").slice(0, 40));
+
+    function selectEntry(entry: SettingsSearchEntry): void {
         open = false;
         query = "";
-        if (onNavigate) {
-            onNavigate(tabId);
-        } else {
-            goto(resolve(`/settings?tab=${tabId}`));
-        }
+        onNavigate?.(entry.tabId, entry.path);
+    }
+
+    function iconForTab(tabId: string): Component | undefined {
+        const tab = getTabById(tabId);
+        return tab ? (ICON_MAP[tab.icon] as Component | undefined) : undefined;
     }
 </script>
 
-<Command.Dialog bind:open title="Settings Search" description="Jump to any settings section">
-    <Command.Input placeholder="Search settings…" bind:value={query} />
+<Command.Dialog
+    bind:open
+    title="Settings Search"
+    description="Jump to any settings section or field">
+    <Command.Input placeholder="Search settings, deny keys, fields…" bind:value={query} />
     <Command.List>
-        <Command.Empty>No matching sections.</Command.Empty>
-        <Command.Group heading="Sections">
-            {#each filtered as tab (tab.id)}
-                {@const IconComponent = ICON_MAP[tab.icon] as Component | undefined}
-                <Command.Item value={tab.id} onSelect={() => selectTab(tab.id)}>
-                    <span class="flex items-center gap-2">
-                        {#if IconComponent}
-                            <IconComponent class="text-muted-foreground size-4 shrink-0" />
-                        {/if}
-                        <span class="font-medium">{tab.label}</span>
-                    </span>
-                    <Command.Shortcut class="max-w-[16rem] truncate text-right">
-                        {tab.description}
-                    </Command.Shortcut>
-                </Command.Item>
-            {/each}
-        </Command.Group>
+        <Command.Empty>No matching settings.</Command.Empty>
+
+        {#if sections.length > 0}
+            <Command.Group heading="Sections">
+                {#each sections as entry (entry.id)}
+                    {@const IconComponent = iconForTab(entry.tabId)}
+                    <Command.Item value={entry.id} onSelect={() => selectEntry(entry)}>
+                        <span class="flex min-w-0 items-center gap-2">
+                            {#if IconComponent}
+                                <IconComponent class="text-muted-foreground size-4 shrink-0" />
+                            {/if}
+                            <span class="font-medium">{entry.label}</span>
+                        </span>
+                        <Command.Shortcut class="max-w-[16rem] truncate text-right">
+                            {entry.description}
+                        </Command.Shortcut>
+                    </Command.Item>
+                {/each}
+            </Command.Group>
+        {/if}
+
+        {#if fields.length > 0}
+            <Command.Group heading="Fields">
+                {#each fields as entry (entry.id)}
+                    <Command.Item value={entry.id} onSelect={() => selectEntry(entry)}>
+                        <span class="flex min-w-0 flex-col gap-0.5 text-left">
+                            <span class="font-medium">{entry.label}</span>
+                            <span class="text-muted-foreground truncate text-xs">
+                                {entry.path ?? entry.tabId}
+                            </span>
+                        </span>
+                        <Command.Shortcut class="max-w-[14rem] truncate text-right text-xs">
+                            {entry.description || entry.tabId}
+                        </Command.Shortcut>
+                    </Command.Item>
+                {/each}
+            </Command.Group>
+        {/if}
     </Command.List>
 </Command.Dialog>
