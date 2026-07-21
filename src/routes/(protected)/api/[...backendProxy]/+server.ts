@@ -27,8 +27,8 @@ const FORWARDED_RESPONSE_HEADERS = [
 const proxyRequest = async (method: string, locals: App.Locals, url: URL, request?: Request) => {
     // Tighten scope: only proxy to backend /api/v1/* paths.
     // Incoming protected route is /(protected)/api/[...backendProxy] -> /api/{...backendProxy}
-    // so enforce the rewritten path starts with /api/v1/ before forwarding.
-    const proxyPath = url.pathname.replace(/^\/api\//, "/api/");
+    // so enforce the path starts with /api/v1/ before forwarding.
+    const proxyPath = url.pathname;
     if (!proxyPath.startsWith("/api/v1/")) {
         throw error(400, "Invalid proxy path");
     }
