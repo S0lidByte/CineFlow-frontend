@@ -1,6 +1,6 @@
 import type { PageServerLoad } from "./$types";
 import { redirect } from "@sveltejs/kit";
-import providers from "$lib/providers";
+import providers from "$lib/server/providers";
 import { transformTMDBList, type TMDBListItem } from "$lib/providers/parser";
 import { createCustomFetch } from "$lib/custom-fetch";
 import { createScopedLogger } from "$lib/logger";

@@ -68,8 +68,14 @@ export const actions = {
             const filesystem = await fetchFilesystem(locals.backendUrl, locals.apiKey, fetch);
             const merged = { ...filesystem, library_profiles: profiles };
             await saveFilesystem(locals.backendUrl, locals.apiKey, merged, fetch);
-            logger.info("Library profiles saved", { count: Object.keys(profiles).length });
-            return { success: true };
+            // Re-read so the client can baseline against the canonical stored payload.
+            const refreshed = await fetchFilesystem(locals.backendUrl, locals.apiKey, fetch);
+            const savedProfiles = (refreshed.library_profiles ?? profiles) as Record<
+                string,
+                unknown
+            >;
+            logger.info("Library profiles saved", { count: Object.keys(savedProfiles).length });
+            return { success: true, profiles: savedProfiles };
         } catch (e) {
             logger.error("Library profiles save failed", {
                 error: e instanceof Error ? e.message : String(e)

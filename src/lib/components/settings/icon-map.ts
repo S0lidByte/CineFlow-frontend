@@ -14,6 +14,7 @@ import FileText from "@lucide/svelte/icons/file-text";
 import ScanSearch from "@lucide/svelte/icons/scan-search";
 import Server from "@lucide/svelte/icons/server";
 import BookOpen from "@lucide/svelte/icons/book-open";
+import ListOrdered from "@lucide/svelte/icons/list-ordered";
 
 export const ICON_MAP: Record<string, Component> = {
     settings: Settings,
@@ -22,6 +23,7 @@ export const ICON_MAP: Record<string, Component> = {
     download: Download,
     "file-text": FileText,
     "scan-search": ScanSearch,
+    "list-ordered": ListOrdered,
     server: Server,
     "book-open": BookOpen
 };

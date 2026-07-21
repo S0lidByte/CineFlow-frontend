@@ -1,6 +1,6 @@
 import type { RequestHandler } from "./$types";
 import { json, error } from "@sveltejs/kit";
-import providers from "$lib/providers";
+import providers from "$lib/server/providers";
 import { createCustomFetch } from "$lib/custom-fetch";
 import { createScopedLogger } from "$lib/logger";
 import { resolveId } from "$lib/services/resolver";

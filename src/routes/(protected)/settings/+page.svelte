@@ -41,6 +41,9 @@
     import SettingsSearch from "$lib/components/settings/settings-search.svelte";
     import Kbd from "$lib/components/ui/kbd/kbd.svelte";
     import SearchIcon from "@lucide/svelte/icons/search";
+    import { highlightAndScrollToField } from "$lib/components/settings/settings-field-index";
+    import { onMount, tick } from "svelte";
+    import { SvelteURLSearchParams } from "svelte/reactivity";
 
     // Lucide icons used in the tab nav and header
     import Loader2 from "@lucide/svelte/icons/loader-2";
@@ -62,7 +65,9 @@
 
     /** Target tab id while a discard-and-switch is being confirmed. */
     let tabSwitchTarget: string | null = null;
+    let tabSwitchFocus: string | null = null;
     let showDiscardConfirm = $state(false);
+    let pendingFocusPath = $state<string | null>(null);
 
     /** Programmatically submits the SJSF-managed `<form>` inside `.settings-form`. */
     function submitSettingsForm(): void {
@@ -72,26 +77,54 @@
     }
 
     /**
-     * Handles a tab button click.
+     * Handles a tab button click or search selection.
      * If the form has unsaved changes, opens a confirmation dialog instead of
      * navigating immediately.
      */
-    function handleTabClick(tabId: string): void {
-        if (tabId === $page.data.activeTabId) return;
+    function handleTabClick(tabId: string, focusPath?: string): void {
+        const sameTab = tabId === $page.data.activeTabId;
+        if (sameTab) {
+            if (focusPath) {
+                pendingFocusPath = focusPath;
+                const url = new URL($page.url);
+                url.searchParams.set("focus", focusPath);
+                history.replaceState({}, "", url);
+                void tryFocusField(focusPath);
+            }
+            return;
+        }
+
         if (form?.isChanged) {
             tabSwitchTarget = tabId;
+            tabSwitchFocus = focusPath ?? null;
             showDiscardConfirm = true;
-        } else {
-            goto(resolve(`/settings?tab=${tabId}`));
+            return;
         }
+
+        navigateToTab(tabId, focusPath);
+    }
+
+    function navigateToTab(tabId: string, focusPath?: string): void {
+        formStore.set(null);
+        const params = new SvelteURLSearchParams();
+        params.set("tab", tabId);
+        if (focusPath) {
+            params.set("focus", focusPath);
+            pendingFocusPath = focusPath;
+        } else {
+            pendingFocusPath = null;
+        }
+        goto(resolve(`/settings?${params.toString()}`));
     }
 
     /** Confirms the discard-and-switch dialog: resets the form and navigates. */
     function confirmDiscardAndSwitch(): void {
         if (tabSwitchTarget) {
             form?.reset();
-            goto(resolve(`/settings?tab=${tabSwitchTarget}`));
+            formStore.set(null);
+            navigateToTab(tabSwitchTarget, tabSwitchFocus ?? undefined);
             tabSwitchTarget = null;
+            tabSwitchFocus = null;
         }
         showDiscardConfirm = false;
     }
@@ -99,7 +132,19 @@
     /** Cancels the discard-and-switch dialog and keeps the user on the current tab. */
     function cancelTabSwitch(): void {
         tabSwitchTarget = null;
+        tabSwitchFocus = null;
         showDiscardConfirm = false;
+    }
+
+    async function tryFocusField(focusPath: string): Promise<void> {
+        for (let attempt = 0; attempt < 12; attempt++) {
+            await tick();
+            if (highlightAndScrollToField(focusPath)) {
+                pendingFocusPath = null;
+                return;
+            }
+            await new Promise((r) => setTimeout(r, 50));
+        }
     }
 
     /**
@@ -113,6 +158,21 @@
      * Disables save/discard controls during in-flight requests.
      */
     const isNavigating = $derived(Boolean($navigating));
+
+    $effect(() => {
+        const fromUrl = $page.data.focusPath as string | null | undefined;
+        const target = pendingFocusPath ?? fromUrl ?? null;
+        if (!target || isNavigating) return;
+        void tryFocusField(target);
+    });
+
+    onMount(() => {
+        const fromUrl = $page.data.focusPath as string | null | undefined;
+        if (fromUrl) {
+            pendingFocusPath = fromUrl;
+            void tryFocusField(fromUrl);
+        }
+    });
 
     /**
      * The active tab metadata, resolved from `$page.data.tabs`.
@@ -193,56 +253,69 @@
                     </p>
                 </div>
 
-                <!-- Save status + primary Save button -->
-                <div class="mt-2 flex items-center gap-2 md:mt-0">
-                    {#if isDirty}
-                        <div class="flex items-center gap-1.5 text-xs font-medium text-amber-500">
-                            <AlertCircle class="size-3.5" />
-                            Unsaved changes
-                        </div>
-                    {:else}
-                        <div class="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
-                            <Check class="size-3.5" />
-                            All changes saved
-                        </div>
-                    {/if}
-
-                    <Tooltip.Root>
-                        <Tooltip.Trigger>
-                            <Button
-                                type="button"
-                                class="min-w-[11rem]"
-                                onclick={submitSettingsForm}
-                                disabled={!isDirty || isNavigating}
+                <!-- Save status + primary Save button (SJSF tabs only) -->
+                {#if !activeTab?.custom}
+                    <div class="mt-2 flex items-center gap-2 md:mt-0">
+                        {#if isNavigating || !form}
+                            <div
+                                class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+                                <Loader2 class="size-3.5 animate-spin" />
+                                {isNavigating ? "Loading section…" : "Preparing form…"}
+                            </div>
+                        {:else if isDirty}
+                            <Tooltip.Root>
+                                <Tooltip.Trigger>
+                                    {#snippet child({ props })}
+                                        <Button
+                                            {...props}
+                                            type="button"
+                                            class="min-w-[10rem]"
+                                            onclick={submitSettingsForm}
+                                            disabled={isNavigating}
+                                            aria-live="polite">
+                                            <AlertCircle class="size-4" />
+                                            Save changes
+                                        </Button>
+                                    {/snippet}
+                                </Tooltip.Trigger>
+                                <Tooltip.Content side="bottom">
+                                    Save <Kbd
+                                        class="border-primary-foreground/20 text-primary-foreground ml-1 bg-transparent"
+                                        >{navigator?.platform?.includes("Mac")
+                                            ? "⌘S"
+                                            : "Ctrl+S"}</Kbd>
+                                </Tooltip.Content>
+                            </Tooltip.Root>
+                        {:else}
+                            <div
+                                class="flex items-center gap-1.5 text-xs font-medium text-emerald-500"
                                 aria-live="polite">
-                                {#if isNavigating}
-                                    <Loader2 class="size-4 animate-spin" />
-                                    Saving...
-                                {:else if isDirty}
-                                    <AlertCircle class="size-4" />
-                                    Save changes
-                                {:else}
-                                    <Check class="size-4" />
-                                    All changes saved
-                                {/if}
-                            </Button>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content side="bottom">
-                            Save <Kbd
-                                class="border-primary-foreground/20 text-primary-foreground ml-1 bg-transparent"
-                                >{navigator?.platform?.includes("Mac") ? "⌘S" : "Ctrl+S"}</Kbd>
-                        </Tooltip.Content>
-                    </Tooltip.Root>
+                                <Check class="size-3.5" />
+                                All changes saved
+                            </div>
+                        {/if}
 
-                    <button
-                        class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors md:flex"
-                        onclick={() => (searchOpen = true)}>
-                        <SearchIcon class="size-3.5" />
-                        Search settings
-                        <Kbd class="ml-1"
-                            >{navigator?.platform?.includes("Mac") ? "⌘K" : "Ctrl+K"}</Kbd>
-                    </button>
-                </div>
+                        <button
+                            class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors md:flex"
+                            onclick={() => (searchOpen = true)}>
+                            <SearchIcon class="size-3.5" />
+                            Search settings
+                            <Kbd class="ml-1"
+                                >{navigator?.platform?.includes("Mac") ? "⌘K" : "Ctrl+K"}</Kbd>
+                        </button>
+                    </div>
+                {:else}
+                    <div class="mt-2 flex items-center gap-2 md:mt-0">
+                        <button
+                            class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors md:flex"
+                            onclick={() => (searchOpen = true)}>
+                            <SearchIcon class="size-3.5" />
+                            Search settings
+                            <Kbd class="ml-1"
+                                >{navigator?.platform?.includes("Mac") ? "⌘K" : "Ctrl+K"}</Kbd>
+                        </button>
+                    </div>
+                {/if}
 
                 <div class="mt-4 flex items-center justify-between md:hidden">
                     <button
@@ -312,6 +385,23 @@
                         {activeTab?.label ?? "Settings"}
                     </div>
 
+                    {#if $page.data.activeTabId === "ranking"}
+                        <div
+                            class="border-border/60 bg-muted/30 text-muted-foreground mb-4 rounded-lg border px-3 py-2.5 text-xs leading-relaxed">
+                            <span class="text-foreground font-medium">How rejects map:</span>
+                            DEBUG logs use
+                            <code class="text-foreground/90">denied by: category_attribute</code>
+                            (example:
+                            <code class="text-foreground/90">audio_dolby_digital_plus</code>). Use
+                            <kbd class="bg-background/80 rounded border px-1 py-0.5 text-[10px]"
+                                >Ctrl+K</kbd>
+                            and search
+                            <code class="text-foreground/90">ddp</code> to jump to that control.
+                            Open a category, then set <span class="text-foreground">Fetch</span> /
+                            <span class="text-foreground">Rank</span> per attribute.
+                        </div>
+                    {/if}
+
                     <!-- Loading overlay shown while navigating to a new tab -->
                     {#if $navigating}
                         <div
@@ -367,9 +457,9 @@
                         <Button size="sm" onclick={submitSettingsForm} disabled={isNavigating}>
                             {#if isNavigating}
                                 <Loader2 class="size-4 animate-spin" />
-                                Saving...
+                                Loading...
                             {:else}
-                                Save (Ctrl+S)
+                                Save ({navigator?.platform?.includes("Mac") ? "⌘S" : "Ctrl+S"})
                             {/if}
                         </Button>
                     </div>
@@ -396,6 +486,9 @@
         </AlertDialog>
 
         <!-- ── Settings Command Palette ────────────────────────────────────── -->
-        <SettingsSearch bind:open={searchOpen} />
+        <SettingsSearch
+            bind:open={searchOpen}
+            onNavigate={handleTabClick}
+            entries={$page.data.searchIndex ?? []} />
     </Tooltip.Provider>
 </PageShell>

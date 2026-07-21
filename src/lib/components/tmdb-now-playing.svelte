@@ -380,7 +380,7 @@
                                         )}">
                                         {#if showRequestButton}
                                             <Button
-                                                href="/watch/{item.id}"
+                                                href="/watch/{item.id}?type={mediaType}"
                                                 variant="default"
                                                 size="lg"
                                                 class="bg-primary text-primary-foreground hover:bg-primary/90 flex h-10 items-center justify-center rounded-md px-8 text-sm font-bold shadow-sm transition-all hover:scale-[1.02] md:h-12 md:text-base">

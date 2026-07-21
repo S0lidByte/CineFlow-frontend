@@ -155,6 +155,12 @@ export class NotificationStore {
                 .select("notification")
                 .json<NotificationEvent | null>(({ error }) => {
                     if (error) {
+                        if (
+                            error instanceof SyntaxError &&
+                            error.message.includes("Unexpected end of JSON input")
+                        ) {
+                            return null;
+                        }
                         logger.warn("Failed to parse notification payload", error);
                         return null;
                     }

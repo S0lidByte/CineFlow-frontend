@@ -1,6 +1,28 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { error, json } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
+
+const BACKEND_COMPAT_HEADERS = {
+    "x-actor-roles": "platform:admin,settings:write,playback:operator"
+} as const;
+
+const BODY_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+const FORWARDED_REQUEST_HEADERS = [
+    "accept",
+    "range",
+    "if-none-match",
+    "if-modified-since"
+] as const;
+const FORWARDED_RESPONSE_HEADERS = [
+    "accept-ranges",
+    "cache-control",
+    "content-disposition",
+    "content-length",
+    "content-range",
+    "content-type",
+    "etag",
+    "last-modified",
+    "location"
+] as const;
 
 const proxyRequest = async (method: string, locals: App.Locals, url: URL, request?: Request) => {
     // Tighten scope: only proxy to backend /api/v1/* paths.
@@ -19,27 +41,45 @@ const proxyRequest = async (method: string, locals: App.Locals, url: URL, reques
     targetUrl.search = url.search;
 
     try {
-        const response = await fetch(targetUrl.toString(), {
-            method,
-            headers: {
-                "x-api-key": locals.apiKey,
-                // Forward the content-type from the original request if it exists
-                "Content-Type": request?.headers.get("Content-Type") || "application/json"
-            },
-            body:
-                request && ["POST", "PUT", "PATCH", "DELETE"].includes(method)
-                    ? await request.text()
-                    : undefined
+        const headers = new Headers({
+            "x-api-key": locals.apiKey,
+            ...BACKEND_COMPAT_HEADERS
         });
 
-        const contentType = response.headers.get("Content-Type") || "";
-        const body = await response.text();
-
-        return new Response(body, {
-            status: response.status,
-            headers: {
-                "Content-Type": contentType
+        if (request) {
+            for (const header of FORWARDED_REQUEST_HEADERS) {
+                const value = request.headers.get(header);
+                if (value) headers.set(header, value);
             }
+
+            const contentType = request.headers.get("content-type");
+            if (contentType && BODY_METHODS.has(method)) {
+                headers.set("content-type", contentType);
+            }
+        }
+
+        const response = await fetch(targetUrl.toString(), {
+            method,
+            headers,
+            body: request && BODY_METHODS.has(method) ? request.body : undefined,
+            duplex: request && BODY_METHODS.has(method) ? "half" : undefined
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+
+        const responseHeaders = new Headers();
+        for (const header of FORWARDED_RESPONSE_HEADERS) {
+            const value = response.headers.get(header);
+            if (value) responseHeaders.set(header, value);
+        }
+
+        if (!responseHeaders.has("content-type")) {
+            responseHeaders.set("content-type", "application/octet-stream");
+        }
+
+        return new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: responseHeaders
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
@@ -53,5 +93,7 @@ export const POST: RequestHandler = ({ locals, url, request }) =>
     proxyRequest("POST", locals, url, request);
 export const PUT: RequestHandler = ({ locals, url, request }) =>
     proxyRequest("PUT", locals, url, request);
+export const PATCH: RequestHandler = ({ locals, url, request }) =>
+    proxyRequest("PATCH", locals, url, request);
 export const DELETE: RequestHandler = ({ locals, url, request }) =>
     proxyRequest("DELETE", locals, url, request);

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
+    import { browser } from "$app/environment";
     import { Button } from "$lib/components/ui/button/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
@@ -49,7 +50,8 @@
     let localProfiles = $state<Record<string, LibraryProfile>>(
         structuredClone(untrack(() => profiles))
     );
-    const initialJson = $derived(JSON.stringify(profiles));
+    /** Baseline used for dirty detection; updated after a successful save. */
+    let baselineJson = $state(JSON.stringify(untrack(() => profiles)));
 
     // Track which cards are expanded
     let expanded = $state<Record<string, boolean>>({});
@@ -69,7 +71,12 @@
     let isSaving = $state(false);
 
     // Dirty tracking
-    const isDirty = $derived(JSON.stringify(localProfiles) !== initialJson);
+    const isDirty = $derived(JSON.stringify(localProfiles) !== baselineJson);
+    const saveShortcutLabel = $derived(
+        browser && typeof navigator !== "undefined" && navigator.platform?.includes("Mac")
+            ? "⌘S"
+            : "Ctrl+S"
+    );
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
     function profileKeys(): string[] {
@@ -169,10 +176,17 @@
     // ─── Save ─────────────────────────────────────────────────────────────────
     function handleSaveResult(result: { type: string; data?: unknown }) {
         isSaving = false;
-        if (
-            result.type === "success" ||
-            (result.type === "failure" && (result.data as Record<string, unknown>)?.success)
-        ) {
+        const payload = (result.data ?? {}) as {
+            success?: boolean;
+            profiles?: Record<string, LibraryProfile>;
+        };
+        if (result.type === "success" || (result.type === "failure" && payload.success)) {
+            if (payload.profiles && typeof payload.profiles === "object") {
+                localProfiles = structuredClone(payload.profiles);
+                baselineJson = JSON.stringify(payload.profiles);
+            } else {
+                baselineJson = JSON.stringify(localProfiles);
+            }
             toast.success("Library profiles saved");
         } else {
             toast.error("Failed to save library profiles");
@@ -820,8 +834,7 @@
                         size="sm"
                         onclick={() => document.getElementById("save-form-submit")?.click()}
                         disabled={isSaving}>
-                        {#if isSaving}<Loader2 class="size-4 animate-spin" /> Saving...{:else}Save
-                            (Ctrl+S){/if}
+                        {#if isSaving}<Loader2 class="size-4 animate-spin" /> Saving...{:else}Save ({saveShortcutLabel}){/if}
                     </Button>
                 </div>
             {/if}

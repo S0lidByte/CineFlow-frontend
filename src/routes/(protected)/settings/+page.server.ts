@@ -11,10 +11,69 @@ import {
     getTabById,
     SETTINGS_TABS
 } from "$lib/components/settings/sections";
+import {
+    buildFieldIndexFromSchema,
+    buildRankingShortcutEntries,
+    buildSectionSearchEntries,
+    mergeSearchEntries,
+    type SettingsSearchEntry
+} from "$lib/components/settings/settings-field-index";
 import { perfCount, startPerfMark, endPerfMark } from "$lib/perf";
 import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("settings-page-server");
+const SETTINGS_WRITE_HEADERS = {
+    "x-actor-roles": "platform:admin,settings:write,playback:operator"
+} as const;
+
+const FULL_SCHEMA_CACHE_TTL_MS = 10 * 60 * 1000;
+let fullSchemaCache: {
+    schema: Record<string, unknown>;
+    expiresAt: number;
+    backendUrl: string;
+} | null = null;
+
+async function getFullSettingsSchema(
+    baseUrl: string,
+    apiKey: string,
+    fetchFn: typeof globalThis.fetch
+): Promise<Record<string, unknown> | null> {
+    if (
+        fullSchemaCache &&
+        fullSchemaCache.backendUrl === baseUrl &&
+        fullSchemaCache.expiresAt > Date.now()
+    ) {
+        return fullSchemaCache.schema;
+    }
+
+    const res = await providers.riven.GET("/api/v1/settings/schema", {
+        baseUrl,
+        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
+        fetch: fetchFn
+    });
+    if (res.error || !res.data) {
+        logger.warn("Failed to load full settings schema for search index", {
+            error: res.error
+        });
+        return null;
+    }
+
+    const schema = res.data as Record<string, unknown>;
+    fullSchemaCache = {
+        schema,
+        backendUrl: baseUrl,
+        expiresAt: Date.now() + FULL_SCHEMA_CACHE_TTL_MS
+    };
+    return schema;
+}
+
+function buildSearchIndex(fullSchema: Record<string, unknown> | null): SettingsSearchEntry[] {
+    return mergeSearchEntries(
+        buildSectionSearchEntries(),
+        buildRankingShortcutEntries(),
+        buildFieldIndexFromSchema(fullSchema)
+    );
+}
 
 const PATHS = "filesystem";
 async function fetchFilesystem(
@@ -24,12 +83,16 @@ async function fetchFilesystem(
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
         fetch: fetchFn,
         params: { path: { paths: PATHS } }
     });
     if (res.error) throw new Error("Failed to load filesystem settings");
-    return (res.data as Record<string, unknown>)["filesystem"] as Record<string, unknown>;
+    const data = (res.data ?? {}) as Record<string, unknown>;
+    return ((data["filesystem"] as Record<string, unknown> | undefined) ?? data) as Record<
+        string,
+        unknown
+    >;
 }
 
 const SETTINGS_SCHEMA_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -64,14 +127,87 @@ function setCachedSettingsSchema(cacheKey: string, schema: Record<string, unknow
     });
 }
 
+/** Remove library_profiles from filesystem schema defs so the dedicated tab owns that field. */
+function pruneLibraryProfilesFromSchema(schema: Record<string, unknown>): void {
+    if (!schema.$defs) return;
+    const defs = schema.$defs as Record<string, unknown>;
+    const fsModel = defs.FilesystemModel as Record<string, unknown> | undefined;
+    const fsProps = fsModel?.properties as Record<string, unknown> | undefined;
+    if (fsProps && fsProps.library_profiles !== undefined) {
+        delete fsProps.library_profiles;
+    }
+}
+
+function pruneLibraryProfilesFromValue(initialValue: Record<string, unknown>): void {
+    const fsVal = initialValue.filesystem as Record<string, unknown> | undefined;
+    if (fsVal && fsVal.library_profiles !== undefined) {
+        delete fsVal.library_profiles;
+    }
+}
+
+/** Pydantic/OpenAPI model class names that should not appear as UI headings. */
+function isNoiseSchemaTitle(title: string): boolean {
+    return title === "Settings" || /Model$/i.test(title);
+}
+
+/**
+ * Strip noisy schema titles (ScraperModel, RTNSettingsModel, …) and replace
+ * top-level property titles with humanized key labels. Mutates in place.
+ */
+function sanitizeSettingsSchemaTitles(schema: Record<string, unknown>): void {
+    const visit = (node: unknown, propertyKey?: string): void => {
+        if (!node || typeof node !== "object" || Array.isArray(node)) return;
+        const obj = node as Record<string, unknown>;
+
+        if (typeof obj.title === "string" && isNoiseSchemaTitle(obj.title)) {
+            if (propertyKey) {
+                obj.title = propertyKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+            } else {
+                delete obj.title;
+            }
+        }
+
+        if (obj.properties && typeof obj.properties === "object") {
+            for (const [key, value] of Object.entries(obj.properties as Record<string, unknown>)) {
+                visit(value, key);
+            }
+        }
+
+        if (obj.$defs && typeof obj.$defs === "object") {
+            for (const value of Object.values(obj.$defs as Record<string, unknown>)) {
+                visit(value);
+            }
+        }
+
+        if (obj.definitions && typeof obj.definitions === "object") {
+            for (const value of Object.values(obj.definitions as Record<string, unknown>)) {
+                visit(value);
+            }
+        }
+
+        if (obj.items) visit(obj.items);
+        if (Array.isArray(obj.anyOf)) obj.anyOf.forEach((v) => visit(v));
+        if (Array.isArray(obj.oneOf)) obj.oneOf.forEach((v) => visit(v));
+        if (Array.isArray(obj.allOf)) obj.allOf.forEach((v) => visit(v));
+    };
+
+    visit(schema);
+    if (typeof schema.title === "string" && isNoiseSchemaTitle(schema.title)) {
+        delete schema.title;
+    }
+}
+
 function buildSettingsUiSchema(properties: Record<string, unknown>, keys: string[]): UiSchemaRoot {
     const order = keys.filter((k) => properties[k] !== undefined);
     const ui: Record<string, unknown> = {
-        "ui:order": order.length > 0 ? order : undefined
+        "ui:order": order.length > 0 ? order : undefined,
+        // Page shell already shows the section title — hide root schema model name.
+        "ui:options": { title: false, description: false }
     };
     if (keys.includes("api_key")) {
         ui["api_key"] = { "ui:components": { textWidget: "apiKeyWidget" } };
     }
+
     // Removed `ui:widget: "hidden"` for `library_profiles` because the property is now fully
     // pruned from the schema payload itself inside the `load` and `actions` functions.
     return ui as UiSchemaRoot;
@@ -85,7 +221,7 @@ async function getSchemaForKeys(
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/schema/keys", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
         fetch: fetchFn,
         params: { query: { keys, title: "Settings" } }
     });
@@ -103,7 +239,7 @@ async function getSettingsForPaths(
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
         fetch: fetchFn,
         params: { path: { paths } }
     });
@@ -273,12 +409,17 @@ export const load: PageServerLoad = async ({
     if (tab.custom) {
         if (tab.id === "library-profiles") {
             try {
-                const filesystem = await fetchFilesystem(locals.backendUrl, locals.apiKey, fetch);
+                const [filesystem, fullSchema] = await Promise.all([
+                    fetchFilesystem(locals.backendUrl, locals.apiKey, fetch),
+                    getFullSettingsSchema(locals.backendUrl, locals.apiKey, fetch)
+                ]);
                 const profiles = (filesystem["library_profiles"] ?? {}) as Record<string, unknown>;
                 return {
                     tabs: SETTINGS_TABS,
                     activeTabId: tab.id,
                     paths,
+                    searchIndex: buildSearchIndex(fullSchema),
+                    focusPath: url.searchParams.get("focus") ?? null,
                     customData: {
                         profiles
                     }
@@ -305,15 +446,13 @@ export const load: PageServerLoad = async ({
 
     let schema: Record<string, unknown>;
     let initialValue: Record<string, unknown>;
+    let fullSchema: Record<string, unknown> | null = null;
 
     try {
-        [schema, initialValue] = await loadSettingsDataWithRetry(
-            fetch,
-            locals.backendUrl,
-            locals.apiKey,
-            keys,
-            paths
-        );
+        [[schema, initialValue], fullSchema] = await Promise.all([
+            loadSettingsDataWithRetry(fetch, locals.backendUrl, locals.apiKey, keys, paths),
+            getFullSettingsSchema(locals.backendUrl, locals.apiKey, fetch)
+        ]);
     } catch (e) {
         logger.error("Settings page load failed", {
             tab: tab.id,
@@ -335,30 +474,13 @@ export const load: PageServerLoad = async ({
         });
     }
 
-    const props = (schema.properties ?? {}) as Record<string, unknown>;
-
     // Hide library_profiles from the filesystem schema to prevent duplication with the dedicated tab
     // Pydantic separates nested models into a root `$defs` object and uses `$ref` pointers.
-    // The actual schema properties are in `schema.$defs.FilesystemModel.properties`.
-    if (schema.$defs) {
-        const defs = schema.$defs as Record<string, unknown>;
-        if (defs.FilesystemModel) {
-            const fsModel = defs.FilesystemModel as Record<string, unknown>;
-            if (fsModel.properties) {
-                const fsProps = fsModel.properties as Record<string, unknown>;
-                if (fsProps.library_profiles !== undefined) {
-                    delete fsProps.library_profiles;
-                }
-            }
-        }
-    }
-    if (initialValue && initialValue.filesystem) {
-        const fsVal = initialValue.filesystem as Record<string, unknown>;
-        if (fsVal.library_profiles !== undefined) {
-            delete fsVal.library_profiles;
-        }
-    }
+    pruneLibraryProfilesFromSchema(schema);
+    pruneLibraryProfilesFromValue(initialValue);
+    sanitizeSettingsSchemaTitles(schema);
 
+    const props = (schema.properties ?? {}) as Record<string, unknown>;
     const uiSchema = buildSettingsUiSchema(props, tab.keys) as unknown as UiSchemaRoot;
     setCachedSettingsSchema(schemaCacheKey, schema);
     perfCount("settings.schema.cache.set", 1, {
@@ -380,6 +502,8 @@ export const load: PageServerLoad = async ({
         tabs: SETTINGS_TABS,
         activeTabId: tab.id,
         paths,
+        searchIndex: buildSearchIndex(fullSchema),
+        focusPath: url.searchParams.get("focus") ?? null,
         form: {
             schema,
             initialValue,
@@ -424,6 +548,8 @@ export const actions = {
         } else {
             perfCount("settings.schema.cache.miss", 1, { tab: tab.id });
             schema = await getSchemaForKeys(locals.backendUrl, locals.apiKey, paths, fetch);
+            pruneLibraryProfilesFromSchema(schema);
+            sanitizeSettingsSchemaTitles(schema);
             setCachedSettingsSchema(schemaCacheKey, schema);
             perfCount("settings.schema.cache.set", 1, { tab: tab.id });
         }
@@ -462,34 +588,52 @@ export const actions = {
             try {
                 const currentRes = await providers.riven.GET("/api/v1/settings/get/{paths}", {
                     baseUrl: locals.backendUrl,
-                    headers: { "x-api-key": locals.apiKey },
+                    headers: { "x-api-key": locals.apiKey, ...SETTINGS_WRITE_HEADERS },
                     fetch,
                     params: { path: { paths: "filesystem" } }
                 });
 
+                const isRecord = (value: unknown): value is Record<string, unknown> =>
+                    typeof value === "object" && value !== null && !Array.isArray(value);
+
                 if (
-                    !currentRes.error &&
-                    currentRes.data &&
-                    (currentRes.data as Record<string, unknown>).filesystem
+                    currentRes.error ||
+                    !isRecord(currentRes.data) ||
+                    !isRecord(currentRes.data.filesystem)
                 ) {
-                    const currentFs = (currentRes.data as Record<string, unknown>)
-                        .filesystem as Record<string, unknown>;
-                    if (currentFs.library_profiles !== undefined) {
-                        (payload.filesystem as Record<string, unknown>).library_profiles =
-                            currentFs.library_profiles;
-                    }
+                    logger.error("Failed to salvage library_profiles during filesystem save", {
+                        error: currentRes.error ?? "missing filesystem payload"
+                    });
+                    endPerfMark(mark, {
+                        tab: tab.id,
+                        valid: true,
+                        success: false
+                    });
+                    return fail(500, { form });
+                }
+
+                const currentFs = currentRes.data.filesystem;
+                if (currentFs.library_profiles !== undefined) {
+                    (payload.filesystem as Record<string, unknown>).library_profiles =
+                        currentFs.library_profiles;
                 }
             } catch (e) {
                 logger.error("Failed to salvage library_profiles during filesystem save", {
                     error: e
                 });
+                endPerfMark(mark, {
+                    tab: tab.id,
+                    valid: true,
+                    success: false
+                });
+                return fail(500, { form });
             }
         }
 
         const res = await providers.riven.POST("/api/v1/settings/set/{paths}", {
             body: payload,
             baseUrl: locals.backendUrl,
-            headers: { "x-api-key": locals.apiKey },
+            headers: { "x-api-key": locals.apiKey, ...SETTINGS_WRITE_HEADERS },
             fetch,
             params: { path: { paths } }
         });
