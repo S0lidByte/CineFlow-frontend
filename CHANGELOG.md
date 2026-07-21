@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.3.4-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.3-beta.1...riven-frontend-v1.3.4-beta.1) (2026-05-24)
+
+### Bug Fixes
+
+- preserve sqlite startup without database url ([6ac83cf](https://github.com/S0lidByte/CineFlow-frontend/commit/6ac83cf577b1b7b6c6167d602698d2ba732ba353))
+
+## [1.3.3-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.2-beta.1...riven-frontend-v1.3.3-beta.1) (2026-05-24)
+
+### Bug Fixes
+
+- allow frontend build without runtime db url ([ef7a371](https://github.com/S0lidByte/CineFlow-frontend/commit/ef7a3714c599b43bf726d127aa16df64aa7077ac))
+- create sqlite data directory on startup ([09713dd](https://github.com/S0lidByte/CineFlow-frontend/commit/09713dd4d6cbe7f5131483f9d052f81e01cee2ab))
+
+## [1.3.2-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.1-beta.1...riven-frontend-v1.3.2-beta.1) (2026-05-24)
+
+### Bug Fixes
+
+- sync auto scrape request API type ([68fc272](https://github.com/S0lidByte/CineFlow-frontend/commit/68fc272e2431c930769f67e1bb9b38eefb6fa78a))
+
 ## [1.3.1-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.0-beta.1...riven-frontend-v1.3.1-beta.1) (2026-03-07)
 
 ### Bug Fixes
