@@ -57,11 +57,6 @@
         return (data.statistics.states.Unreleased ?? 0).toLocaleString();
     });
 
-    const unreleasedCount = $derived.by(() => {
-        if (!data.statistics?.states) return "0";
-        return (data.statistics.states.Unreleased ?? 0).toLocaleString();
-    });
-
     const heatmapLegend = [
         { label: "No Activity", color: "var(--muted)" },
         { label: "Low", color: "var(--chart-4)" },
