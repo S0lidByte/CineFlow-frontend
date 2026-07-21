@@ -51,6 +51,8 @@
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
     import RefreshCw from "@lucide/svelte/icons/refresh-cw";
     import ChevronRight from "@lucide/svelte/icons/chevron-right";
+    import ChevronDown from "@lucide/svelte/icons/chevron-down";
+    import Info from "@lucide/svelte/icons/info";
 
     /** Maps the icon name stored in {@link SectionTab.icon} to a Svelte component. */
     // Imported ICON_MAP from $lib/components/settings/icon-map
@@ -68,6 +70,7 @@
     let tabSwitchFocus: string | null = null;
     let showDiscardConfirm = $state(false);
     let pendingFocusPath = $state<string | null>(null);
+    let rankingHelpOpen = $state(false);
 
     /** Programmatically submits the SJSF-managed `<form>` inside `.settings-form`. */
     function submitSettingsForm(): void {
@@ -377,28 +380,66 @@
                 <div
                     class="border-border/70 bg-card/35 relative min-w-0 flex-1 rounded-xl border p-4 md:p-6"
                     aria-busy={isNavigating}>
-                    <!-- Panel title row with refresh/loading indicator -->
+                    <!-- Panel section chrome: label only (page header already has Settings + description) -->
                     <div
-                        class="border-border/60 mb-4 flex items-center gap-1.5 border-b pb-4 text-sm font-semibold text-neutral-200">
-                        <RefreshCw
-                            class={cn("size-3.5 shrink-0", isNavigating && "animate-spin")} />
-                        {activeTab?.label ?? "Settings"}
+                        class="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-3">
+                        <div class="min-w-0">
+                            <div
+                                class="flex items-center gap-1.5 text-sm font-semibold text-neutral-100">
+                                <RefreshCw
+                                    class={cn(
+                                        "size-3.5 shrink-0 opacity-70",
+                                        isNavigating && "animate-spin"
+                                    )} />
+                                <span>{activeTab?.label ?? "Settings"}</span>
+                            </div>
+                        </div>
                     </div>
 
                     {#if $page.data.activeTabId === "ranking"}
                         <div
-                            class="border-border/60 bg-muted/30 text-muted-foreground mb-4 rounded-lg border px-3 py-2.5 text-xs leading-relaxed">
-                            <span class="text-foreground font-medium">How rejects map:</span>
-                            DEBUG logs use
-                            <code class="text-foreground/90">denied by: category_attribute</code>
-                            (example:
-                            <code class="text-foreground/90">audio_dolby_digital_plus</code>). Use
-                            <kbd class="bg-background/80 rounded border px-1 py-0.5 text-[10px]"
-                                >Ctrl+K</kbd>
-                            and search
-                            <code class="text-foreground/90">ddp</code> to jump to that control.
-                            Open a category, then set <span class="text-foreground">Fetch</span> /
-                            <span class="text-foreground">Rank</span> per attribute.
+                            class="border-border/50 bg-muted/25 text-muted-foreground mb-4 rounded-lg border px-3 py-2 text-xs">
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <Info class="text-foreground/70 size-3.5 shrink-0" />
+                                <span>
+                                    Tip: rejects map as
+                                    <code class="text-foreground/90"
+                                        >denied by: category_attribute</code>
+                                    ·
+                                    <kbd
+                                        class="bg-background/80 rounded border px-1 py-0.5 text-[10px]"
+                                        >Ctrl+K</kbd>
+                                    to jump
+                                </span>
+                                <button
+                                    type="button"
+                                    class="text-foreground/80 hover:text-foreground ml-auto inline-flex items-center gap-1 font-medium"
+                                    aria-expanded={rankingHelpOpen}
+                                    onclick={() => (rankingHelpOpen = !rankingHelpOpen)}>
+                                    How rejects map
+                                    <ChevronDown
+                                        class={cn(
+                                            "size-3.5 transition-transform",
+                                            rankingHelpOpen && "rotate-180"
+                                        )} />
+                                </button>
+                            </div>
+                            {#if rankingHelpOpen}
+                                <p class="border-border/40 mt-2 border-t pt-2 leading-relaxed">
+                                    DEBUG logs use
+                                    <code class="text-foreground/90"
+                                        >denied by: category_attribute</code>
+                                    (example:
+                                    <code class="text-foreground/90">audio_dolby_digital_plus</code
+                                    >). Search
+                                    <code class="text-foreground/90">ddp</code>
+                                    with Ctrl+K, open a category, then set
+                                    <span class="text-foreground">Fetch</span>
+                                    /
+                                    <span class="text-foreground">Rank</span>
+                                    per attribute.
+                                </p>
+                            {/if}
                         </div>
                     {/if}
 

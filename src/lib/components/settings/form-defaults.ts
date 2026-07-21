@@ -10,11 +10,14 @@ import { theme as baseTheme } from "@sjsf/shadcn4-theme";
 import ApiKeyWidget from "./api-key-widget.svelte";
 import SettingsDescription from "./settings-description.svelte";
 import SettingsLabel from "./settings-label.svelte";
+import SettingsSubmitButton from "./settings-submit-button.svelte";
 
 export const theme = extendByRecord(baseTheme, {
     apiKeyWidget: ApiKeyWidget,
     description: SettingsDescription,
-    label: SettingsLabel
+    label: SettingsLabel,
+    // Page shell owns Save chrome; suppress SJSF's default Submit button.
+    submitButton: SettingsSubmitButton
 });
 
 import "@sjsf/shadcn4-theme/extra-widgets/textarea-include";

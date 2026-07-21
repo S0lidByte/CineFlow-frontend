@@ -221,13 +221,12 @@
 <style>
     /**
      * Form field layout and theming.
-     * All rules target the SJSF data-slot attributes so they stay encapsulated
-     * to the settings form and don't bleed into other components.
+     * Targets SJSF data-slot attributes so styles stay scoped to settings forms.
      */
 
     :global(.settings-form) {
         display: grid;
-        gap: 0.65rem;
+        gap: 0.75rem;
         grid-template-columns: 1fr;
     }
 
@@ -269,13 +268,32 @@
         }
     }
 
-    /* Soften object legends into section dividers instead of model-name banners */
+    /* Section headers: left-aligned full-width legends with divider */
+    :global(.settings-form fieldset[data-slot="field-set"]) {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        min-inline-size: 0;
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+
     :global(.settings-form legend[data-slot="field-legend"]) {
+        float: none;
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        text-align: left;
         font-size: 0.85rem;
         font-weight: 600;
         letter-spacing: 0.01em;
-        margin-bottom: 0.4rem;
-        color: color-mix(in oklab, var(--color-foreground) 82%, transparent);
+        margin: 0 0 0.15rem;
+        padding: 0 0 0.45rem;
+        border-bottom: 1px solid color-mix(in oklab, var(--color-border) 65%, transparent);
+        color: color-mix(in oklab, var(--color-foreground) 88%, transparent);
     }
 
     :global(.settings-form legend.settings-collapsible-legend) {
@@ -285,12 +303,15 @@
         align-items: center;
         gap: 0.4rem;
         border-radius: 0.375rem;
-        padding: 0.15rem 0.25rem;
-        margin-left: -0.25rem;
+        padding: 0.25rem 0.35rem 0.5rem;
+        margin-left: -0.35rem;
+        margin-right: -0.35rem;
+        width: calc(100% + 0.7rem);
+        max-width: none;
     }
 
     :global(.settings-form legend.settings-collapsible-legend:hover) {
-        background: color-mix(in oklab, var(--color-muted) 55%, transparent);
+        background: color-mix(in oklab, var(--color-muted) 45%, transparent);
     }
 
     :global(.settings-form legend.settings-collapsible-legend::before) {
@@ -299,6 +320,7 @@
         font-size: 0.7rem;
         opacity: 0.75;
         transition: transform 0.15s ease;
+        flex-shrink: 0;
     }
 
     :global(.settings-form fieldset[data-collapsed] > legend.settings-collapsible-legend::before) {
@@ -306,21 +328,27 @@
     }
 
     :global(.settings-form fieldset[data-collapsed]) {
-        padding-bottom: 0.25rem;
+        padding-bottom: 0.15rem;
     }
 
+    /* Quieter leaf fields — less card wall */
     :global(.settings-form [data-slot="field"]) {
-        border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+        border: 1px solid color-mix(in oklab, var(--color-border) 45%, transparent);
         border-radius: 0.5rem;
-        background: color-mix(in oklab, var(--color-card) 88%, transparent);
-        padding: 0.55rem 0.7rem;
+        background: color-mix(in oklab, var(--color-card) 55%, transparent);
+        padding: 0.45rem 0.6rem;
         min-width: 0;
+        gap: 0.35rem;
     }
 
-    /* Nested groups: lighter chrome so the page is not a wall of identical cards */
     :global(.settings-form [data-slot="field"] [data-slot="field"]) {
-        background: color-mix(in oklab, var(--color-background) 55%, transparent);
-        border-color: color-mix(in oklab, var(--color-border) 55%, transparent);
+        background: color-mix(in oklab, var(--color-background) 40%, transparent);
+        border-color: color-mix(in oklab, var(--color-border) 40%, transparent);
+    }
+
+    /* Nested object groups: lighter chrome, no extra boxed wall */
+    :global(.settings-form fieldset[data-slot="field-set"] > [data-slot="field-group"]) {
+        padding-top: 0.15rem;
     }
 
     :global(.settings-form [data-slot="field-label"]) {
@@ -362,9 +390,29 @@
             border-color 0.25s ease;
     }
 
+    /* Array "Add item" — content-width, left-aligned (not full bleed) */
+    :global(.settings-form [data-slot="button-group"]),
+    :global(.settings-form [data-layout="array-field"] > [data-slot="button-group"]),
+    :global(.settings-form button[type="button"]:is([data-slot="button"])) {
+        width: fit-content;
+        max-width: 100%;
+        justify-self: start;
+    }
+
+    :global(.settings-form [data-layout="array-field"] [data-slot="button-group"]) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    :global(.settings-form [data-layout="array-field"] [data-slot="button-group"] > *) {
+        width: auto;
+        flex: 0 0 auto;
+    }
+
     /**
-     * Compact Ranking attribute objects: SJSF already uses
-     * object-property grids; force Fetch / Custom Rank / Rank onto one row.
+     * Compact Ranking attribute objects: force Fetch / Custom Rank / Rank onto one row.
      */
     @media (min-width: 900px) {
         :global(
@@ -377,7 +425,6 @@
                         > [data-layout="object-property"]:nth-child(3)
                 )
         ) {
-            /* keep attribute wrappers full width inside category */
             grid-column: 1 / -1;
         }
 
