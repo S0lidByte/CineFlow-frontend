@@ -291,9 +291,10 @@
         font-weight: 600;
         letter-spacing: 0.01em;
         margin: 0 0 0.15rem;
-        padding: 0 0 0.45rem;
-        border-bottom: 1px solid color-mix(in oklab, var(--color-border) 65%, transparent);
-        color: color-mix(in oklab, var(--color-foreground) 88%, transparent);
+        padding: 0 0 0.45rem 0.55rem;
+        border-bottom: 1px solid color-mix(in oklab, var(--color-primary) 22%, var(--color-border));
+        border-left: 3px solid color-mix(in oklab, var(--color-primary) 55%, transparent);
+        color: color-mix(in oklab, var(--color-foreground) 92%, transparent);
     }
 
     :global(.settings-form legend.settings-collapsible-legend) {
@@ -311,7 +312,7 @@
     }
 
     :global(.settings-form legend.settings-collapsible-legend:hover) {
-        background: color-mix(in oklab, var(--color-muted) 45%, transparent);
+        background: color-mix(in oklab, var(--color-primary) 12%, var(--color-muted));
     }
 
     :global(.settings-form legend.settings-collapsible-legend::before) {
@@ -331,14 +332,25 @@
         padding-bottom: 0.15rem;
     }
 
-    /* Quieter leaf fields — less card wall */
+    /* Field cards with subtle primary accent */
     :global(.settings-form [data-slot="field"]) {
-        border: 1px solid color-mix(in oklab, var(--color-border) 45%, transparent);
+        border: 1px solid color-mix(in oklab, var(--color-border) 50%, transparent);
         border-radius: 0.5rem;
-        background: color-mix(in oklab, var(--color-card) 55%, transparent);
+        background: linear-gradient(
+            135deg,
+            color-mix(in oklab, var(--color-card) 70%, transparent),
+            color-mix(in oklab, var(--color-primary) 4%, var(--color-card))
+        );
         padding: 0.45rem 0.6rem;
         min-width: 0;
         gap: 0.35rem;
+    }
+
+    :global(.settings-form fieldset[data-slot="field-set"] > [data-slot="field-group"]) {
+        padding-top: 0.35rem;
+        padding-left: 0.25rem;
+        border-left: 1px solid color-mix(in oklab, var(--color-primary) 18%, transparent);
+        margin-left: 0.15rem;
     }
 
     :global(.settings-form [data-slot="field"] [data-slot="field"]) {
@@ -346,10 +358,7 @@
         border-color: color-mix(in oklab, var(--color-border) 40%, transparent);
     }
 
-    /* Nested object groups: lighter chrome, no extra boxed wall */
-    :global(.settings-form fieldset[data-slot="field-set"] > [data-slot="field-group"]) {
-        padding-top: 0.15rem;
-    }
+    /* Nested object groups */
 
     :global(.settings-form [data-slot="field-label"]) {
         font-weight: 600;

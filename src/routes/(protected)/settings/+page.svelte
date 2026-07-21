@@ -31,6 +31,7 @@
         AlertDialogTitle
     } from "$lib/components/ui/alert-dialog/index.js";
     import SettingsFormContent from "$lib/components/settings/settings-form-content.svelte";
+    import SettingsTabGuide from "$lib/components/settings/settings-tab-guide.svelte";
     import LibraryProfilesPanel from "$lib/components/settings/library-profiles-panel.svelte";
     import { cn } from "$lib/utils";
     import { goto } from "$app/navigation";
@@ -70,7 +71,7 @@
     let tabSwitchFocus: string | null = null;
     let showDiscardConfirm = $state(false);
     let pendingFocusPath = $state<string | null>(null);
-    let rankingHelpOpen = $state(false);
+    let rankingDenyHelpOpen = $state(false);
 
     /** Programmatically submits the SJSF-managed `<form>` inside `.settings-form`. */
     function submitSettingsForm(): void {
@@ -215,9 +216,12 @@
     <title>Settings - Riven</title>
 </svelte:head>
 
-<PageShell class="h-full px-4 md:px-6 lg:px-8">
+<PageShell class="relative h-full px-4 md:px-6 lg:px-8">
+    <div
+        class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/10 to-transparent"
+        aria-hidden="true"></div>
     <Tooltip.Provider>
-        <div class="w-full">
+        <div class="relative w-full">
             <!-- ── Page header ─────────────────────────────────────────────── -->
             <header
                 class="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-start md:justify-between">
@@ -236,7 +240,9 @@
                     </nav>
 
                     <div class="mt-1 flex flex-wrap items-center gap-2">
-                        <h1 class="text-3xl font-bold tracking-tight text-neutral-50">Settings</h1>
+                        <h1 class="text-foreground text-3xl font-bold tracking-tight">
+                            Settings
+                        </h1>
                         {#if activeTab?.restartRequired}
                             <Badge
                                 class="border-amber-500/30 bg-amber-500/20 text-xs font-medium text-amber-600 dark:text-amber-400">
@@ -250,8 +256,8 @@
                         {#if activeTab?.description}
                             {activeTab.description}
                         {:else}
-                            Configure backend behavior with production-safe defaults. Keep changes
-                            focused, then save once to apply the current section.
+                            Configure CineFlow by section — each tab includes a guide with how-to
+                            steps. Save before switching tabs.
                         {/if}
                     </p>
                 </div>
@@ -344,9 +350,9 @@
                         <Tooltip.Root>
                             <Tooltip.Trigger
                                 class={cn(
-                                    "flex w-full cursor-pointer items-center gap-2 rounded-md border-l-2 px-3 py-2 text-left text-sm font-medium transition-colors",
+                                    "flex w-full cursor-pointer items-center gap-2 rounded-lg border-l-2 px-3 py-2 text-left text-sm font-medium transition-all",
                                     $page.data.activeTabId === tab.id
-                                        ? "border-primary bg-muted text-foreground pl-[10px]"
+                                        ? "border-primary bg-primary/12 text-primary ring-primary/25 pl-[10px] shadow-sm ring-1"
                                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground border-transparent pl-[10px]"
                                 )}
                                 onclick={() => handleTabClick(tab.id)}
@@ -378,17 +384,17 @@
                     This panel is the only bordered container so there is no nested-card look.
                 -->
                 <div
-                    class="border-border/70 bg-card/35 relative min-w-0 flex-1 rounded-xl border p-4 md:p-6"
+                    class="border-border/70 bg-card/50 ring-primary/8 relative min-w-0 flex-1 rounded-xl border p-4 shadow-md ring-1 md:p-6"
                     aria-busy={isNavigating}>
-                    <!-- Panel section chrome: label only (page header already has Settings + description) -->
+                    <!-- Panel section chrome -->
                     <div
-                        class="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-3">
+                        class="border-primary/15 from-primary/8 mb-4 flex items-center justify-between gap-3 border-b bg-gradient-to-r to-transparent pb-3">
                         <div class="min-w-0">
                             <div
-                                class="flex items-center gap-1.5 text-sm font-semibold text-neutral-100">
+                                class="text-foreground flex items-center gap-1.5 text-sm font-semibold">
                                 <RefreshCw
                                     class={cn(
-                                        "size-3.5 shrink-0 opacity-70",
+                                        "text-primary size-3.5 shrink-0 opacity-80",
                                         isNavigating && "animate-spin"
                                     )} />
                                 <span>{activeTab?.label ?? "Settings"}</span>
@@ -396,13 +402,17 @@
                         </div>
                     </div>
 
+                    {#if activeTab}
+                        <SettingsTabGuide tab={activeTab} />
+                    {/if}
+
                     {#if $page.data.activeTabId === "ranking"}
                         <div
-                            class="border-border/50 bg-muted/25 text-muted-foreground mb-4 rounded-lg border px-3 py-2 text-xs">
+                            class="border-primary/25 from-primary/8 mb-4 rounded-lg border bg-gradient-to-br to-transparent px-3 py-2.5">
                             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <Info class="text-foreground/70 size-3.5 shrink-0" />
-                                <span>
-                                    Tip: rejects map as
+                                <Info class="text-primary size-3.5 shrink-0" />
+                                <span class="text-muted-foreground text-xs">
+                                    Rejects map as
                                     <code class="text-foreground/90"
                                         >denied by: category_attribute</code>
                                     ·
@@ -413,32 +423,36 @@
                                 </span>
                                 <button
                                     type="button"
-                                    class="text-foreground/80 hover:text-foreground ml-auto inline-flex items-center gap-1 font-medium"
-                                    aria-expanded={rankingHelpOpen}
-                                    onclick={() => (rankingHelpOpen = !rankingHelpOpen)}>
-                                    How rejects map
+                                    class="text-primary hover:text-primary/80 ml-auto inline-flex items-center gap-1 text-xs font-semibold"
+                                    aria-expanded={rankingDenyHelpOpen}
+                                    onclick={() => (rankingDenyHelpOpen = !rankingDenyHelpOpen)}>
+                                    Deny-key reference
                                     <ChevronDown
                                         class={cn(
                                             "size-3.5 transition-transform",
-                                            rankingHelpOpen && "rotate-180"
+                                            rankingDenyHelpOpen && "rotate-180"
                                         )} />
                                 </button>
                             </div>
-                            {#if rankingHelpOpen}
-                                <p class="border-border/40 mt-2 border-t pt-2 leading-relaxed">
-                                    DEBUG logs use
-                                    <code class="text-foreground/90"
-                                        >denied by: category_attribute</code>
-                                    (example:
-                                    <code class="text-foreground/90">audio_dolby_digital_plus</code
-                                    >). Search
-                                    <code class="text-foreground/90">ddp</code>
-                                    with Ctrl+K, open a category, then set
-                                    <span class="text-foreground">Fetch</span>
-                                    /
-                                    <span class="text-foreground">Rank</span>
-                                    per attribute.
-                                </p>
+                            {#if rankingDenyHelpOpen}
+                                <ul
+                                    class="text-muted-foreground mt-2 list-disc space-y-1 border-t border-primary/15 pt-2 pl-5 text-xs leading-relaxed">
+                                    <li>
+                                        Examples:
+                                        <code class="text-foreground/90">audio_dolby_digital_plus</code>,
+                                        <code class="text-foreground/90">quality_remux</code>,
+                                        <code class="text-foreground/90">extras_dubbed</code>
+                                    </li>
+                                    <li>
+                                        When <strong class="text-foreground">Fetch</strong> is off, RTN
+                                        rejects outright — no rank score is applied.
+                                    </li>
+                                    <li>
+                                        Disney+/Amazon WEB-DL often needs
+                                        <strong class="text-foreground">audio_dolby_digital_plus</strong>
+                                        fetch enabled.
+                                    </li>
+                                </ul>
                             {/if}
                         </div>
                     {/if}
@@ -478,7 +492,7 @@
             <!-- ── Sticky save bar (shown only when SJSF form is dirty and not on custom tabs) ─────────── -->
             {#if isDirty && !activeTab?.custom}
                 <div
-                    class="border-border bg-card/95 fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between gap-4 border-t px-4 py-3 shadow-lg backdrop-blur md:right-4 md:bottom-4 md:left-auto md:max-w-md md:rounded-lg md:border md:shadow-xl"
+                    class="border-primary/30 bg-card/95 fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between gap-4 border-t px-4 py-3 shadow-lg backdrop-blur md:right-4 md:bottom-4 md:left-auto md:max-w-md md:rounded-lg md:border md:shadow-xl"
                     role="status"
                     aria-live="polite">
                     <div class="min-w-0">
