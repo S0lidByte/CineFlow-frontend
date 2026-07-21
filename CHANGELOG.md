@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.5-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.4-beta.1...riven-frontend-v1.3.5-beta.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* **deps:** bump better-auth to 1.6.23 for kysely 0.29 build compat ([dabd477](https://github.com/S0lidByte/CineFlow-frontend/commit/dabd47740fc5cefc2c45a6c98af8a792e01e1aa6))
+
 ## [1.3.4-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.3-beta.1...riven-frontend-v1.3.4-beta.1) (2026-05-24)
 
 ### Bug Fixes
