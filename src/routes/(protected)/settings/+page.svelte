@@ -43,6 +43,7 @@
     import SearchIcon from "@lucide/svelte/icons/search";
     import { highlightAndScrollToField } from "$lib/components/settings/settings-field-index";
     import { onMount, tick } from "svelte";
+    import { SvelteURLSearchParams } from "svelte/reactivity";
 
     // Lucide icons used in the tab nav and header
     import Loader2 from "@lucide/svelte/icons/loader-2";
@@ -105,7 +106,7 @@
 
     function navigateToTab(tabId: string, focusPath?: string): void {
         formStore.set(null);
-        const params = new URLSearchParams();
+        const params = new SvelteURLSearchParams();
         params.set("tab", tabId);
         if (focusPath) {
             params.set("focus", focusPath);
