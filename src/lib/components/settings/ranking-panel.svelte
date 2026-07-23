@@ -58,9 +58,7 @@
     let isTesting = $state(false);
     let panelTab = $state("filters");
     let activeCategory = $state("audio");
-    let testTitle = $state(
-        "The.Movie.2024.2160p.WEB-DL.DDP5.1.Atmos.H.265-GROUP"
-    );
+    let testTitle = $state("The.Movie.2024.2160p.WEB-DL.DDP5.1.Atmos.H.265-GROUP");
     let testCorrect = $state("");
     let testResult = $state<TestResult | null>(null);
 

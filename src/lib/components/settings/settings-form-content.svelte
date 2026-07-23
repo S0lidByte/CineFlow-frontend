@@ -213,38 +213,42 @@
 
         // Hide the section legend that duplicates the page H1 (tab label).
         // SJSF often wraps tab content as form > fieldset(root, no legend) > … > fieldset(legend=Tab).
-        root.querySelectorAll<HTMLFieldSetElement>('fieldset[data-slot="field-set"]').forEach((fs) => {
-            const depth = fieldsetDepth(fs);
-            if (depth > 1) return;
-            const legend = fs.querySelector<HTMLElement>(':scope > legend[data-slot="field-legend"]');
-            if (!legend || !tabLabel) return;
-            const title = legendTitleText(legend).toLowerCase();
-            const matchesTab =
-                title === tabLabel ||
-                title === `${tabLabel} configuration` ||
-                title === `${tabLabel} settings`;
-            if (!matchesTab) return;
+        root.querySelectorAll<HTMLFieldSetElement>('fieldset[data-slot="field-set"]').forEach(
+            (fs) => {
+                const depth = fieldsetDepth(fs);
+                if (depth > 1) return;
+                const legend = fs.querySelector<HTMLElement>(
+                    ':scope > legend[data-slot="field-legend"]'
+                );
+                if (!legend || !tabLabel) return;
+                const title = legendTitleText(legend).toLowerCase();
+                const matchesTab =
+                    title === tabLabel ||
+                    title === `${tabLabel} configuration` ||
+                    title === `${tabLabel} settings`;
+                if (!matchesTab) return;
 
-            legend.dataset.settingsHiddenRoot = "1";
-            legend.hidden = true;
-            // Keep the section body visible — page H1 replaces this legend.
-            fs.removeAttribute("data-collapsed");
-            const group = fs.querySelector<HTMLElement>(':scope > [data-slot="field-group"]');
-            if (group) group.hidden = false;
-            const desc = fs.querySelector<HTMLElement>(
-                ':scope > [data-slot="field-description"]'
-            );
-            if (desc) {
-                const d = (desc.textContent ?? "").trim().toLowerCase();
-                if (
-                    !d ||
-                    d === `${tabLabel} configuration` ||
-                    d.includes(`${tabLabel} configuration`)
-                ) {
-                    desc.hidden = true;
+                legend.dataset.settingsHiddenRoot = "1";
+                legend.hidden = true;
+                // Keep the section body visible — page H1 replaces this legend.
+                fs.removeAttribute("data-collapsed");
+                const group = fs.querySelector<HTMLElement>(':scope > [data-slot="field-group"]');
+                if (group) group.hidden = false;
+                const desc = fs.querySelector<HTMLElement>(
+                    ':scope > [data-slot="field-description"]'
+                );
+                if (desc) {
+                    const d = (desc.textContent ?? "").trim().toLowerCase();
+                    if (
+                        !d ||
+                        d === `${tabLabel} configuration` ||
+                        d.includes(`${tabLabel} configuration`)
+                    ) {
+                        desc.hidden = true;
+                    }
                 }
             }
-        });
+        );
     }
 
     function enhanceCollapsibleSections(root: HTMLElement): () => void {
@@ -465,9 +469,15 @@
     /* Provider cards (Scraping / Downloaders / Content): nested provider fieldsets.
        Note: BasicForm is <form class="settings-form"> — no nested <form>. */
     :global(
-        .settings-form[data-settings-tab="scraping"] > fieldset[data-slot="field-set"] fieldset[data-slot="field-set"],
-        .settings-form[data-settings-tab="downloaders"] > fieldset[data-slot="field-set"] fieldset[data-slot="field-set"],
-        .settings-form[data-settings-tab="content"] > fieldset[data-slot="field-set"] fieldset[data-slot="field-set"]
+        .settings-form[data-settings-tab="scraping"]
+            > fieldset[data-slot="field-set"]
+            fieldset[data-slot="field-set"],
+        .settings-form[data-settings-tab="downloaders"]
+            > fieldset[data-slot="field-set"]
+            fieldset[data-slot="field-set"],
+        .settings-form[data-settings-tab="content"]
+            > fieldset[data-slot="field-set"]
+            fieldset[data-slot="field-set"]
     ) {
         border-color: color-mix(in oklab, var(--color-border) 70%, transparent);
         background: linear-gradient(
@@ -500,9 +510,7 @@
         content: none;
     }
 
-    :global(
-        .settings-form legend[data-slot="field-legend"][data-settings-enabled="1"]::after
-    ) {
+    :global(.settings-form legend[data-slot="field-legend"][data-settings-enabled="1"]::after) {
         content: "Enabled";
         margin-left: auto;
         font-size: 0.65rem;
@@ -725,7 +733,9 @@
 
     :global(.settings-form [data-slot="field"]:has(button[role="switch"]) button[role="switch"]),
     :global(
-        .settings-form [data-slot="field"]:has(button[data-slot="checkbox"]) button[data-slot="checkbox"]
+        .settings-form
+            [data-slot="field"]:has(button[data-slot="checkbox"])
+            button[data-slot="checkbox"]
     ),
     :global(.settings-form [data-slot="field"]:has(input[type="checkbox"]) input[type="checkbox"]) {
         order: 1;

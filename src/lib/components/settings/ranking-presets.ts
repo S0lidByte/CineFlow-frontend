@@ -76,14 +76,7 @@ export const RANKING_PRESETS: RankingPreset[] = [
         description: "Allow dual/MULTi audio and common WEB encodes.",
         enableFetch: {
             quality: ["avc", "hevc", "web", "webdl", "hdtv"],
-            audio: [
-                "aac",
-                "flac",
-                "stereo",
-                "surround",
-                "dolby_digital",
-                "dolby_digital_plus"
-            ],
+            audio: ["aac", "flac", "stereo", "surround", "dolby_digital", "dolby_digital_plus"],
             hdr: ["sdr", "hdr", "bit10"],
             rips: ["webrip", "hdrip"],
             extras: ["dubbed", "subbed", "proper", "repack", "uncensored", "scene"],
@@ -129,9 +122,7 @@ export function applyRankingPreset(
 
 export function humanizeAttr(key: string, titles?: Record<string, string>): string {
     if (titles?.[key]) return titles[key];
-    return key
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase());
+    return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function denyKeyFor(category: string, attribute: string): string {
