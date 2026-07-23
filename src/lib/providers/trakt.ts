@@ -7023,85 +7023,88 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        id?: number;
-                        watched_at?: string;
-                        sharing?: {
-                            twitter?: boolean;
-                            mastodon?: boolean;
-                            tumblr?: boolean;
-                        };
-                        movie?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    } | {
-                        id?: number;
-                        watched_at?: string;
-                        sharing?: {
-                            twitter?: boolean;
-                            mastodon?: boolean;
-                            tumblr?: boolean;
-                        };
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    } | {
-                        id?: number;
-                        watched_at?: string;
-                        sharing?: {
-                            twitter?: boolean;
-                            mastodon?: boolean;
-                            tumblr?: boolean;
-                        };
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: unknown;
-                                tmdb?: unknown;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    };
+                    "application/json":
+                        | {
+                              id?: number;
+                              watched_at?: string;
+                              sharing?: {
+                                  twitter?: boolean;
+                                  mastodon?: boolean;
+                                  tumblr?: boolean;
+                              };
+                              movie?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }
+                        | {
+                              id?: number;
+                              watched_at?: string;
+                              sharing?: {
+                                  twitter?: boolean;
+                                  mastodon?: boolean;
+                                  tumblr?: boolean;
+                              };
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }
+                        | {
+                              id?: number;
+                              watched_at?: string;
+                              sharing?: {
+                                  twitter?: boolean;
+                                  mastodon?: boolean;
+                                  tumblr?: boolean;
+                              };
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: unknown;
+                                      tmdb?: unknown;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          };
                 };
             };
             /** @description There is already a checkin in progress. */
@@ -7276,62 +7279,64 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        id?: number;
-                        parent_id?: number;
-                        created_at?: string;
-                        updated_at?: string;
-                        comment?: string;
-                        spoiler?: boolean;
-                        review?: boolean;
-                        replies?: number;
-                        likes?: number;
-                        user_stats?: {
-                            rating?: unknown;
-                            play_count?: number;
-                            completed_count?: number;
-                        };
-                        user?: {
-                            username?: string;
-                            private?: boolean;
-                            name?: string;
-                            vip?: boolean;
-                            vip_ep?: boolean;
-                            ids?: {
-                                slug?: string;
-                            };
-                        };
-                        sharing?: {
-                            twitter?: boolean;
-                            tumblr?: boolean;
-                            medium?: boolean;
-                        };
-                    } | {
-                        id?: number;
-                        parent_id?: number;
-                        created_at?: string;
-                        updated_at?: string;
-                        comment?: string;
-                        spoiler?: boolean;
-                        review?: boolean;
-                        replies?: number;
-                        likes?: number;
-                        user_stats?: {
-                            rating?: unknown;
-                            play_count?: number;
-                            completed_count?: number;
-                        };
-                        user?: {
-                            username?: string;
-                            private?: boolean;
-                            name?: string;
-                            vip?: boolean;
-                            vip_ep?: boolean;
-                            ids?: {
-                                slug?: string;
-                            };
-                        };
-                    };
+                    "application/json":
+                        | {
+                              id?: number;
+                              parent_id?: number;
+                              created_at?: string;
+                              updated_at?: string;
+                              comment?: string;
+                              spoiler?: boolean;
+                              review?: boolean;
+                              replies?: number;
+                              likes?: number;
+                              user_stats?: {
+                                  rating?: unknown;
+                                  play_count?: number;
+                                  completed_count?: number;
+                              };
+                              user?: {
+                                  username?: string;
+                                  private?: boolean;
+                                  name?: string;
+                                  vip?: boolean;
+                                  vip_ep?: boolean;
+                                  ids?: {
+                                      slug?: string;
+                                  };
+                              };
+                              sharing?: {
+                                  twitter?: boolean;
+                                  tumblr?: boolean;
+                                  medium?: boolean;
+                              };
+                          }
+                        | {
+                              id?: number;
+                              parent_id?: number;
+                              created_at?: string;
+                              updated_at?: string;
+                              comment?: string;
+                              spoiler?: boolean;
+                              review?: boolean;
+                              replies?: number;
+                              likes?: number;
+                              user_stats?: {
+                                  rating?: unknown;
+                                  play_count?: number;
+                                  completed_count?: number;
+                              };
+                              user?: {
+                                  username?: string;
+                                  private?: boolean;
+                                  name?: string;
+                                  vip?: boolean;
+                                  vip_ep?: boolean;
+                                  ids?: {
+                                      slug?: string;
+                                  };
+                              };
+                          };
                 };
             };
         };
@@ -9138,17 +9143,19 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        name: string;
-                        slug: string;
-                    }[] | {
-                        name: string;
-                        slug: string;
-                        subgenres: {
-                            name: string;
-                            slug: string;
-                        }[];
-                    }[];
+                    "application/json":
+                        | {
+                              name: string;
+                              slug: string;
+                          }[]
+                        | {
+                              name: string;
+                              slug: string;
+                              subgenres: {
+                                  name: string;
+                                  slug: string;
+                              }[];
+                          }[];
                 };
             };
         };
@@ -9777,7 +9784,26 @@ export interface operations {
                  * @description Sort by a specific property
                  * @example rank
                  */
-                sort_by: "rank" | "added" | "title" | "released" | "runtime" | "popularity" | "random" | "percentage" | "imdb_rating" | "tmdb_rating" | "rt_tomatometer" | "rt_audience" | "metascore" | "votes" | "imdb_votes" | "tmdb_votes" | "my_rating" | "watched" | "collected";
+                sort_by:
+                    | "rank"
+                    | "added"
+                    | "title"
+                    | "released"
+                    | "runtime"
+                    | "popularity"
+                    | "random"
+                    | "percentage"
+                    | "imdb_rating"
+                    | "tmdb_rating"
+                    | "rt_tomatometer"
+                    | "rt_audience"
+                    | "metascore"
+                    | "votes"
+                    | "imdb_votes"
+                    | "tmdb_votes"
+                    | "my_rating"
+                    | "watched"
+                    | "collected";
                 /**
                  * @description Sort direction
                  * @example asc
@@ -11518,42 +11544,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        title?: string;
-                        year?: number;
-                        ids?: {
-                            trakt?: number;
-                            slug?: string;
-                            imdb?: string;
-                            tmdb?: number;
-                        };
-                    } | {
-                        title?: string;
-                        year?: number;
-                        ids?: {
-                            trakt?: number;
-                            slug?: string;
-                            imdb?: string;
-                            tmdb?: number;
-                        };
-                        tagline?: string;
-                        overview?: string;
-                        released?: string;
-                        runtime?: number;
-                        country?: string;
-                        updated_at?: string;
-                        trailer?: unknown;
-                        homepage?: string;
-                        status?: string;
-                        rating?: number;
-                        votes?: number;
-                        comment_count?: number;
-                        languages?: string[];
-                        available_translations?: string[];
-                        genres?: string[];
-                        certification?: string;
-                        original_title?: string;
-                    };
+                    "application/json":
+                        | {
+                              title?: string;
+                              year?: number;
+                              ids?: {
+                                  trakt?: number;
+                                  slug?: string;
+                                  imdb?: string;
+                                  tmdb?: number;
+                              };
+                          }
+                        | {
+                              title?: string;
+                              year?: number;
+                              ids?: {
+                                  trakt?: number;
+                                  slug?: string;
+                                  imdb?: string;
+                                  tmdb?: number;
+                              };
+                              tagline?: string;
+                              overview?: string;
+                              released?: string;
+                              runtime?: number;
+                              country?: string;
+                              updated_at?: string;
+                              trailer?: unknown;
+                              homepage?: string;
+                              status?: string;
+                              rating?: number;
+                              votes?: number;
+                              comment_count?: number;
+                              languages?: string[];
+                              available_translations?: string[];
+                              genres?: string[];
+                              certification?: string;
+                              original_title?: string;
+                          };
                 };
             };
         };
@@ -13759,40 +13787,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        attached_to?: {
-                            type?: string;
-                        };
-                        type?: string;
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    } | {
-                        attached_to?: {
-                            type?: string;
-                            id?: number;
-                        };
-                        type?: string;
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    };
+                    "application/json":
+                        | {
+                              attached_to?: {
+                                  type?: string;
+                              };
+                              type?: string;
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }
+                        | {
+                              attached_to?: {
+                                  type?: string;
+                                  id?: number;
+                              };
+                              type?: string;
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          };
                 };
             };
         };
@@ -13958,37 +13988,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        name?: string;
-                        ids?: {
-                            trakt?: number;
-                            slug?: string;
-                            imdb?: string;
-                            tmdb?: number;
-                        };
-                    } | {
-                        name?: string;
-                        ids?: {
-                            trakt?: number;
-                            slug?: string;
-                            imdb?: string;
-                            tmdb?: number;
-                        };
-                        social_ids?: {
-                            twitter?: string;
-                            facebook?: string;
-                            instagram?: string;
-                            wikipedia?: unknown;
-                        };
-                        biography?: string;
-                        birthday?: string;
-                        death?: unknown;
-                        birthplace?: string;
-                        homepage?: string;
-                        gender?: string;
-                        known_for_department?: string;
-                        updated_at?: string;
-                    };
+                    "application/json":
+                        | {
+                              name?: string;
+                              ids?: {
+                                  trakt?: number;
+                                  slug?: string;
+                                  imdb?: string;
+                                  tmdb?: number;
+                              };
+                          }
+                        | {
+                              name?: string;
+                              ids?: {
+                                  trakt?: number;
+                                  slug?: string;
+                                  imdb?: string;
+                                  tmdb?: number;
+                              };
+                              social_ids?: {
+                                  twitter?: string;
+                                  facebook?: string;
+                                  instagram?: string;
+                                  wikipedia?: unknown;
+                              };
+                              biography?: string;
+                              birthday?: string;
+                              death?: unknown;
+                              birthplace?: string;
+                              homepage?: string;
+                              gender?: string;
+                              known_for_department?: string;
+                              updated_at?: string;
+                          };
                 };
             };
         };
@@ -14953,88 +14985,91 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        id?: number;
-                        action?: string;
-                        progress?: number;
-                        sharing?: {
-                            twitter?: boolean;
-                            mastodon?: boolean;
-                            tumblr?: boolean;
-                        };
-                        movie?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    } | {
-                        id?: number;
-                        action?: string;
-                        progress?: number;
-                        sharing?: {
-                            twitter?: boolean;
-                            mastodon?: boolean;
-                            tumblr?: boolean;
-                        };
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    } | {
-                        id?: number;
-                        action?: string;
-                        progress?: number;
-                        sharing?: {
-                            twitter?: boolean;
-                            mastodon?: boolean;
-                            tumblr?: boolean;
-                        };
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: unknown;
-                                tmdb?: unknown;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    };
+                    "application/json":
+                        | {
+                              id?: number;
+                              action?: string;
+                              progress?: number;
+                              sharing?: {
+                                  twitter?: boolean;
+                                  mastodon?: boolean;
+                                  tumblr?: boolean;
+                              };
+                              movie?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }
+                        | {
+                              id?: number;
+                              action?: string;
+                              progress?: number;
+                              sharing?: {
+                                  twitter?: boolean;
+                                  mastodon?: boolean;
+                                  tumblr?: boolean;
+                              };
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }
+                        | {
+                              id?: number;
+                              action?: string;
+                              progress?: number;
+                              sharing?: {
+                                  twitter?: boolean;
+                                  mastodon?: boolean;
+                                  tumblr?: boolean;
+                              };
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: unknown;
+                                      tmdb?: unknown;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          };
                 };
             };
         };
@@ -15190,88 +15225,91 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        id?: number;
-                        action?: string;
-                        progress?: number;
-                        sharing?: {
-                            twitter?: boolean;
-                            mastodon?: boolean;
-                            tumblr?: boolean;
-                        };
-                        movie?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    } | {
-                        id?: number;
-                        action?: string;
-                        progress?: number;
-                        sharing?: {
-                            twitter?: boolean;
-                            mastodon?: boolean;
-                            tumblr?: boolean;
-                        };
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    } | {
-                        id?: number;
-                        action?: string;
-                        progress?: number;
-                        sharing?: {
-                            twitter?: boolean;
-                            mastodon?: boolean;
-                            tumblr?: boolean;
-                        };
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: unknown;
-                                tmdb?: unknown;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    };
+                    "application/json":
+                        | {
+                              id?: number;
+                              action?: string;
+                              progress?: number;
+                              sharing?: {
+                                  twitter?: boolean;
+                                  mastodon?: boolean;
+                                  tumblr?: boolean;
+                              };
+                              movie?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }
+                        | {
+                              id?: number;
+                              action?: string;
+                              progress?: number;
+                              sharing?: {
+                                  twitter?: boolean;
+                                  mastodon?: boolean;
+                                  tumblr?: boolean;
+                              };
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }
+                        | {
+                              id?: number;
+                              action?: string;
+                              progress?: number;
+                              sharing?: {
+                                  twitter?: boolean;
+                                  mastodon?: boolean;
+                                  tumblr?: boolean;
+                              };
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: unknown;
+                                      tmdb?: unknown;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          };
                 };
             };
             /** @description The same item was recently scrobbled. */
@@ -15304,7 +15342,16 @@ export interface operations {
                  * @description Specific text fields.
                  * @example title
                  */
-                fields?: "title" | "tagline" | "overview" | "people" | "translations" | "aliases" | "name" | "biography" | "description";
+                fields?:
+                    | "title"
+                    | "tagline"
+                    | "overview"
+                    | "people"
+                    | "translations"
+                    | "aliases"
+                    | "name"
+                    | "biography"
+                    | "description";
             };
             header?: {
                 /**
@@ -16984,51 +17031,53 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        title?: string;
-                        year?: number;
-                        ids?: {
-                            trakt?: number;
-                            slug?: string;
-                            tvdb?: number;
-                            imdb?: string;
-                            tmdb?: number;
-                        };
-                    } | {
-                        title?: string;
-                        year?: number;
-                        ids?: {
-                            trakt?: number;
-                            slug?: string;
-                            tvdb?: number;
-                            imdb?: string;
-                            tmdb?: number;
-                        };
-                        tagline?: string;
-                        overview?: string;
-                        first_aired?: string;
-                        airs?: {
-                            day?: string;
-                            time?: string;
-                            timezone?: string;
-                        };
-                        runtime?: number;
-                        certification?: string;
-                        network?: string;
-                        country?: string;
-                        updated_at?: string;
-                        trailer?: unknown;
-                        homepage?: string;
-                        status?: string;
-                        rating?: number;
-                        votes?: number;
-                        comment_count?: number;
-                        languages?: string[];
-                        available_translations?: string[];
-                        genres?: string[];
-                        aired_episodes?: number;
-                        original_title?: string;
-                    };
+                    "application/json":
+                        | {
+                              title?: string;
+                              year?: number;
+                              ids?: {
+                                  trakt?: number;
+                                  slug?: string;
+                                  tvdb?: number;
+                                  imdb?: string;
+                                  tmdb?: number;
+                              };
+                          }
+                        | {
+                              title?: string;
+                              year?: number;
+                              ids?: {
+                                  trakt?: number;
+                                  slug?: string;
+                                  tvdb?: number;
+                                  imdb?: string;
+                                  tmdb?: number;
+                              };
+                              tagline?: string;
+                              overview?: string;
+                              first_aired?: string;
+                              airs?: {
+                                  day?: string;
+                                  time?: string;
+                                  timezone?: string;
+                              };
+                              runtime?: number;
+                              certification?: string;
+                              network?: string;
+                              country?: string;
+                              updated_at?: string;
+                              trailer?: unknown;
+                              homepage?: string;
+                              status?: string;
+                              rating?: number;
+                              votes?: number;
+                              comment_count?: number;
+                              languages?: string[];
+                              available_translations?: string[];
+                              genres?: string[];
+                              aired_episodes?: number;
+                              original_title?: string;
+                          };
                 };
             };
         };
@@ -17273,7 +17322,15 @@ export interface operations {
                  * @description how to sort
                  * @example newest
                  */
-                sort: "newest" | "oldest" | "likes" | "replies" | "highest" | "lowest" | "plays" | "watched";
+                sort:
+                    | "newest"
+                    | "oldest"
+                    | "likes"
+                    | "replies"
+                    | "highest"
+                    | "lowest"
+                    | "plays"
+                    | "watched";
             };
             cookie?: never;
         };
@@ -17477,7 +17534,9 @@ export interface operations {
                  * @example true
                  */
                 count_specials?: string;
-                "last_activity (optional, string, `aired`) ... used to calculate last_episode and next_episode": "aired" | "collected";
+                "last_activity (optional, string, `aired`) ... used to calculate last_episode and next_episode":
+                    | "aired"
+                    | "collected";
             };
             header?: {
                 /**
@@ -17668,7 +17727,9 @@ export interface operations {
                  * @example true
                  */
                 count_specials?: string;
-                "last_activity (optional, string, `aired`) ... used to calculate last_episode and next_episode": "aired" | "watched";
+                "last_activity (optional, string, `aired`) ... used to calculate last_episode and next_episode":
+                    | "aired"
+                    | "watched";
             };
             header?: {
                 /**
@@ -17964,234 +18025,236 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        cast?: {
-                            characters: string[];
-                            episode_count: number;
-                            person: {
-                                name?: string;
-                                ids?: {
-                                    trakt?: number;
-                                    slug?: string;
-                                    imdb?: string;
-                                    tmdb?: number;
-                                };
-                            };
-                        }[];
-                        crew?: {
-                            art?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            production?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            sound?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            "visual effects"?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            "costume & make-up"?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            writing?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            directing?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                        };
-                    } | {
-                        cast?: {
-                            characters: string[];
-                            episode_count: number;
-                            person: {
-                                name?: string;
-                                ids?: {
-                                    trakt?: number;
-                                    slug?: string;
-                                    imdb?: string;
-                                    tmdb?: number;
-                                };
-                            };
-                        }[];
-                        guest_stars?: {
-                            characters: string[];
-                            episode_count: number;
-                            person: {
-                                name?: string;
-                                ids?: {
-                                    trakt?: number;
-                                    slug?: string;
-                                    imdb?: string;
-                                    tmdb?: number;
-                                };
-                            };
-                        }[];
-                        crew?: {
-                            art?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            production?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            sound?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            "visual effects"?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            "costume & make-up"?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            writing?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            directing?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                        };
-                    };
+                    "application/json":
+                        | {
+                              cast?: {
+                                  characters: string[];
+                                  episode_count: number;
+                                  person: {
+                                      name?: string;
+                                      ids?: {
+                                          trakt?: number;
+                                          slug?: string;
+                                          imdb?: string;
+                                          tmdb?: number;
+                                      };
+                                  };
+                              }[];
+                              crew?: {
+                                  art?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  production?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  sound?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  "visual effects"?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  "costume & make-up"?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  writing?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  directing?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                              };
+                          }
+                        | {
+                              cast?: {
+                                  characters: string[];
+                                  episode_count: number;
+                                  person: {
+                                      name?: string;
+                                      ids?: {
+                                          trakt?: number;
+                                          slug?: string;
+                                          imdb?: string;
+                                          tmdb?: number;
+                                      };
+                                  };
+                              }[];
+                              guest_stars?: {
+                                  characters: string[];
+                                  episode_count: number;
+                                  person: {
+                                      name?: string;
+                                      ids?: {
+                                          trakt?: number;
+                                          slug?: string;
+                                          imdb?: string;
+                                          tmdb?: number;
+                                      };
+                                  };
+                              }[];
+                              crew?: {
+                                  art?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  production?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  sound?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  "visual effects"?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  "costume & make-up"?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  writing?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  directing?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                              };
+                          };
                 };
             };
         };
@@ -18884,49 +18947,52 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        number: number;
-                        ids: {
-                            trakt?: number;
-                            tvdb?: number;
-                            tmdb?: number;
-                        };
-                    }[] | {
-                        number: number;
-                        ids: {
-                            trakt?: number;
-                            tvdb?: number;
-                            tmdb?: number;
-                        };
-                        rating: number;
-                        votes: number;
-                        episode_count: number;
-                        aired_episodes: number;
-                        title: string;
-                        overview: string | null;
-                        first_aired: string;
-                        udpated_at: string;
-                        network: string;
-                        original_title: string | null;
-                    }[] | {
-                        number: number;
-                        ids: {
-                            trakt?: number;
-                            tvdb?: number | null;
-                            tmdb?: number;
-                        };
-                        episodes: {
-                            season: number;
-                            number: number;
-                            title: string;
-                            ids: {
-                                trakt?: number;
-                                tvdb?: number | null;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        }[];
-                    }[];
+                    "application/json":
+                        | {
+                              number: number;
+                              ids: {
+                                  trakt?: number;
+                                  tvdb?: number;
+                                  tmdb?: number;
+                              };
+                          }[]
+                        | {
+                              number: number;
+                              ids: {
+                                  trakt?: number;
+                                  tvdb?: number;
+                                  tmdb?: number;
+                              };
+                              rating: number;
+                              votes: number;
+                              episode_count: number;
+                              aired_episodes: number;
+                              title: string;
+                              overview: string | null;
+                              first_aired: string;
+                              udpated_at: string;
+                              network: string;
+                              original_title: string | null;
+                          }[]
+                        | {
+                              number: number;
+                              ids: {
+                                  trakt?: number;
+                                  tvdb?: number | null;
+                                  tmdb?: number;
+                              };
+                              episodes: {
+                                  season: number;
+                                  number: number;
+                                  title: string;
+                                  ids: {
+                                      trakt?: number;
+                                      tvdb?: number | null;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              }[];
+                          }[];
                 };
             };
         };
@@ -18970,31 +19036,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        number?: number;
-                        ids?: {
-                            trakt?: number;
-                            tvdb?: number;
-                            tmdb?: number;
-                        };
-                    } | {
-                        number?: number;
-                        ids?: {
-                            trakt?: number;
-                            tvdb?: number;
-                            tmdb?: number;
-                        };
-                        rating?: number;
-                        votes?: number;
-                        episode_count?: number;
-                        aired_episodes?: number;
-                        title?: string;
-                        overview?: string;
-                        first_aired?: string;
-                        udpated_at?: string;
-                        network?: string;
-                        original_title?: string;
-                    };
+                    "application/json":
+                        | {
+                              number?: number;
+                              ids?: {
+                                  trakt?: number;
+                                  tvdb?: number;
+                                  tmdb?: number;
+                              };
+                          }
+                        | {
+                              number?: number;
+                              ids?: {
+                                  trakt?: number;
+                                  tvdb?: number;
+                                  tmdb?: number;
+                              };
+                              rating?: number;
+                              votes?: number;
+                              episode_count?: number;
+                              aired_episodes?: number;
+                              title?: string;
+                              overview?: string;
+                              first_aired?: string;
+                              udpated_at?: string;
+                              network?: string;
+                              original_title?: string;
+                          };
                 };
             };
         };
@@ -19271,7 +19339,15 @@ export interface operations {
                  * @description how to sort
                  * @example newest
                  */
-                sort: "newest" | "oldest" | "likes" | "replies" | "highest" | "lowest" | "plays" | "watched";
+                sort:
+                    | "newest"
+                    | "oldest"
+                    | "likes"
+                    | "replies"
+                    | "highest"
+                    | "lowest"
+                    | "plays"
+                    | "watched";
             };
             cookie?: never;
         };
@@ -19501,208 +19577,210 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        cast?: {
-                            characters: string[];
-                            episode_count: number;
-                            person: {
-                                name?: string;
-                                ids?: {
-                                    trakt?: number;
-                                    slug?: string;
-                                    imdb?: string;
-                                    tmdb?: number;
-                                };
-                            };
-                        }[];
-                        crew?: {
-                            production?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            sound?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            "costume & make-up"?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            writing?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            art?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            directing?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                        };
-                    } | {
-                        cast?: {
-                            characters: string[];
-                            episode_count: number;
-                            person: {
-                                name?: string;
-                                ids?: {
-                                    trakt?: number;
-                                    slug?: string;
-                                    imdb?: string;
-                                    tmdb?: number;
-                                };
-                            };
-                        }[];
-                        guest_stars?: {
-                            characters: string[];
-                            episode_count: number;
-                            person: {
-                                name?: string;
-                                ids?: {
-                                    trakt?: number;
-                                    slug?: string;
-                                    imdb?: string;
-                                    tmdb?: number;
-                                };
-                            };
-                        }[];
-                        crew?: {
-                            production?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            sound?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            "costume & make-up"?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            writing?: {
-                                jobs?: string[];
-                                episode_count?: number;
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            art?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            directing?: {
-                                jobs: string[];
-                                episode_count: number;
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                        };
-                    };
+                    "application/json":
+                        | {
+                              cast?: {
+                                  characters: string[];
+                                  episode_count: number;
+                                  person: {
+                                      name?: string;
+                                      ids?: {
+                                          trakt?: number;
+                                          slug?: string;
+                                          imdb?: string;
+                                          tmdb?: number;
+                                      };
+                                  };
+                              }[];
+                              crew?: {
+                                  production?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  sound?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  "costume & make-up"?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  writing?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  art?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  directing?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                              };
+                          }
+                        | {
+                              cast?: {
+                                  characters: string[];
+                                  episode_count: number;
+                                  person: {
+                                      name?: string;
+                                      ids?: {
+                                          trakt?: number;
+                                          slug?: string;
+                                          imdb?: string;
+                                          tmdb?: number;
+                                      };
+                                  };
+                              }[];
+                              guest_stars?: {
+                                  characters: string[];
+                                  episode_count: number;
+                                  person: {
+                                      name?: string;
+                                      ids?: {
+                                          trakt?: number;
+                                          slug?: string;
+                                          imdb?: string;
+                                          tmdb?: number;
+                                      };
+                                  };
+                              }[];
+                              crew?: {
+                                  production?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  sound?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  "costume & make-up"?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  writing?: {
+                                      jobs?: string[];
+                                      episode_count?: number;
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  art?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  directing?: {
+                                      jobs: string[];
+                                      episode_count: number;
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                              };
+                          };
                 };
             };
         };
@@ -20399,145 +20477,147 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        cast?: {
-                            characters: string[];
-                            person: {
-                                name?: string;
-                                ids?: {
-                                    trakt?: number;
-                                    slug?: string;
-                                    imdb?: string;
-                                    tmdb?: number;
-                                };
-                            };
-                        }[];
-                        crew?: {
-                            writing?: {
-                                jobs: string[];
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            directing?: {
-                                jobs?: string[];
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            camera?: {
-                                jobs?: string[];
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            editing?: {
-                                jobs?: string[];
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                        };
-                    } | {
-                        cast?: {
-                            characters: string[];
-                            person: {
-                                name?: string;
-                                ids?: {
-                                    trakt?: number;
-                                    slug?: string;
-                                    imdb?: string;
-                                    tmdb?: number;
-                                };
-                            };
-                        }[];
-                        guest_stars?: {
-                            characters: string[];
-                            person: {
-                                name?: string;
-                                ids?: {
-                                    trakt?: number;
-                                    slug?: string;
-                                    imdb?: string | null;
-                                    tmdb?: number;
-                                };
-                            };
-                        }[];
-                        crew?: {
-                            writing?: {
-                                jobs: string[];
-                                person: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            directing?: {
-                                jobs?: string[];
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            camera?: {
-                                jobs?: string[];
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                            editing?: {
-                                jobs?: string[];
-                                person?: {
-                                    name?: string;
-                                    ids?: {
-                                        trakt?: number;
-                                        slug?: string;
-                                        imdb?: string;
-                                        tmdb?: number;
-                                    };
-                                };
-                            }[];
-                        };
-                    };
+                    "application/json":
+                        | {
+                              cast?: {
+                                  characters: string[];
+                                  person: {
+                                      name?: string;
+                                      ids?: {
+                                          trakt?: number;
+                                          slug?: string;
+                                          imdb?: string;
+                                          tmdb?: number;
+                                      };
+                                  };
+                              }[];
+                              crew?: {
+                                  writing?: {
+                                      jobs: string[];
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  directing?: {
+                                      jobs?: string[];
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  camera?: {
+                                      jobs?: string[];
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  editing?: {
+                                      jobs?: string[];
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                              };
+                          }
+                        | {
+                              cast?: {
+                                  characters: string[];
+                                  person: {
+                                      name?: string;
+                                      ids?: {
+                                          trakt?: number;
+                                          slug?: string;
+                                          imdb?: string;
+                                          tmdb?: number;
+                                      };
+                                  };
+                              }[];
+                              guest_stars?: {
+                                  characters: string[];
+                                  person: {
+                                      name?: string;
+                                      ids?: {
+                                          trakt?: number;
+                                          slug?: string;
+                                          imdb?: string | null;
+                                          tmdb?: number;
+                                      };
+                                  };
+                              }[];
+                              crew?: {
+                                  writing?: {
+                                      jobs: string[];
+                                      person: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  directing?: {
+                                      jobs?: string[];
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  camera?: {
+                                      jobs?: string[];
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                                  editing?: {
+                                      jobs?: string[];
+                                      person?: {
+                                          name?: string;
+                                          ids?: {
+                                              trakt?: number;
+                                              slug?: string;
+                                              imdb?: string;
+                                              tmdb?: number;
+                                          };
+                                      };
+                                  }[];
+                              };
+                          };
                 };
             };
         };
@@ -21128,91 +21208,95 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        collected_at: string;
-                        updated_at: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        collected_at: string;
-                        updated_at: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        metadata: {
-                            media_type?: string;
-                            resolution?: string;
-                            hdr?: string;
-                            audio?: string;
-                            audio_channels?: string;
-                            "3d"?: boolean;
-                        };
-                    }[] | {
-                        last_collected_at: string;
-                        last_updated_at: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        seasons: {
-                            number: number;
-                            episodes: {
-                                number: number;
-                                collected_at: string;
-                            }[];
-                        }[];
-                    }[] | {
-                        last_collected_at: string;
-                        last_updated_at: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        seasons: {
-                            number: number;
-                            episodes: {
-                                number: number;
-                                collected_at: string;
-                                metadata: {
-                                    media_type?: string;
-                                    resolution?: string;
-                                    hdr?: string;
-                                    audio?: string;
-                                    audio_channels?: string;
-                                    "3d"?: boolean;
-                                };
-                            }[];
-                        }[];
-                    }[];
+                    "application/json":
+                        | {
+                              collected_at: string;
+                              updated_at: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              collected_at: string;
+                              updated_at: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              metadata: {
+                                  media_type?: string;
+                                  resolution?: string;
+                                  hdr?: string;
+                                  audio?: string;
+                                  audio_channels?: string;
+                                  "3d"?: boolean;
+                              };
+                          }[]
+                        | {
+                              last_collected_at: string;
+                              last_updated_at: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              seasons: {
+                                  number: number;
+                                  episodes: {
+                                      number: number;
+                                      collected_at: string;
+                                  }[];
+                              }[];
+                          }[]
+                        | {
+                              last_collected_at: string;
+                              last_updated_at: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              seasons: {
+                                  number: number;
+                                  episodes: {
+                                      number: number;
+                                      collected_at: string;
+                                      metadata: {
+                                          media_type?: string;
+                                          resolution?: string;
+                                          hdr?: string;
+                                          audio?: string;
+                                          audio_channels?: string;
+                                          "3d"?: boolean;
+                                      };
+                                  }[];
+                              }[];
+                          }[];
                 };
             };
         };
@@ -21703,61 +21787,64 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        plays: number;
-                        last_watched_at: string;
-                        last_updated_at: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        plays: number;
-                        last_watched_at: string;
-                        last_updated_at: string;
-                        reset_at?: unknown;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        seasons: {
-                            number: number;
-                            episodes: {
-                                number: number;
-                                plays: number;
-                                last_watched_at: string;
-                            }[];
-                        }[];
-                    }[] | {
-                        plays: number;
-                        last_watched_at: string;
-                        last_updated_at: string;
-                        reset_at: string | null;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              plays: number;
+                              last_watched_at: string;
+                              last_updated_at: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              plays: number;
+                              last_watched_at: string;
+                              last_updated_at: string;
+                              reset_at?: unknown;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              seasons: {
+                                  number: number;
+                                  episodes: {
+                                      number: number;
+                                      plays: number;
+                                      last_watched_at: string;
+                                  }[];
+                              }[];
+                          }[]
+                        | {
+                              plays: number;
+                              last_watched_at: string;
+                              last_updated_at: string;
+                              reset_at: string | null;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -21818,86 +21905,89 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        id: number;
-                        watched_at: string;
-                        action: string;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: unknown;
-                                tmdb?: number;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        id: number;
-                        watched_at: string;
-                        action: string;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        id: number;
-                        watched_at: string;
-                        action: string;
-                        type: string;
-                        episode: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: unknown;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              id: number;
+                              watched_at: string;
+                              action: string;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: unknown;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              id: number;
+                              watched_at: string;
+                              action: string;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              id: number;
+                              watched_at: string;
+                              action: string;
+                              type: string;
+                              episode: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: unknown;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -22381,84 +22471,88 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        rated_at: string;
-                        rating: number;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rated_at: string;
-                        rating: number;
-                        type: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rated_at: string;
-                        rating: number;
-                        type: string;
-                        season: {
-                            number?: number;
-                            ids?: {
-                                tvdb?: number;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rated_at: string;
-                        rating: number;
-                        type: string;
-                        episode: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              rated_at: string;
+                              rating: number;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rated_at: string;
+                              rating: number;
+                              type: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rated_at: string;
+                              rating: number;
+                              type: string;
+                              season: {
+                                  number?: number;
+                                  ids?: {
+                                      tvdb?: number;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rated_at: string;
+                              rating: number;
+                              type: string;
+                              episode: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -22933,7 +23027,26 @@ export interface operations {
                  * @description Sort by a specific property
                  * @example rank
                  */
-                sort_by: "rank" | "added" | "title" | "released" | "runtime" | "popularity" | "random" | "percentage" | "imdb_rating" | "tmdb_rating" | "rt_tomatometer" | "rt_audience" | "metascore" | "votes" | "imdb_votes" | "tmdb_votes" | "my_rating" | "watched" | "collected";
+                sort_by:
+                    | "rank"
+                    | "added"
+                    | "title"
+                    | "released"
+                    | "runtime"
+                    | "popularity"
+                    | "random"
+                    | "percentage"
+                    | "imdb_rating"
+                    | "tmdb_rating"
+                    | "rt_tomatometer"
+                    | "rt_audience"
+                    | "metascore"
+                    | "votes"
+                    | "imdb_votes"
+                    | "tmdb_votes"
+                    | "my_rating"
+                    | "watched"
+                    | "collected";
                 /**
                  * @description Sort direction
                  * @example asc
@@ -22955,92 +23068,96 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: string;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: string | null;
-                        type: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: unknown;
-                        type: string;
-                        season: {
-                            number?: number;
-                            ids?: {
-                                tvdb?: number;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: unknown;
-                        type: string;
-                        episode: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: string;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: string | null;
+                              type: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: unknown;
+                              type: string;
+                              season: {
+                                  number?: number;
+                                  ids?: {
+                                      tvdb?: number;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: unknown;
+                              type: string;
+                              episode: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -23765,7 +23882,26 @@ export interface operations {
                  * @description Sort by a specific property
                  * @example rank
                  */
-                sort_by: "rank" | "added" | "title" | "released" | "runtime" | "popularity" | "random" | "percentage" | "imdb_rating" | "tmdb_rating" | "rt_tomatometer" | "rt_audience" | "metascore" | "votes" | "imdb_votes" | "tmdb_votes" | "my_rating" | "watched" | "collected";
+                sort_by:
+                    | "rank"
+                    | "added"
+                    | "title"
+                    | "released"
+                    | "runtime"
+                    | "popularity"
+                    | "random"
+                    | "percentage"
+                    | "imdb_rating"
+                    | "tmdb_rating"
+                    | "rt_tomatometer"
+                    | "rt_audience"
+                    | "metascore"
+                    | "votes"
+                    | "imdb_votes"
+                    | "tmdb_votes"
+                    | "my_rating"
+                    | "watched"
+                    | "collected";
                 /**
                  * @description Sort direction
                  * @example asc
@@ -23787,40 +23923,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: string;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: string;
-                        type: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: string;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: string;
+                              type: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -24871,7 +25009,14 @@ export interface operations {
             };
             path: {
                 /** @example calendar */
-                section: "calendar" | "progress_watched" | "progress_watched_reset" | "progress_collected" | "recommendations" | "comments" | "dropped";
+                section:
+                    | "calendar"
+                    | "progress_watched"
+                    | "progress_watched_reset"
+                    | "progress_collected"
+                    | "recommendations"
+                    | "comments"
+                    | "dropped";
             };
             cookie?: never;
         };
@@ -24960,7 +25105,12 @@ export interface operations {
             };
             path: {
                 /** @example calendar */
-                section: "calendar" | "progress_watched" | "progress_collected" | "recommendations" | "dropped";
+                section:
+                    | "calendar"
+                    | "progress_watched"
+                    | "progress_collected"
+                    | "recommendations"
+                    | "dropped";
             };
             cookie?: never;
         };
@@ -25127,7 +25277,13 @@ export interface operations {
             };
             path: {
                 /** @example calendar */
-                section: "calendar" | "progress_watched" | "progress_collected" | "recommendations" | "comments" | "dropped";
+                section:
+                    | "calendar"
+                    | "progress_watched"
+                    | "progress_collected"
+                    | "recommendations"
+                    | "comments"
+                    | "dropped";
             };
             cookie?: never;
         };
@@ -25304,53 +25460,57 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        username?: string;
-                        private?: boolean;
-                        name?: string;
-                        vip?: boolean;
-                        vip_ep?: boolean;
-                        ids?: {
-                            slug?: string;
-                        };
-                    } | {
-                        username?: string;
-                        private?: boolean;
-                        ids?: {
-                            slug?: string;
-                        };
-                    } | {
-                        username?: string;
-                        private?: boolean;
-                        name?: string;
-                        vip?: boolean;
-                        vip_ep?: boolean;
-                        ids?: {
-                            slug?: string;
-                        };
-                        joined_at?: string;
-                        location?: string;
-                        about?: string;
-                        gender?: string;
-                        age?: number;
-                        images?: {
-                            avatar?: {
-                                full?: string;
-                            };
-                        };
-                    } | {
-                        username?: string;
-                        private?: boolean;
-                        name?: string;
-                        vip?: boolean;
-                        vip_ep?: boolean;
-                        ids?: {
-                            slug?: string;
-                        };
-                        vip_og?: boolean;
-                        vip_years?: number;
-                        vip_cover_image?: string;
-                    };
+                    "application/json":
+                        | {
+                              username?: string;
+                              private?: boolean;
+                              name?: string;
+                              vip?: boolean;
+                              vip_ep?: boolean;
+                              ids?: {
+                                  slug?: string;
+                              };
+                          }
+                        | {
+                              username?: string;
+                              private?: boolean;
+                              ids?: {
+                                  slug?: string;
+                              };
+                          }
+                        | {
+                              username?: string;
+                              private?: boolean;
+                              name?: string;
+                              vip?: boolean;
+                              vip_ep?: boolean;
+                              ids?: {
+                                  slug?: string;
+                              };
+                              joined_at?: string;
+                              location?: string;
+                              about?: string;
+                              gender?: string;
+                              age?: number;
+                              images?: {
+                                  avatar?: {
+                                      full?: string;
+                                  };
+                              };
+                          }
+                        | {
+                              username?: string;
+                              private?: boolean;
+                              name?: string;
+                              vip?: boolean;
+                              vip_ep?: boolean;
+                              ids?: {
+                                  slug?: string;
+                              };
+                              vip_og?: boolean;
+                              vip_years?: number;
+                              vip_cover_image?: string;
+                          };
                 };
             };
         };
@@ -25399,105 +25559,108 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        liked_at?: string;
-                        type?: string;
-                        comment?: {
-                            id?: number;
-                            parent_id?: number;
-                            created_at?: string;
-                            updated_at?: string;
-                            comment?: string;
-                            spoiler?: boolean;
-                            review?: boolean;
-                            replies?: number;
-                            likes?: number;
-                            user_stats?: {
-                                rating?: unknown;
-                                play_count?: number;
-                                completed_count?: number;
-                            };
-                            user?: {
-                                username?: string;
-                                private?: boolean;
-                                name?: string;
-                                vip?: boolean;
-                                vip_ep?: boolean;
-                                ids?: {
-                                    slug?: string;
-                                };
-                            };
-                        };
-                    }[] | {
-                        liked_at?: string;
-                        type?: string;
-                        comment?: {
-                            id?: number;
-                            parent_id?: number;
-                            created_at?: string;
-                            updated_at?: string;
-                            comment?: string;
-                            spoiler?: boolean;
-                            review?: boolean;
-                            replies?: number;
-                            likes?: number;
-                            user_stats?: {
-                                rating?: unknown;
-                                play_count?: number;
-                                completed_count?: number;
-                            };
-                            user?: {
-                                username?: string;
-                                private?: boolean;
-                                name?: string;
-                                vip?: boolean;
-                                vip_ep?: boolean;
-                                ids?: {
-                                    slug?: string;
-                                };
-                            };
-                        };
-                        comment_type?: string;
-                        movie?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        liked_at?: string;
-                        type?: string;
-                        list?: {
-                            name?: string;
-                            description?: string;
-                            privacy?: string;
-                            share_link?: string;
-                            display_numbers?: boolean;
-                            allow_comments?: boolean;
-                            updated_at?: string;
-                            item_count?: number;
-                            comment_count?: number;
-                            likes?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                            };
-                            user?: {
-                                username?: string;
-                                private?: boolean;
-                                name?: string;
-                                vip?: boolean;
-                                vip_ep?: boolean;
-                                ids?: {
-                                    slug?: string;
-                                };
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              liked_at?: string;
+                              type?: string;
+                              comment?: {
+                                  id?: number;
+                                  parent_id?: number;
+                                  created_at?: string;
+                                  updated_at?: string;
+                                  comment?: string;
+                                  spoiler?: boolean;
+                                  review?: boolean;
+                                  replies?: number;
+                                  likes?: number;
+                                  user_stats?: {
+                                      rating?: unknown;
+                                      play_count?: number;
+                                      completed_count?: number;
+                                  };
+                                  user?: {
+                                      username?: string;
+                                      private?: boolean;
+                                      name?: string;
+                                      vip?: boolean;
+                                      vip_ep?: boolean;
+                                      ids?: {
+                                          slug?: string;
+                                      };
+                                  };
+                              };
+                          }[]
+                        | {
+                              liked_at?: string;
+                              type?: string;
+                              comment?: {
+                                  id?: number;
+                                  parent_id?: number;
+                                  created_at?: string;
+                                  updated_at?: string;
+                                  comment?: string;
+                                  spoiler?: boolean;
+                                  review?: boolean;
+                                  replies?: number;
+                                  likes?: number;
+                                  user_stats?: {
+                                      rating?: unknown;
+                                      play_count?: number;
+                                      completed_count?: number;
+                                  };
+                                  user?: {
+                                      username?: string;
+                                      private?: boolean;
+                                      name?: string;
+                                      vip?: boolean;
+                                      vip_ep?: boolean;
+                                      ids?: {
+                                          slug?: string;
+                                      };
+                                  };
+                              };
+                              comment_type?: string;
+                              movie?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              liked_at?: string;
+                              type?: string;
+                              list?: {
+                                  name?: string;
+                                  description?: string;
+                                  privacy?: string;
+                                  share_link?: string;
+                                  display_numbers?: boolean;
+                                  allow_comments?: boolean;
+                                  updated_at?: string;
+                                  item_count?: number;
+                                  comment_count?: number;
+                                  likes?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                  };
+                                  user?: {
+                                      username?: string;
+                                      private?: boolean;
+                                      name?: string;
+                                      vip?: boolean;
+                                      vip_ep?: boolean;
+                                      ids?: {
+                                          slug?: string;
+                                      };
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -25538,91 +25701,95 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        collected_at: string;
-                        updated_at: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        collected_at: string;
-                        updated_at: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        metadata: {
-                            media_type?: string;
-                            resolution?: string;
-                            hdr?: string;
-                            audio?: string;
-                            audio_channels?: string;
-                            "3d"?: boolean;
-                        };
-                    }[] | {
-                        last_collected_at: string;
-                        last_updated_at: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        seasons: {
-                            number: number;
-                            episodes: {
-                                number: number;
-                                collected_at: string;
-                            }[];
-                        }[];
-                    }[] | {
-                        last_collected_at: string;
-                        last_updated_at: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        seasons: {
-                            number: number;
-                            episodes: {
-                                number: number;
-                                collected_at: string;
-                                metadata: {
-                                    media_type?: string;
-                                    resolution?: string;
-                                    hdr?: string;
-                                    audio?: string;
-                                    audio_channels?: string;
-                                    "3d"?: boolean;
-                                };
-                            }[];
-                        }[];
-                    }[];
+                    "application/json":
+                        | {
+                              collected_at: string;
+                              updated_at: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              collected_at: string;
+                              updated_at: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              metadata: {
+                                  media_type?: string;
+                                  resolution?: string;
+                                  hdr?: string;
+                                  audio?: string;
+                                  audio_channels?: string;
+                                  "3d"?: boolean;
+                              };
+                          }[]
+                        | {
+                              last_collected_at: string;
+                              last_updated_at: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              seasons: {
+                                  number: number;
+                                  episodes: {
+                                      number: number;
+                                      collected_at: string;
+                                  }[];
+                              }[];
+                          }[]
+                        | {
+                              last_collected_at: string;
+                              last_updated_at: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              seasons: {
+                                  number: number;
+                                  episodes: {
+                                      number: number;
+                                      collected_at: string;
+                                      metadata: {
+                                          media_type?: string;
+                                          resolution?: string;
+                                          hdr?: string;
+                                          audio?: string;
+                                          audio_channels?: string;
+                                          "3d"?: boolean;
+                                      };
+                                  }[];
+                              }[];
+                          }[];
                 };
             };
         };
@@ -26011,7 +26178,16 @@ export interface operations {
                  */
                 id: string;
                 /** @example all */
-                type: "all" | "movies" | "shows" | "seasons" | "episodes" | "people" | "history" | "collection" | "ratings";
+                type:
+                    | "all"
+                    | "movies"
+                    | "shows"
+                    | "seasons"
+                    | "episodes"
+                    | "people"
+                    | "history"
+                    | "collection"
+                    | "ratings";
             };
             cookie?: never;
         };
@@ -26029,132 +26205,135 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        attached_to: {
-                            type?: string;
-                        };
-                        type: string;
-                        movie?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        note: {
-                            id?: number;
-                            notes?: string;
-                            privacy?: string;
-                            spoiler?: boolean;
-                            created_at?: string;
-                            updated_at?: string;
-                            user?: {
-                                username?: string;
-                                private?: boolean;
-                                name?: string;
-                                vip?: boolean;
-                                vip_ep?: boolean;
-                                ids?: {
-                                    slug?: string;
-                                    trakt?: number;
-                                };
-                            };
-                        };
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        attached_to?: {
-                            type?: string;
-                            id?: number;
-                        };
-                        type?: string;
-                        movie?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        note?: {
-                            id?: number;
-                            notes?: string;
-                            privacy?: string;
-                            spoiler?: boolean;
-                            created_at?: string;
-                            updated_at?: string;
-                            user?: {
-                                username?: string;
-                                private?: boolean;
-                                name?: string;
-                                vip?: boolean;
-                                vip_ep?: boolean;
-                                ids?: {
-                                    slug?: string;
-                                    trakt?: number;
-                                };
-                            };
-                        };
-                    }[] | {
-                        attached_to?: {
-                            type?: string;
-                        };
-                        type?: string;
-                        movie?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        note?: {
-                            id?: number;
-                            notes?: string;
-                            privacy?: string;
-                            spoiler?: boolean;
-                            created_at?: string;
-                            updated_at?: string;
-                            user?: {
-                                username?: string;
-                                private?: boolean;
-                                name?: string;
-                                vip?: boolean;
-                                vip_ep?: boolean;
-                                ids?: {
-                                    slug?: string;
-                                    trakt?: number;
-                                };
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              attached_to: {
+                                  type?: string;
+                              };
+                              type: string;
+                              movie?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              note: {
+                                  id?: number;
+                                  notes?: string;
+                                  privacy?: string;
+                                  spoiler?: boolean;
+                                  created_at?: string;
+                                  updated_at?: string;
+                                  user?: {
+                                      username?: string;
+                                      private?: boolean;
+                                      name?: string;
+                                      vip?: boolean;
+                                      vip_ep?: boolean;
+                                      ids?: {
+                                          slug?: string;
+                                          trakt?: number;
+                                      };
+                                  };
+                              };
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              attached_to?: {
+                                  type?: string;
+                                  id?: number;
+                              };
+                              type?: string;
+                              movie?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              note?: {
+                                  id?: number;
+                                  notes?: string;
+                                  privacy?: string;
+                                  spoiler?: boolean;
+                                  created_at?: string;
+                                  updated_at?: string;
+                                  user?: {
+                                      username?: string;
+                                      private?: boolean;
+                                      name?: string;
+                                      vip?: boolean;
+                                      vip_ep?: boolean;
+                                      ids?: {
+                                          slug?: string;
+                                          trakt?: number;
+                                      };
+                                  };
+                              };
+                          }[]
+                        | {
+                              attached_to?: {
+                                  type?: string;
+                              };
+                              type?: string;
+                              movie?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              note?: {
+                                  id?: number;
+                                  notes?: string;
+                                  privacy?: string;
+                                  spoiler?: boolean;
+                                  created_at?: string;
+                                  updated_at?: string;
+                                  user?: {
+                                      username?: string;
+                                      private?: boolean;
+                                      name?: string;
+                                      vip?: boolean;
+                                      vip_ep?: boolean;
+                                      ids?: {
+                                          slug?: string;
+                                          trakt?: number;
+                                      };
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -27020,7 +27199,26 @@ export interface operations {
                  * @description Sort by a specific property
                  * @example rank
                  */
-                sort_by: "rank" | "added" | "title" | "released" | "runtime" | "popularity" | "random" | "percentage" | "imdb_rating" | "tmdb_rating" | "rt_tomatometer" | "rt_audience" | "metascore" | "votes" | "imdb_votes" | "tmdb_votes" | "my_rating" | "watched" | "collected";
+                sort_by:
+                    | "rank"
+                    | "added"
+                    | "title"
+                    | "released"
+                    | "runtime"
+                    | "popularity"
+                    | "random"
+                    | "percentage"
+                    | "imdb_rating"
+                    | "tmdb_rating"
+                    | "rt_tomatometer"
+                    | "rt_audience"
+                    | "metascore"
+                    | "votes"
+                    | "imdb_votes"
+                    | "tmdb_votes"
+                    | "my_rating"
+                    | "watched"
+                    | "collected";
                 /**
                  * @description Sort direction
                  * @example asc
@@ -28315,86 +28513,89 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        id: number;
-                        watched_at: string;
-                        action: string;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: unknown;
-                                tmdb?: number;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        id: number;
-                        watched_at: string;
-                        action: string;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        id: number;
-                        watched_at: string;
-                        action: string;
-                        type: string;
-                        episode: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: unknown;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              id: number;
+                              watched_at: string;
+                              action: string;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: unknown;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              id: number;
+                              watched_at: string;
+                              action: string;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              id: number;
+                              watched_at: string;
+                              action: string;
+                              type: string;
+                              episode: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: unknown;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -28440,84 +28641,88 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        rated_at: string;
-                        rating: number;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rated_at: string;
-                        rating: number;
-                        type: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rated_at: string;
-                        rating: number;
-                        type: string;
-                        season: {
-                            number?: number;
-                            ids?: {
-                                tvdb?: number;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rated_at: string;
-                        rating: number;
-                        type: string;
-                        episode: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              rated_at: string;
+                              rating: number;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rated_at: string;
+                              rating: number;
+                              type: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rated_at: string;
+                              rating: number;
+                              type: string;
+                              season: {
+                                  number?: number;
+                                  ids?: {
+                                      tvdb?: number;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rated_at: string;
+                              rating: number;
+                              type: string;
+                              episode: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -28552,7 +28757,26 @@ export interface operations {
                  * @description Sort by a specific property
                  * @example rank
                  */
-                sort_by: "rank" | "added" | "title" | "released" | "runtime" | "popularity" | "random" | "percentage" | "imdb_rating" | "tmdb_rating" | "rt_tomatometer" | "rt_audience" | "metascore" | "votes" | "imdb_votes" | "tmdb_votes" | "my_rating" | "watched" | "collected";
+                sort_by:
+                    | "rank"
+                    | "added"
+                    | "title"
+                    | "released"
+                    | "runtime"
+                    | "popularity"
+                    | "random"
+                    | "percentage"
+                    | "imdb_rating"
+                    | "tmdb_rating"
+                    | "rt_tomatometer"
+                    | "rt_audience"
+                    | "metascore"
+                    | "votes"
+                    | "imdb_votes"
+                    | "tmdb_votes"
+                    | "my_rating"
+                    | "watched"
+                    | "collected";
                 /**
                  * @description Sort direction
                  * @example asc
@@ -28574,92 +28798,96 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: string;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: string | null;
-                        type: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: unknown;
-                        type: string;
-                        season: {
-                            number?: number;
-                            ids?: {
-                                tvdb?: number;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: unknown;
-                        type: string;
-                        episode: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: string;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: string | null;
+                              type: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: unknown;
+                              type: string;
+                              season: {
+                                  number?: number;
+                                  ids?: {
+                                      tvdb?: number;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: unknown;
+                              type: string;
+                              episode: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -28798,7 +29026,26 @@ export interface operations {
                  * @description Sort by a specific property
                  * @example rank
                  */
-                sort_by: "rank" | "added" | "title" | "released" | "runtime" | "popularity" | "random" | "percentage" | "imdb_rating" | "tmdb_rating" | "rt_tomatometer" | "rt_audience" | "metascore" | "votes" | "imdb_votes" | "tmdb_votes" | "my_rating" | "watched" | "collected";
+                sort_by:
+                    | "rank"
+                    | "added"
+                    | "title"
+                    | "released"
+                    | "runtime"
+                    | "popularity"
+                    | "random"
+                    | "percentage"
+                    | "imdb_rating"
+                    | "tmdb_rating"
+                    | "rt_tomatometer"
+                    | "rt_audience"
+                    | "metascore"
+                    | "votes"
+                    | "imdb_votes"
+                    | "tmdb_votes"
+                    | "my_rating"
+                    | "watched"
+                    | "collected";
                 /**
                  * @description Sort direction
                  * @example asc
@@ -28819,40 +29066,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: string;
-                        type: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        rank: number;
-                        id: number;
-                        listed_at: string;
-                        notes: string;
-                        type: string;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: string;
+                              type: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              rank: number;
+                              id: number;
+                              listed_at: string;
+                              notes: string;
+                              type: string;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };
@@ -28988,49 +29237,51 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        expires_at?: string;
-                        started_at?: string;
-                        action?: string;
-                        type?: string;
-                        episode?: {
-                            season?: number;
-                            number?: number;
-                            title?: string;
-                            ids?: {
-                                trakt?: number;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        show?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    } | {
-                        expires_at?: string;
-                        started_at?: string;
-                        action?: string;
-                        type?: string;
-                        movie?: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    };
+                    "application/json":
+                        | {
+                              expires_at?: string;
+                              started_at?: string;
+                              action?: string;
+                              type?: string;
+                              episode?: {
+                                  season?: number;
+                                  number?: number;
+                                  title?: string;
+                                  ids?: {
+                                      trakt?: number;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              show?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }
+                        | {
+                              expires_at?: string;
+                              started_at?: string;
+                              action?: string;
+                              type?: string;
+                              movie?: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          };
                 };
             };
             /** @description Not watching anything. */
@@ -29078,61 +29329,64 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        plays: number;
-                        last_watched_at: string;
-                        last_updated_at: string;
-                        movie: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[] | {
-                        plays: number;
-                        last_watched_at: string;
-                        last_updated_at: string;
-                        reset_at?: unknown;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                        seasons: {
-                            number: number;
-                            episodes: {
-                                number: number;
-                                plays: number;
-                                last_watched_at: string;
-                            }[];
-                        }[];
-                    }[] | {
-                        plays: number;
-                        last_watched_at: string;
-                        last_updated_at: string;
-                        reset_at: string | null;
-                        show: {
-                            title?: string;
-                            year?: number;
-                            ids?: {
-                                trakt?: number;
-                                slug?: string;
-                                tvdb?: number;
-                                imdb?: string;
-                                tmdb?: number;
-                            };
-                        };
-                    }[];
+                    "application/json":
+                        | {
+                              plays: number;
+                              last_watched_at: string;
+                              last_updated_at: string;
+                              movie: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[]
+                        | {
+                              plays: number;
+                              last_watched_at: string;
+                              last_updated_at: string;
+                              reset_at?: unknown;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                              seasons: {
+                                  number: number;
+                                  episodes: {
+                                      number: number;
+                                      plays: number;
+                                      last_watched_at: string;
+                                  }[];
+                              }[];
+                          }[]
+                        | {
+                              plays: number;
+                              last_watched_at: string;
+                              last_updated_at: string;
+                              reset_at: string | null;
+                              show: {
+                                  title?: string;
+                                  year?: number;
+                                  ids?: {
+                                      trakt?: number;
+                                      slug?: string;
+                                      tvdb?: number;
+                                      imdb?: string;
+                                      tmdb?: number;
+                                  };
+                              };
+                          }[];
                 };
             };
         };

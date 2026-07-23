@@ -2846,7 +2846,10 @@ export interface components {
             action: "select_files" | "update_attributes" | "abort" | "complete";
             files?: components["schemas"]["Container"] | null;
             /** File Data */
-            file_data?: components["schemas"]["DebridFile"] | components["schemas"]["ShowFileData"] | null;
+            file_data?:
+                | components["schemas"]["DebridFile"]
+                | components["schemas"]["ShowFileData"]
+                | null;
         };
         /**
          * ShowFileData
@@ -2915,7 +2918,19 @@ export interface components {
          * States
          * @enum {string}
          */
-        States: "Unknown" | "Unreleased" | "Ongoing" | "Requested" | "Indexed" | "Scraped" | "Downloaded" | "Symlinked" | "Completed" | "PartiallyCompleted" | "Failed" | "Paused";
+        States:
+            | "Unknown"
+            | "Unreleased"
+            | "Ongoing"
+            | "Requested"
+            | "Indexed"
+            | "Scraped"
+            | "Downloaded"
+            | "Symlinked"
+            | "Completed"
+            | "PartiallyCompleted"
+            | "Failed"
+            | "Paused";
         /**
          * StatesFilter
          * @enum {string}
@@ -4172,7 +4187,9 @@ export interface operations {
                 /** @description Filter by media type(s) */
                 type?: components["schemas"]["MediaTypeEnum"][] | null;
                 /** @description Filter by state(s) */
-                states?: (components["schemas"]["States"] | components["schemas"]["StatesFilter"])[] | null;
+                states?:
+                    | (components["schemas"]["States"] | components["schemas"]["StatesFilter"])[]
+                    | null;
                 /** @description Sort order(s). Multiple sorts allowed but only one per type (title or date) */
                 sort?: components["schemas"]["SortOrderEnum"][] | null;
                 /** @description Search by title or IMDB/TVDB/TMDB ID */
@@ -4969,7 +4986,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"] | components["schemas"]["SelectFilesResponse"];
+                    "application/json":
+                        | components["schemas"]["MessageResponse"]
+                        | components["schemas"]["SelectFilesResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5057,7 +5076,19 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Filter for Overseerr requests */
-                filter?: ("all" | "approved" | "available" | "pending" | "processing" | "unavailable" | "failed" | "deleted" | "completed") | null;
+                filter?:
+                    | (
+                          | "all"
+                          | "approved"
+                          | "available"
+                          | "pending"
+                          | "processing"
+                          | "unavailable"
+                          | "failed"
+                          | "deleted"
+                          | "completed"
+                      )
+                    | null;
                 /** @description Number of requests to fetch */
                 take?: number;
                 api_key?: string | null;
