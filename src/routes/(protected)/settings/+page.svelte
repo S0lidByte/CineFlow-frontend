@@ -33,6 +33,7 @@
     import SettingsFormContent from "$lib/components/settings/settings-form-content.svelte";
     import SettingsTabGuide from "$lib/components/settings/settings-tab-guide.svelte";
     import LibraryProfilesPanel from "$lib/components/settings/library-profiles-panel.svelte";
+    import RankingPanel from "$lib/components/settings/ranking-panel.svelte";
     import { cn } from "$lib/utils";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
@@ -43,6 +44,7 @@
         SECTION_GROUPS,
         getTabsByGroup,
         LIBRARY_PROFILES_TAB_ID,
+        RANKING_TAB_ID,
         type SectionGroup
     } from "$lib/components/settings/sections";
     import SettingsSearch from "$lib/components/settings/settings-search.svelte";
@@ -57,9 +59,7 @@
     import Loader2 from "@lucide/svelte/icons/loader-2";
     import Check from "@lucide/svelte/icons/check";
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
-    import RefreshCw from "@lucide/svelte/icons/refresh-cw";
     import ChevronRight from "@lucide/svelte/icons/chevron-right";
-    import Info from "@lucide/svelte/icons/info";
 
     /** Maps the icon name stored in {@link SectionTab.icon} to a Svelte component. */
     // Imported ICON_MAP from $lib/components/settings/icon-map
@@ -77,7 +77,6 @@
     let tabSwitchFocus: string | null = null;
     let showDiscardConfirm = $state(false);
     let pendingFocusPath = $state<string | null>(null);
-    let rankingDenyHelpOpen = $state(false);
 
     /**
      * Tracks which sidebar groups are expanded.
@@ -321,22 +320,26 @@
                     </nav>
 
                     <div class="mt-1 flex flex-wrap items-center gap-2">
-                        <h1 class="text-foreground text-3xl font-bold tracking-tight">Settings</h1>
+                        <h1 class="text-foreground text-3xl font-bold tracking-tight">
+                            {activeTab?.label ?? "Settings"}
+                        </h1>
                         {#if activeTab?.restartRequired}
                             <Badge
                                 class="border-amber-500/30 bg-amber-500/20 text-xs font-medium text-amber-600 dark:text-amber-400">
                                 Restart required
                             </Badge>
                         {/if}
+                        {#if isNavigating}
+                            <Loader2 class="text-muted-foreground size-4 animate-spin" />
+                        {/if}
                     </div>
 
-                    <!-- Section description (falls back to generic copy) -->
+                    <!-- One-line section subtitle only -->
                     <p class="text-muted-foreground mt-2 max-w-3xl text-sm md:text-[0.92rem]">
                         {#if activeTab?.description}
                             {activeTab.description}
                         {:else}
-                            Configure CineFlow by section — each tab includes a guide with how-to
-                            steps. Save before switching tabs.
+                            Configure CineFlow by section. Save before switching tabs.
                         {/if}
                     </p>
                 </div>
@@ -507,80 +510,10 @@
                     This panel is the only bordered container so there is no nested-card look.
                 -->
                 <div
-                    class="border-border/70 bg-card/50 ring-primary/8 relative flex min-h-[calc(100vh-10rem)] min-w-0 flex-1 flex-col rounded-xl border p-4 pb-12 shadow-md ring-1 md:p-6"
+                    class="border-border/70 bg-card/50 ring-primary/8 relative min-w-0 flex-1 rounded-xl border p-4 pb-10 shadow-md ring-1 md:p-6"
                     aria-busy={isNavigating}>
-                    <!-- Panel section chrome -->
-                    <div
-                        class="border-primary/15 from-primary/8 mb-4 flex items-center justify-between gap-3 border-b bg-gradient-to-r to-transparent pb-3">
-                        <div class="min-w-0">
-                            <div
-                                class="text-foreground flex items-center gap-1.5 text-sm font-semibold">
-                                <RefreshCw
-                                    class={cn(
-                                        "text-primary size-3.5 shrink-0 opacity-80",
-                                        isNavigating && "animate-spin"
-                                    )} />
-                                <span>{activeTab?.label ?? "Settings"}</span>
-                            </div>
-                        </div>
-                    </div>
-
                     {#if activeTab}
                         <SettingsTabGuide tab={activeTab} />
-                    {/if}
-
-                    {#if $page.data.activeTabId === "ranking"}
-                        <div
-                            class="border-primary/25 from-primary/8 mb-4 rounded-lg border bg-gradient-to-br to-transparent px-3 py-2.5">
-                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <Info class="text-primary size-3.5 shrink-0" />
-                                <span class="text-muted-foreground text-xs">
-                                    Rejects map as
-                                    <code class="text-foreground/90"
-                                        >denied by: category_attribute</code>
-                                    ·
-                                    <kbd
-                                        class="bg-background/80 rounded border px-1 py-0.5 text-[10px]"
-                                        >Ctrl+K</kbd>
-                                    to jump
-                                </span>
-                                <button
-                                    type="button"
-                                    class="text-primary hover:text-primary/80 ml-auto inline-flex items-center gap-1 text-xs font-semibold"
-                                    aria-expanded={rankingDenyHelpOpen}
-                                    onclick={() => (rankingDenyHelpOpen = !rankingDenyHelpOpen)}>
-                                    Deny-key reference
-                                    <ChevronDown
-                                        class={cn(
-                                            "size-3.5 transition-transform",
-                                            rankingDenyHelpOpen && "rotate-180"
-                                        )} />
-                                </button>
-                            </div>
-                            {#if rankingDenyHelpOpen}
-                                <ul
-                                    class="text-muted-foreground border-primary/15 mt-2 list-disc space-y-1 border-t pt-2 pl-5 text-xs leading-relaxed">
-                                    <li>
-                                        Examples:
-                                        <code class="text-foreground/90"
-                                            >audio_dolby_digital_plus</code
-                                        >,
-                                        <code class="text-foreground/90">quality_remux</code>,
-                                        <code class="text-foreground/90">extras_dubbed</code>
-                                    </li>
-                                    <li>
-                                        When <strong class="text-foreground">Fetch</strong> is off, RTN
-                                        rejects outright — no rank score is applied.
-                                    </li>
-                                    <li>
-                                        Disney+/Amazon WEB-DL often needs
-                                        <strong class="text-foreground"
-                                            >audio_dolby_digital_plus</strong>
-                                        fetch enabled.
-                                    </li>
-                                </ul>
-                            {/if}
-                        </div>
                     {/if}
 
                     <!-- Loading overlay shown while navigating to a new tab -->
@@ -601,6 +534,19 @@
                         {#if activeTab?.custom && $page.data.activeTabId === LIBRARY_PROFILES_TAB_ID}
                             <LibraryProfilesPanel
                                 profiles={$page.data.customData?.profiles ?? {}} />
+                        {:else if activeTab?.custom && $page.data.activeTabId === RANKING_TAB_ID}
+                            <RankingPanel
+                                ranking={($page.data.customData?.ranking ??
+                                    {}) as import("$lib/components/settings/ranking-presets").RankingSettings}
+                                meta={($page.data.customData?.rankingMeta ?? {
+                                    deny_keys: {},
+                                    attribute_titles: {},
+                                    categories: {}
+                                }) as {
+                                    deny_keys: Record<string, string>;
+                                    attribute_titles: Record<string, string>;
+                                    categories: Record<string, string>;
+                                }} />
                         {:else if $page.data.form}
                             <SettingsFormContent
                                 {formStore}

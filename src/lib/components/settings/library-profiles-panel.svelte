@@ -221,7 +221,7 @@
                 <div>
                     <!-- Breadcrumbs removed since it's already in settings context -->
                     <div class="mt-1 flex flex-wrap items-center gap-2">
-                        <h1 class="text-2xl font-bold tracking-tight">Library Profiles</h1>
+                        <h2 class="text-xl font-bold tracking-tight">Library Profiles</h2>
                         <Badge class="border-neutral-700 bg-neutral-800 text-xs text-neutral-400"
                             >{profileKeys().length} profiles</Badge>
                     </div>
