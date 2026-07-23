@@ -601,6 +601,27 @@ export const actions = {
 
         const payload = form.data as Record<string, unknown>;
 
+        // Ensure all requested keys in `paths` exist in `payload` by populating missing keys
+        // from backend current settings (e.g. read-only fields like `version` or un-edited fields).
+        try {
+            const currentSettings = await getSettingsForPaths(
+                locals.backendUrl,
+                locals.apiKey,
+                paths,
+                fetch
+            );
+            for (const key of paths.split(",")) {
+                const k = key.trim();
+                if (k && payload[k] === undefined && currentSettings[k] !== undefined) {
+                    payload[k] = currentSettings[k];
+                }
+            }
+        } catch (e) {
+            logger.warn("Failed to fetch current settings fallback during payload completion", {
+                error: e
+            });
+        }
+
         // If saving the filesystem tab, we must salvage the existing library_profiles
         // from the backend so the POST payload doesn't accidentally wipe them out.
         if (paths.includes("filesystem") && payload.filesystem) {
