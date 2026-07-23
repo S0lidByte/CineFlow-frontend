@@ -1044,15 +1044,24 @@ export function parseTVDBShowDetails(
         name: country
     }));
 
-    const cast: ParsedCastMember[] = (data.characters ?? [])
-        .filter((character) => character.type === 3)
-        .slice(0, 10)
-        .map((character) => ({
-            id: character.peopleId || character.id,
-            name: character.personName || character.name,
-            character: character.name,
-            profile_path: buildTVDBImage(character.personImgURL || character.image)
-        }));
+    const cast: ParsedCastMember[] = (() => {
+        const seenPeople = new Set<number>();
+        const members: ParsedCastMember[] = [];
+        for (const character of data.characters ?? []) {
+            if (character.type !== 3) continue;
+            const personId = character.peopleId || character.id;
+            if (personId == null || seenPeople.has(personId)) continue;
+            seenPeople.add(personId);
+            members.push({
+                id: personId,
+                name: character.personName || character.name,
+                character: character.name,
+                profile_path: buildTVDBImage(character.personImgURL || character.image)
+            });
+            if (members.length >= 10) break;
+        }
+        return members;
+    })();
 
     // Map TVDB sourceName to normalized keys
     const sourceNameMap: Record<string, string> = {
@@ -1105,15 +1114,19 @@ export function parseTVDBShowDetails(
         .filter((season) => season.type?.name === "Aired Order" && season.number !== 0)
         .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
 
-    const episodes: TVDBEpisodeItem[] = (data.episodes ?? []).reduce<TVDBEpisodeItem[]>(
-        (acc, episode) => {
-            if (episode.seasonNumber !== 0) {
-                acc.push({ ...episode, image: buildTVDBImage(episode.image) });
+    const episodes: TVDBEpisodeItem[] = (() => {
+        const seenIds = new Set<number>();
+        const list: TVDBEpisodeItem[] = [];
+        for (const episode of data.episodes ?? []) {
+            if (episode.seasonNumber === 0) continue;
+            if (episode.id != null) {
+                if (seenIds.has(episode.id)) continue;
+                seenIds.add(episode.id);
             }
-            return acc;
-        },
-        []
-    );
+            list.push({ ...episode, image: buildTVDBImage(episode.image) });
+        }
+        return list;
+    })();
 
     const recommendations = transformTraktRecommendations(traktRecs, false);
 
