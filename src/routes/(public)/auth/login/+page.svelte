@@ -15,7 +15,6 @@
     import { resolve } from "$app/paths";
     import Fingerprint from "@lucide/svelte/icons/fingerprint";
     import { doesBrowserSupportPasskeys } from "$lib/passkeys";
-    import { page } from "$app/state";
     import Star from "@lucide/svelte/icons/star";
     import { readable } from "svelte/store";
     import { createScopedLogger } from "$lib/logger";
