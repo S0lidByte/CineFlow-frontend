@@ -2,10 +2,9 @@
 
 ## [1.5.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.4.0-beta.1...riven-frontend-v1.5.0-beta.1) (2026-07-23)
 
-
 ### Features
 
-* **settings:** merge full settings layout refactor with all fixes onto main ([88844fd](https://github.com/S0lidByte/CineFlow-frontend/commit/88844fd623e351e67ea462824d2beacad2cadadc))
+- **settings:** merge full settings layout refactor with all fixes onto main ([88844fd](https://github.com/S0lidByte/CineFlow-frontend/commit/88844fd623e351e67ea462824d2beacad2cadadc))
 
 ## [1.4.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.5-beta.1...riven-frontend-v1.4.0-beta.1) (2026-07-23)
 
