@@ -281,7 +281,7 @@
     <title>Settings - Riven</title>
 </svelte:head>
 
-<PageShell class="relative h-full px-4 md:px-6 lg:px-8">
+<PageShell class="relative h-full pt-16 md:pt-20 px-4 md:px-6 lg:px-8">
     <div
         class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/10 to-transparent"
         aria-hidden="true"></div>

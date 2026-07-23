@@ -243,31 +243,37 @@
      */
 
     :global(.settings-form) {
-        display: grid;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
         gap: 1rem;
-        grid-template-columns: 1fr;
+    }
+
+    :global(.settings-form > form),
+    :global(.settings-form fieldset[data-slot="field-set"]),
+    :global(.settings-form [data-slot="field"]:has([data-slot="field"])),
+    :global(.settings-form [data-slot="field-group"]),
+    :global(.settings-form [data-layout="object-properties"]),
+    :global(.settings-form [data-layout="object-property"]) {
+        width: 100%;
     }
 
     :global(.settings-form [data-slot="field-group"]),
     :global(.settings-form [data-layout="object-properties"]) {
         display: grid !important;
-        gap: 0.75rem;
+        gap: 0.85rem;
         grid-template-columns: 1fr;
+        width: 100%;
     }
 
     @media (min-width: 768px) {
-        :global(.settings-form) {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 1rem;
-        }
-
         :global(.settings-form [data-slot="field-group"]),
         :global(.settings-form [data-layout="object-properties"]) {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.75rem;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.85rem;
         }
 
-        /* Nested object / array fields span full width */
+        /* Nested object / array fields span full width of the 2-column grid */
         :global(.settings-form [data-slot="field"]:has([data-slot="field"])),
         :global(.settings-form [data-slot="field-group"] > fieldset[data-slot="field-set"]),
         :global(.settings-form [data-layout="array-field"]),
@@ -281,12 +287,6 @@
         :global(
             .settings-form [data-slot="field-group"] > [data-slot="field"]:has([data-slot="field"])
         ) {
-            grid-column: 1 / -1;
-        }
-
-        /* Root schema wrappers span full width */
-        :global(.settings-form > form > [data-slot="field"]),
-        :global(.settings-form > form > fieldset[data-slot="field-set"]) {
             grid-column: 1 / -1;
         }
     }
