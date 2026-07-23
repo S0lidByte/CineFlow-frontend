@@ -253,7 +253,7 @@
 {/if}
 
 <div class="settings-form-host" bind:this={formHost}>
-    <BasicForm {form} method="POST" action="?/default&tab={activeTabId}" class="settings-form" />
+    <BasicForm {form} method="POST" action="?tab={activeTabId}" class="settings-form" />
 </div>
 
 <style>
