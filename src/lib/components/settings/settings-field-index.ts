@@ -228,48 +228,48 @@ export function filterSearchEntries(
     });
 }
 
-/** Match a focus path to a rendered field card in the settings form. */
+/** Match a focus path to a rendered field card in the settings form.
+ *
+ * Single-pass scan: tests each field for an exact attr match first, then a
+ * leaf-key attr match, then a text-content match. Tracks the best weak match
+ * seen so far and returns it as a fallback — avoiding a second full traversal.
+ */
 export function findFieldElement(focusPath: string): HTMLElement | null {
     const form = document.querySelector(".settings-form");
     if (!form) return null;
 
     const leaf = focusPath.split(".").pop()?.toLowerCase() ?? "";
     const normalizedPath = focusPath.toLowerCase();
+    const leafHuman = leaf.replace(/_/g, " ");
     const fields = form.querySelectorAll<HTMLElement>('[data-slot="field"]');
 
+    let weakMatch: HTMLElement | null = null;
+
     for (const field of fields) {
-        const text = field.textContent?.toLowerCase() ?? "";
         const nameAttrs = Array.from(field.querySelectorAll("[name], [id], [for]"))
-            .map((el) => {
-                const html = el as HTMLElement;
-                return [
-                    html.getAttribute("name"),
-                    html.getAttribute("id"),
-                    html.getAttribute("for")
-                ]
-                    .filter(Boolean)
-                    .join(" ");
+            .flatMap((el) => {
+                const h = el as HTMLElement;
+                return [h.getAttribute("name"), h.getAttribute("id"), h.getAttribute("for")];
             })
+            .filter(Boolean)
             .join(" ")
             .toLowerCase();
 
-        if (
-            nameAttrs.includes(normalizedPath) ||
-            nameAttrs.includes(leaf) ||
-            (leaf.length > 2 && text.includes(leaf.replace(/_/g, " ")))
-        ) {
+        // Strong match: attribute contains the full path or the leaf key
+        if (nameAttrs.includes(normalizedPath) || nameAttrs.includes(leaf)) {
             return field;
+        }
+
+        // Weak match: visible text contains the humanized leaf (e.g. "dolby digital")
+        if (!weakMatch && leaf.length > 2) {
+            const text = field.textContent?.toLowerCase() ?? "";
+            if (text.includes(leafHuman)) {
+                weakMatch = field;
+            }
         }
     }
 
-    // Fallback: match deny-key style label fragments
-    for (const field of fields) {
-        const text = field.textContent?.toLowerCase() ?? "";
-        if (leaf && text.includes(leaf.replace(/_/g, " "))) {
-            return field;
-        }
-    }
-    return null;
+    return weakMatch;
 }
 
 export function highlightAndScrollToField(focusPath: string): boolean {

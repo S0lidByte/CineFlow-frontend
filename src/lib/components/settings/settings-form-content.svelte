@@ -25,6 +25,7 @@
     import { icons } from "@sjsf/lucide-icons";
     import { Alert, AlertDescription, AlertTitle } from "$lib/components/ui/alert/index.js";
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
+    import Check from "@lucide/svelte/icons/check";
     import { getTabById } from "./sections";
     import { tick } from "svelte";
 
@@ -85,12 +86,21 @@
     /** Whether the form has unsaved changes (mirrors `form.isChanged`). */
     const isDirty = $derived(form?.isChanged ?? false);
 
-    // Reset saveStatus to idle whenever the user makes a new change so stale
-    // "error" state doesn't linger after they start editing again.
+    // Reset saveStatus to idle on any new edit; also auto-dismiss success after 4 s
+    // so the banner doesn't linger after the user starts working again.
+    let successTimer: ReturnType<typeof setTimeout> | null = null;
     $effect(() => {
         if (isDirty) {
+            if (successTimer) { clearTimeout(successTimer); successTimer = null; }
             saveStatus = "idle";
         }
+    });
+    $effect(() => {
+        if (saveStatus === "success") {
+            if (successTimer) clearTimeout(successTimer);
+            successTimer = setTimeout(() => { saveStatus = "idle"; }, 4000);
+        }
+        return () => { if (successTimer) { clearTimeout(successTimer); successTimer = null; } };
     });
 
     // Keep the page-shell's formStore in sync with the live form state.
@@ -212,6 +222,14 @@
             Settings were not persisted. Review form errors and retry.
         </AlertDescription>
     </Alert>
+{:else if saveStatus === "success"}
+    <div
+        class="mb-4 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm"
+        role="status"
+        aria-live="polite">
+        <Check class="size-4 shrink-0 text-emerald-500" />
+        <span class="text-emerald-600 dark:text-emerald-400 font-medium">Settings saved successfully.</span>
+    </div>
 {/if}
 
 <div class="settings-form-host" bind:this={formHost}>
@@ -252,8 +270,13 @@
         /* Nested object / array fields span full width */
         :global(.settings-form [data-slot="field"]:has([data-slot="field"])),
         :global(.settings-form [data-slot="field-group"] > fieldset[data-slot="field-set"]),
+        :global(.settings-form [data-layout="array-field"]),
+        :global(.settings-form [data-layout="array-item"]),
         :global(
             .settings-form [data-layout="object-property"]:has(fieldset[data-slot="field-set"])
+        ),
+        :global(
+            .settings-form [data-layout="object-property"]:has([data-layout="array-field"])
         ),
         :global(
             .settings-form [data-slot="field-group"] > [data-slot="field"]:has([data-slot="field"])

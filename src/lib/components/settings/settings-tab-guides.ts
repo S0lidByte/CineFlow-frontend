@@ -161,20 +161,55 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             { title: "Custom ranks", detail: "Fine-grained per-codec and per-source toggles." }
         ]
     },
-    infra: {
-        headline: "Database, notifications, post-processing, logging, and stream delivery.",
+    database: {
+        headline: "Database connection string, pool, and migration settings.",
         howToUse: [
-            "Database: connection string and pool settings — usually set once at deploy.",
-            "Notifications: wire Discord, Apprise, or webhooks for pipeline events.",
-            "Post-processing: subtitle fetch, file naming, and completion hooks.",
-            "Stream: chunk sizes, timeouts, and CDN validation for Plex playback."
+            "Set the PostgreSQL connection string — this is usually configured once at initial deploy.",
+            "Adjust pool size and timeout if you see connection exhaustion warnings in logs.",
+            "After changing database settings, a backend restart is required."
         ],
         cautions: [
-            "Requires backend restart — database URL changes need a controlled maintenance window."
+            "Database URL changes need a controlled maintenance window — data is not migrated automatically.",
+            "Requires backend restart."
         ],
         tips: [
-            "Stream timeouts affect long 4K remux seeks — increase if Plex buffers on start.",
-            "Notification failures never block downloads — check logs if alerts stop."
+            "The backend runs migrations on startup — ensure the database user has ALTER TABLE privileges."
+        ],
+        highlights: [
+            { title: "Connection string", detail: "postgresql+psycopg2://user:pass@host/dbname format." },
+            { title: "Pool", detail: "Default pool of 5 is fine for single-user setups." }
+        ]
+    },
+    notifications: {
+        headline: "Apprise webhooks and per-event alert configuration.",
+        howToUse: [
+            "Add Apprise-compatible URLs (Discord, Slack, Gotify, Ntfy, etc.) to the endpoints list.",
+            "Enable the pipeline events you want to receive alerts for (item added, download complete…).",
+            "Test with a single endpoint before enabling all events."
+        ],
+        tips: [
+            "Notification failures never block downloads — check logs if alerts stop.",
+            "Apprise supports 80+ services — use the Apprise URL format for each provider."
+        ],
+        highlights: [
+            { title: "Apprise", detail: "Single URL scheme covers Discord, Slack, email, Telegram, and more." },
+            { title: "Events", detail: "Subscribe only to the pipeline events you care about." }
+        ]
+    },
+    ops: {
+        headline: "Post-processing, logging verbosity, and stream proxy configuration.",
+        howToUse: [
+            "Post-processing: configure subtitle fetch, file naming hooks, and completion scripts.",
+            "Logging: set log rotation, retention, and output format.",
+            "Stream: tune chunk sizes, CDN validation, and timeout values for Plex playback."
+        ],
+        cautions: [
+            "Stream and logging changes require a backend restart.",
+            "Aggressive stream timeouts may cause Plex buffering on large 4K remux files."
+        ],
+        tips: [
+            "Increase stream read timeout if Plex buffers at the start of 4K remux content.",
+            "Post-processing scripts run as the container user — verify file permissions."
         ],
         highlights: [
             { title: "Post-processing", detail: "Runs after debrid download completes." },

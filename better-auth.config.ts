@@ -50,9 +50,14 @@ export const auth = betterAuth({
         disableSignUp: process.env.ENABLE_EMAIL_PASSWORD_SIGNUP !== "true"
     },
     socialProviders: {},
-    trustedOrigins: ["http://localhost:5173", "http://192.168.1.*:5173", process.env.ORIGIN].filter(
-        Boolean
-    ) as string[],
+    trustedOrigins: [
+        "http://localhost:5173",
+        "http://localhost:5180",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5180",
+        "http://192.168.1.*:5173",
+        process.env.ORIGIN
+    ].filter(Boolean) as string[],
     plugins: [
         username(),
         adminPlugin({

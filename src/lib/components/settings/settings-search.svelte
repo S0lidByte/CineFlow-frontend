@@ -29,15 +29,26 @@
     const sections = $derived(filtered.filter((e) => e.kind === "section"));
     const fields = $derived(filtered.filter((e) => e.kind === "field").slice(0, 40));
 
+    /**
+     * Pre-built tabId → icon map derived once per `entries` change.
+     * Replaces the per-render O(n) `getTabById` lookup with an O(1) Map access.
+     */
+    const tabIconMap = $derived(
+        new Map(
+            entries
+                .map((e) => e.tabId)
+                .filter((id, i, arr) => arr.indexOf(id) === i)   // unique tab IDs
+                .map((tabId) => {
+                    const tab = getTabById(tabId);
+                    return [tabId, tab ? (ICON_MAP[tab.icon] as Component | undefined) : undefined] as const;
+                })
+        )
+    );
+
     function selectEntry(entry: SettingsSearchEntry): void {
         open = false;
         query = "";
         onNavigate?.(entry.tabId, entry.path);
-    }
-
-    function iconForTab(tabId: string): Component | undefined {
-        const tab = getTabById(tabId);
-        return tab ? (ICON_MAP[tab.icon] as Component | undefined) : undefined;
     }
 </script>
 
@@ -52,7 +63,7 @@
         {#if sections.length > 0}
             <Command.Group heading="Sections">
                 {#each sections as entry (entry.id)}
-                    {@const IconComponent = iconForTab(entry.tabId)}
+                    {@const IconComponent = tabIconMap.get(entry.tabId)}
                     <Command.Item value={entry.id} onSelect={() => selectEntry(entry)}>
                         <span class="flex min-w-0 items-center gap-2">
                             {#if IconComponent}

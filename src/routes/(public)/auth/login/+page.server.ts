@@ -11,16 +11,20 @@ import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("auth");
 
-const authProviders = getAuthProviders();
-const isSignupEnabled =
-    authProviders.credential?.enabled && !authProviders.credential?.disableSignup;
-const isCredentialEnabled = authProviders.credential?.enabled;
+function getAuthInfo() {
+    const authProviders = getAuthProviders();
+    const isSignupEnabled =
+        !!(authProviders.credential?.enabled && !authProviders.credential?.disableSignup);
+    const isCredentialEnabled = !!authProviders.credential?.enabled;
+    return { authProviders, isSignupEnabled, isCredentialEnabled };
+}
 
 export const load: PageServerLoad = async (event) => {
     if (event.locals.user) {
         return redirect(302, "/auth");
     }
 
+    const { authProviders, isSignupEnabled } = getAuthInfo();
     const isFirstUser = await noUserExists();
     const canRegister = isSignupEnabled || isFirstUser;
 
@@ -40,6 +44,7 @@ async function noUserExists() {
 
 export const actions: Actions = {
     login: async (event) => {
+        const { isCredentialEnabled } = getAuthInfo();
         if (!isCredentialEnabled) {
             return fail(403, { message: "Email/password login is disabled" });
         }
@@ -71,6 +76,7 @@ export const actions: Actions = {
         return redirect(303, "/");
     },
     register: async (event) => {
+        const { isSignupEnabled } = getAuthInfo();
         const isFirstUser = await noUserExists();
 
         // Allow registration if signup is enabled OR if this is the first user (admin setup)
@@ -121,7 +127,17 @@ export const actions: Actions = {
                         email: registerForm.data.email,
                         password: registerForm.data.password,
                         image: registerForm.data.image || undefined
-                    }
+                    },
+                    headers: event.request.headers
+                });
+
+                await auth.api.signInUsername({
+                    body: {
+                        username: registerForm.data.username,
+                        password: registerForm.data.password,
+                        callbackURL: "/"
+                    },
+                    headers: event.request.headers
                 });
             }
         } catch (error) {

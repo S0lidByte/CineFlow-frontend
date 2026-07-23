@@ -53,6 +53,15 @@ const configureLocals: Handle = async ({ event, resolve }) => {
     return resolve(event);
 };
 
+// In-process TVDB token cache — avoids hitting the external TVDB API on every
+// request. The cookie is httpOnly so the browser sends it back correctly, but
+// during the window between set() and the browser's first follow-up request the
+// in-memory cache prevents a redundant round-trip.
+let cachedTvdbToken: string | null = null;
+let tvdbTokenExpiresAt = 0;
+// 29 days — TVDB tokens are valid for 30 days, refresh a day early
+const TVDB_TOKEN_TTL_MS = 29 * 24 * 60 * 60 * 1000;
+
 const handleTVDBCookie: Handle = async ({ event, resolve }) => {
     // Skip for static assets and internal SvelteKit requests
     if (
@@ -63,37 +72,59 @@ const handleTVDBCookie: Handle = async ({ event, resolve }) => {
         return resolve(event);
     }
 
+    // Fast path: browser already has the cookie — no work needed
     const tvdbCookie = event.cookies.get("tvdb_cookie");
-
-    if (!tvdbCookie) {
-        const customFetch = createCustomFetch(event.fetch);
-        const tvdbLogin = await providers.tvdb.POST("/login", {
-            body: {
-                apikey: "6be85335-5c4f-4d8d-b945-d3ed0eb8cdce"
-            },
-            fetch: customFetch
-        });
-
-        if (tvdbLogin.error) {
-            logger.error("Failed to login to TVDB", { error: tvdbLogin.error });
-            // Don't block the whole request if TVDB is down, just continue without the cookie
-            // Routes that strictly need it will fail gracefully later
-            return resolve(event);
-        } else {
-            const isSecure =
-                event.url.protocol === "https:" ||
-                event.request.headers.get("x-forwarded-proto") === "https";
-
-            event.cookies.set("tvdb_cookie", tvdbLogin.data?.data?.token || "", {
-                path: "/",
-                httpOnly: true,
-                sameSite: "lax",
-                secure: isSecure,
-                maxAge: 60 * 60 * 24 * 30 // 30 days
-            });
-            logger.info("Set TVDB cookie", { secure: isSecure });
-        }
+    if (tvdbCookie) {
+        return resolve(event);
     }
+
+    // Fast path: we already have a valid in-memory token — set cookie and continue
+    // without making an external network call
+    if (cachedTvdbToken && Date.now() < tvdbTokenExpiresAt) {
+        const isSecure =
+            event.url.protocol === "https:" ||
+            event.request.headers.get("x-forwarded-proto") === "https";
+        event.cookies.set("tvdb_cookie", cachedTvdbToken, {
+            path: "/",
+            httpOnly: true,
+            sameSite: "lax",
+            secure: isSecure,
+            maxAge: 60 * 60 * 24 * 30
+        });
+        return resolve(event);
+    }
+
+    // Slow path: fetch a fresh token from TVDB (runs at most once per 29 days)
+    const customFetch = createCustomFetch(event.fetch);
+    const tvdbLogin = await providers.tvdb.POST("/login", {
+        body: {
+            apikey: "6be85335-5c4f-4d8d-b945-d3ed0eb8cdce"
+        },
+        fetch: customFetch
+    });
+
+    if (tvdbLogin.error) {
+        logger.error("Failed to login to TVDB", { error: tvdbLogin.error });
+        // Don't block the whole request if TVDB is down
+        return resolve(event);
+    }
+
+    const token = tvdbLogin.data?.data?.token || "";
+    cachedTvdbToken = token;
+    tvdbTokenExpiresAt = Date.now() + TVDB_TOKEN_TTL_MS;
+
+    const isSecure =
+        event.url.protocol === "https:" ||
+        event.request.headers.get("x-forwarded-proto") === "https";
+
+    event.cookies.set("tvdb_cookie", token, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isSecure,
+        maxAge: 60 * 60 * 24 * 30
+    });
+    logger.info("Set TVDB cookie", { secure: isSecure });
 
     return resolve(event);
 };
