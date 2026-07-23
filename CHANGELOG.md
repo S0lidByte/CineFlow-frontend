@@ -4,19 +4,24 @@
 
 ### Features
 
-- **settings:** grouped sidebar navigation into Core, Media Stack, Discovery, and Tuning categories ([#53](https://github.com/S0lidByte/CineFlow-frontend/issues/53)) ([3b5f694](https://github.com/S0lidByte/CineFlow-frontend/commit/3b5f6947a4e39e318b5d397d7d42cf8dc5a20024))
-- **settings:** per-tab inline guides and full guide reference dialogs
+- **settings:** grouped sidebar navigation into Core, Media Stack, Discovery & Acquisition, and Tuning & Infrastructure categories ([#53](https://github.com/S0lidByte/CineFlow-frontend/issues/53)) ([3b5f694](https://github.com/S0lidByte/CineFlow-frontend/commit/3b5f6947a4e39e318b5d397d7d42cf8dc5a20024))
+- **settings:** split Infrastructure tab into dedicated Database, Notifications, and Operations tabs
+- **settings:** per-tab inline guides with collapsible quick steps and full reference modal dialogs
 - **settings:** Cmd+K global search palette for settings sections and schema fields
-- **settings:** full-height responsive card layout and floating header spacing polish
+- **settings:** full-height responsive card layout with glass-card section styling
+- **settings:** inline save confirmation banner (auto-dismisses after 4s) inside the form panel
 
 ### Bug Fixes
 
 - **settings:** intercept native `<form>` submit events and bind to SJSF `request.run()` for `__sjsf_json_chunks` payload serialization
-- **settings:** fix SvelteKit 2 reserved action name crash by changing form action URL from `?/default&tab=...` to `?tab=...`
+- **settings:** fix SvelteKit 2 reserved action name crash — form action changed from `?/default&tab=...` to `?tab=...`
 - **settings:** enable AJV type coercion (`coerceTypes: true`) for FormData numeric and boolean conversions
 - **settings:** complete missing key payloads from backend defaults to prevent `Missing values for paths: version` 400 errors
 - **settings:** prevent blank page on initial load when deep-linking directly to specific setting tabs
 - **settings:** clone server-side schema cache using `structuredClone` to prevent schema mutation across user sessions
+- **settings:** fix Save button DOM selector so `submitSettingsForm()` correctly triggers form submission
+- **settings:** suppress redundant orange SJSF submit button from form grid while preserving Enter-key submission
+- **settings:** fix top header overlap by adding correct top padding to PageShell
 
 ---
 
