@@ -31,6 +31,7 @@
         AlertDialogTitle
     } from "$lib/components/ui/alert-dialog/index.js";
     import SettingsFormContent from "$lib/components/settings/settings-form-content.svelte";
+    import SettingsTabGuide from "$lib/components/settings/settings-tab-guide.svelte";
     import LibraryProfilesPanel from "$lib/components/settings/library-profiles-panel.svelte";
     import { cn } from "$lib/utils";
     import { goto } from "$app/navigation";
@@ -38,9 +39,16 @@
     import { navigating, page } from "$app/stores";
     import { writable } from "svelte/store";
     import { ICON_MAP } from "$lib/components/settings/icon-map";
+    import {
+        SECTION_GROUPS,
+        getTabsByGroup,
+        LIBRARY_PROFILES_TAB_ID,
+        type SectionGroup
+    } from "$lib/components/settings/sections";
     import SettingsSearch from "$lib/components/settings/settings-search.svelte";
     import Kbd from "$lib/components/ui/kbd/kbd.svelte";
     import SearchIcon from "@lucide/svelte/icons/search";
+    import ChevronDown from "@lucide/svelte/icons/chevron-down";
     import { highlightAndScrollToField } from "$lib/components/settings/settings-field-index";
     import { onMount, tick } from "svelte";
     import { SvelteURLSearchParams } from "svelte/reactivity";
@@ -51,6 +59,7 @@
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
     import RefreshCw from "@lucide/svelte/icons/refresh-cw";
     import ChevronRight from "@lucide/svelte/icons/chevron-right";
+    import Info from "@lucide/svelte/icons/info";
 
     /** Maps the icon name stored in {@link SectionTab.icon} to a Svelte component. */
     // Imported ICON_MAP from $lib/components/settings/icon-map
@@ -68,12 +77,73 @@
     let tabSwitchFocus: string | null = null;
     let showDiscardConfirm = $state(false);
     let pendingFocusPath = $state<string | null>(null);
+    let rankingDenyHelpOpen = $state(false);
 
-    /** Programmatically submits the SJSF-managed `<form>` inside `.settings-form`. */
+    /**
+     * Tracks which sidebar groups are expanded.
+     * Persisted to sessionStorage so the sidebar state survives tab navigation
+     * but resets between browser sessions.
+     */
+    const SESSION_KEY = "settings-sidebar-groups";
+    function loadGroupState(): Record<SectionGroup, boolean> {
+        try {
+            const raw = sessionStorage.getItem(SESSION_KEY);
+            if (raw) return JSON.parse(raw) as Record<SectionGroup, boolean>;
+        } catch {
+            /* ignore */
+        }
+        // Read active tab from URL (always available at init; $page.data may not be resolved yet)
+        const params = new URLSearchParams(
+            typeof window !== "undefined" ? window.location.search : ""
+        );
+        const activeTabId = params.get("tab") ?? "general";
+        const activeGroup =
+            ($page.data.tabs?.find((t: { id: string; group?: string }) => t.id === activeTabId)
+                ?.group as SectionGroup | undefined) ?? "core";
+        return {
+            core: activeGroup === "core",
+            "media-stack": activeGroup === "media-stack",
+            acquisition: activeGroup === "acquisition",
+            tuning: activeGroup === "tuning"
+        };
+    }
+    let groupOpen = $state<Record<SectionGroup, boolean>>(loadGroupState());
+
+    function toggleGroup(group: SectionGroup): void {
+        groupOpen = { ...groupOpen, [group]: !groupOpen[group] };
+        try {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(groupOpen));
+        } catch {
+            /* ignore */
+        }
+    }
+
+    /** Ensure the group containing the newly active tab is always visible. */
+    $effect(() => {
+        const activeGroup = $page.data.tabs?.find(
+            (t: { id: string; group?: string }) => t.id === $page.data.activeTabId
+        )?.group as SectionGroup | undefined;
+        if (activeGroup && !groupOpen[activeGroup]) {
+            groupOpen = { ...groupOpen, [activeGroup]: true };
+            try {
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify(groupOpen));
+            } catch {
+                /* ignore */
+            }
+        }
+    });
+
+    /** Programmatically submits the SJSF-managed `<form>` inside `.settings-form-host`. */
     function submitSettingsForm(): void {
         if ($navigating) return;
-        const formEl = document.querySelector(".settings-form form");
-        (formEl as HTMLFormElement)?.requestSubmit();
+        const formEl =
+            document.querySelector<HTMLFormElement>("form.settings-form") ??
+            document.querySelector<HTMLFormElement>(".settings-form-host form") ??
+            document.querySelector<HTMLFormElement>(".settings-form form") ??
+            document.querySelector<HTMLFormElement>("form[action]");
+        if (formEl) {
+            formEl.requestSubmit();
+        }
     }
 
     /**
@@ -117,14 +187,20 @@
         goto(resolve(`/settings?${params.toString()}`));
     }
 
-    /** Confirms the discard-and-switch dialog: resets the form and navigates. */
+    /** Confirms the discard-and-switch dialog: navigates first, then resets the form.
+     * Resetting after navigation (not before) ensures form data is not wiped if goto() throws.
+     */
     function confirmDiscardAndSwitch(): void {
         if (tabSwitchTarget) {
-            form?.reset();
-            formStore.set(null);
-            navigateToTab(tabSwitchTarget, tabSwitchFocus ?? undefined);
+            const target = tabSwitchTarget;
+            const focus = tabSwitchFocus ?? undefined;
             tabSwitchTarget = null;
             tabSwitchFocus = null;
+            formStore.set(null);
+            navigateToTab(target, focus);
+            // reset() is called optimistically — SJSF reset is synchronous and safe here
+            // because navigateToTab calls goto() which schedules the route change asynchronously.
+            form?.reset();
         }
         showDiscardConfirm = false;
     }
@@ -188,6 +264,14 @@
     let searchOpen = $state(false);
 
     /**
+     * Platform-aware keyboard shortcut label.
+     * Derived once; avoids repeating navigator?.platform?.includes("Mac") throughout the template.
+     */
+    const isMac = $derived(typeof navigator !== "undefined" && navigator.platform?.includes("Mac"));
+    const saveShortcut = $derived(isMac ? "⌘S" : "Ctrl+S");
+    const searchShortcut = $derived(isMac ? "⌘K" : "Ctrl+K");
+
+    /**
      * Global keyboard shortcut handler.
      * Ctrl+S (Windows/Linux) or Cmd+S (macOS) saves when the form is dirty.
      * Ctrl+K (Windows/Linux) or Cmd+K (macOS) opens the settings search palette.
@@ -212,9 +296,13 @@
     <title>Settings - Riven</title>
 </svelte:head>
 
-<PageShell class="h-full px-4 md:px-6 lg:px-8">
+<PageShell class="relative h-full px-4 pt-16 md:px-6 md:pt-20 lg:px-8">
+    <div
+        class="from-primary/10 pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b to-transparent"
+        aria-hidden="true">
+    </div>
     <Tooltip.Provider>
-        <div class="w-full">
+        <div class="relative w-full">
             <!-- ── Page header ─────────────────────────────────────────────── -->
             <header
                 class="mb-4 flex flex-col gap-3 md:mb-6 md:flex-row md:items-start md:justify-between">
@@ -233,7 +321,7 @@
                     </nav>
 
                     <div class="mt-1 flex flex-wrap items-center gap-2">
-                        <h1 class="text-3xl font-bold tracking-tight text-neutral-50">Settings</h1>
+                        <h1 class="text-foreground text-3xl font-bold tracking-tight">Settings</h1>
                         {#if activeTab?.restartRequired}
                             <Badge
                                 class="border-amber-500/30 bg-amber-500/20 text-xs font-medium text-amber-600 dark:text-amber-400">
@@ -247,15 +335,15 @@
                         {#if activeTab?.description}
                             {activeTab.description}
                         {:else}
-                            Configure backend behavior with production-safe defaults. Keep changes
-                            focused, then save once to apply the current section.
+                            Configure CineFlow by section — each tab includes a guide with how-to
+                            steps. Save before switching tabs.
                         {/if}
                     </p>
                 </div>
 
                 <!-- Save status + primary Save button (SJSF tabs only) -->
-                {#if !activeTab?.custom}
-                    <div class="mt-2 flex items-center gap-2 md:mt-0">
+                <div class="mt-2 flex items-center gap-2 md:mt-0">
+                    {#if !activeTab?.custom}
                         {#if isNavigating || !form}
                             <div
                                 class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
@@ -269,11 +357,12 @@
                                         <Button
                                             {...props}
                                             type="button"
-                                            class="min-w-[10rem]"
+                                            size="sm"
+                                            class="h-8 gap-1.5 px-3 text-xs"
                                             onclick={submitSettingsForm}
                                             disabled={isNavigating}
                                             aria-live="polite">
-                                            <AlertCircle class="size-4" />
+                                            <AlertCircle class="size-3.5" />
                                             Save changes
                                         </Button>
                                     {/snippet}
@@ -281,9 +370,7 @@
                                 <Tooltip.Content side="bottom">
                                     Save <Kbd
                                         class="border-primary-foreground/20 text-primary-foreground ml-1 bg-transparent"
-                                        >{navigator?.platform?.includes("Mac")
-                                            ? "⌘S"
-                                            : "Ctrl+S"}</Kbd>
+                                        >{saveShortcut}</Kbd>
                                 </Tooltip.Content>
                             </Tooltip.Root>
                         {:else}
@@ -294,37 +381,15 @@
                                 All changes saved
                             </div>
                         {/if}
+                    {/if}
 
-                        <button
-                            class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors md:flex"
-                            onclick={() => (searchOpen = true)}>
-                            <SearchIcon class="size-3.5" />
-                            Search settings
-                            <Kbd class="ml-1"
-                                >{navigator?.platform?.includes("Mac") ? "⌘K" : "Ctrl+K"}</Kbd>
-                        </button>
-                    </div>
-                {:else}
-                    <div class="mt-2 flex items-center gap-2 md:mt-0">
-                        <button
-                            class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors md:flex"
-                            onclick={() => (searchOpen = true)}>
-                            <SearchIcon class="size-3.5" />
-                            Search settings
-                            <Kbd class="ml-1"
-                                >{navigator?.platform?.includes("Mac") ? "⌘K" : "Ctrl+K"}</Kbd>
-                        </button>
-                    </div>
-                {/if}
-
-                <div class="mt-4 flex items-center justify-between md:hidden">
+                    <!-- Single search button — rendered once, visible on all screen sizes -->
                     <button
-                        class="text-muted-foreground hover:text-foreground border-border/50 flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs"
+                        class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs transition-colors"
                         onclick={() => (searchOpen = true)}>
                         <SearchIcon class="size-3.5" />
-                        Search settings
-                        <Kbd class="ml-1"
-                            >{navigator?.platform?.includes("Mac") ? "⌘K" : "Ctrl+K"}</Kbd>
+                        <span class="hidden sm:inline">Search settings</span>
+                        <Kbd class="ml-1 hidden sm:inline-flex">{searchShortcut}</Kbd>
                     </button>
                 </div>
             </header>
@@ -332,41 +397,108 @@
             <Separator class="mb-6 md:mb-8" />
 
             <div class="flex flex-col gap-6 lg:flex-row lg:gap-8">
-                <!-- ── Tab navigation ──────────────────────────────────────── -->
+                <!-- ── Two-level grouped sidebar nav ───────────────────────── -->
                 <nav
-                    class="flex shrink-0 flex-row flex-wrap gap-1 lg:w-52 lg:flex-col lg:flex-nowrap lg:gap-0.5 xl:w-60"
+                    class="flex shrink-0 flex-row flex-wrap gap-1 lg:w-56 lg:flex-col lg:flex-nowrap lg:gap-0 xl:w-64"
                     aria-label="Settings sections">
-                    {#each $page.data.tabs as tab (tab.id)}
-                        {@const IconComponent = ICON_MAP[tab.icon] as Component | undefined}
-                        <Tooltip.Root>
-                            <Tooltip.Trigger
+                    <!-- Mobile: flat pill strip (groups collapsed) -->
+                    <div class="flex flex-wrap gap-1 lg:hidden">
+                        {#each $page.data.tabs as tab (tab.id)}
+                            {@const IconComponent = ICON_MAP[tab.icon] as Component | undefined}
+                            <button
                                 class={cn(
-                                    "flex w-full cursor-pointer items-center gap-2 rounded-md border-l-2 px-3 py-2 text-left text-sm font-medium transition-colors",
+                                    "flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-all",
                                     $page.data.activeTabId === tab.id
-                                        ? "border-primary bg-muted text-foreground pl-[10px]"
-                                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground border-transparent pl-[10px]"
+                                        ? "border-primary/40 bg-primary/12 text-primary"
+                                        : "border-border/50 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                 )}
                                 onclick={() => handleTabClick(tab.id)}
                                 aria-current={$page.data.activeTabId === tab.id
                                     ? "true"
                                     : undefined}>
                                 {#if IconComponent}
-                                    <IconComponent class="size-4 shrink-0" />
+                                    <IconComponent class="size-3.5 shrink-0" />
                                 {/if}
-                                <span>{tab.label}</span>
-                                {#if tab.restartRequired}
-                                    <span
-                                        class="ml-auto rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
-                                        title="Changes require a backend restart">
-                                        Restart
-                                    </span>
+                                {tab.label}
+                            </button>
+                        {/each}
+                    </div>
+
+                    <!-- Desktop: two-level grouped sidebar -->
+                    <div class="hidden w-full flex-col gap-0.5 lg:flex">
+                        {#each Object.entries(SECTION_GROUPS) as [groupId, groupMeta] (groupId)}
+                            {@const group =
+                                groupId as import("$lib/components/settings/sections").SectionGroup}
+                            {@const GroupIcon = ICON_MAP[groupMeta.icon] as Component | undefined}
+                            {@const groupTabs = getTabsByGroup(group)}
+                            {@const isGroupOpen = groupOpen[group]}
+                            {@const hasActiveTab = groupTabs.some(
+                                (t) => t.id === $page.data.activeTabId
+                            )}
+
+                            <div class="mb-1">
+                                <!-- Group header button -->
+                                <button
+                                    class={cn(
+                                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-semibold tracking-wider uppercase transition-colors",
+                                        hasActiveTab
+                                            ? "text-primary"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                    onclick={() => toggleGroup(group)}
+                                    aria-expanded={isGroupOpen}>
+                                    {#if GroupIcon}
+                                        <GroupIcon class="size-3.5 shrink-0 opacity-70" />
+                                    {/if}
+                                    <span class="flex-1">{groupMeta.label}</span>
+                                    <ChevronDown
+                                        class={cn(
+                                            "size-3.5 shrink-0 opacity-60 transition-transform duration-200",
+                                            isGroupOpen && "rotate-180"
+                                        )} />
+                                </button>
+
+                                <!-- Leaf tabs inside the group -->
+                                {#if isGroupOpen}
+                                    <div class="mt-0.5 flex flex-col gap-0.5 pl-2">
+                                        {#each groupTabs as tab (tab.id)}
+                                            {@const IconComponent = ICON_MAP[tab.icon] as
+                                                | Component
+                                                | undefined}
+                                            <Tooltip.Root>
+                                                <Tooltip.Trigger
+                                                    class={cn(
+                                                        "flex w-full cursor-pointer items-center gap-2 rounded-md border-l-2 py-1.5 pr-3 pl-2 text-left text-sm transition-all",
+                                                        $page.data.activeTabId === tab.id
+                                                            ? "border-primary bg-primary/12 text-primary font-medium shadow-sm"
+                                                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground border-transparent font-normal"
+                                                    )}
+                                                    onclick={() => handleTabClick(tab.id)}
+                                                    aria-current={$page.data.activeTabId === tab.id
+                                                        ? "true"
+                                                        : undefined}>
+                                                    {#if IconComponent}
+                                                        <IconComponent class="size-3.5 shrink-0" />
+                                                    {/if}
+                                                    <span class="flex-1 truncate">{tab.label}</span>
+                                                    {#if tab.restartRequired}
+                                                        <span
+                                                            class="shrink-0 rounded bg-amber-500/20 px-1 py-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-400"
+                                                            title="Requires backend restart">
+                                                            ↻
+                                                        </span>
+                                                    {/if}
+                                                </Tooltip.Trigger>
+                                                <Tooltip.Content side="right" sideOffset={8}>
+                                                    {tab.description}
+                                                </Tooltip.Content>
+                                            </Tooltip.Root>
+                                        {/each}
+                                    </div>
                                 {/if}
-                            </Tooltip.Trigger>
-                            <Tooltip.Content side="right" sideOffset={8}>
-                                {tab.description}
-                            </Tooltip.Content>
-                        </Tooltip.Root>
-                    {/each}
+                            </div>
+                        {/each}
+                    </div>
                 </nav>
 
                 <!-- ── Form panel (single visual container) ───────────────── -->
@@ -375,30 +507,79 @@
                     This panel is the only bordered container so there is no nested-card look.
                 -->
                 <div
-                    class="border-border/70 bg-card/35 relative min-w-0 flex-1 rounded-xl border p-4 md:p-6"
+                    class="border-border/70 bg-card/50 ring-primary/8 relative flex min-h-[calc(100vh-10rem)] min-w-0 flex-1 flex-col rounded-xl border p-4 pb-12 shadow-md ring-1 md:p-6"
                     aria-busy={isNavigating}>
-                    <!-- Panel title row with refresh/loading indicator -->
+                    <!-- Panel section chrome -->
                     <div
-                        class="border-border/60 mb-4 flex items-center gap-1.5 border-b pb-4 text-sm font-semibold text-neutral-200">
-                        <RefreshCw
-                            class={cn("size-3.5 shrink-0", isNavigating && "animate-spin")} />
-                        {activeTab?.label ?? "Settings"}
+                        class="border-primary/15 from-primary/8 mb-4 flex items-center justify-between gap-3 border-b bg-gradient-to-r to-transparent pb-3">
+                        <div class="min-w-0">
+                            <div
+                                class="text-foreground flex items-center gap-1.5 text-sm font-semibold">
+                                <RefreshCw
+                                    class={cn(
+                                        "text-primary size-3.5 shrink-0 opacity-80",
+                                        isNavigating && "animate-spin"
+                                    )} />
+                                <span>{activeTab?.label ?? "Settings"}</span>
+                            </div>
+                        </div>
                     </div>
+
+                    {#if activeTab}
+                        <SettingsTabGuide tab={activeTab} />
+                    {/if}
 
                     {#if $page.data.activeTabId === "ranking"}
                         <div
-                            class="border-border/60 bg-muted/30 text-muted-foreground mb-4 rounded-lg border px-3 py-2.5 text-xs leading-relaxed">
-                            <span class="text-foreground font-medium">How rejects map:</span>
-                            DEBUG logs use
-                            <code class="text-foreground/90">denied by: category_attribute</code>
-                            (example:
-                            <code class="text-foreground/90">audio_dolby_digital_plus</code>). Use
-                            <kbd class="bg-background/80 rounded border px-1 py-0.5 text-[10px]"
-                                >Ctrl+K</kbd>
-                            and search
-                            <code class="text-foreground/90">ddp</code> to jump to that control.
-                            Open a category, then set <span class="text-foreground">Fetch</span> /
-                            <span class="text-foreground">Rank</span> per attribute.
+                            class="border-primary/25 from-primary/8 mb-4 rounded-lg border bg-gradient-to-br to-transparent px-3 py-2.5">
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <Info class="text-primary size-3.5 shrink-0" />
+                                <span class="text-muted-foreground text-xs">
+                                    Rejects map as
+                                    <code class="text-foreground/90"
+                                        >denied by: category_attribute</code>
+                                    ·
+                                    <kbd
+                                        class="bg-background/80 rounded border px-1 py-0.5 text-[10px]"
+                                        >Ctrl+K</kbd>
+                                    to jump
+                                </span>
+                                <button
+                                    type="button"
+                                    class="text-primary hover:text-primary/80 ml-auto inline-flex items-center gap-1 text-xs font-semibold"
+                                    aria-expanded={rankingDenyHelpOpen}
+                                    onclick={() => (rankingDenyHelpOpen = !rankingDenyHelpOpen)}>
+                                    Deny-key reference
+                                    <ChevronDown
+                                        class={cn(
+                                            "size-3.5 transition-transform",
+                                            rankingDenyHelpOpen && "rotate-180"
+                                        )} />
+                                </button>
+                            </div>
+                            {#if rankingDenyHelpOpen}
+                                <ul
+                                    class="text-muted-foreground border-primary/15 mt-2 list-disc space-y-1 border-t pt-2 pl-5 text-xs leading-relaxed">
+                                    <li>
+                                        Examples:
+                                        <code class="text-foreground/90"
+                                            >audio_dolby_digital_plus</code
+                                        >,
+                                        <code class="text-foreground/90">quality_remux</code>,
+                                        <code class="text-foreground/90">extras_dubbed</code>
+                                    </li>
+                                    <li>
+                                        When <strong class="text-foreground">Fetch</strong> is off, RTN
+                                        rejects outright — no rank score is applied.
+                                    </li>
+                                    <li>
+                                        Disney+/Amazon WEB-DL often needs
+                                        <strong class="text-foreground"
+                                            >audio_dolby_digital_plus</strong>
+                                        fetch enabled.
+                                    </li>
+                                </ul>
+                            {/if}
                         </div>
                     {/if}
 
@@ -417,7 +598,7 @@
 
                     <!-- Keyed so components fully remount on tab change -->
                     {#key $page.data.activeTabId}
-                        {#if activeTab?.custom && $page.data.activeTabId === "library-profiles"}
+                        {#if activeTab?.custom && $page.data.activeTabId === LIBRARY_PROFILES_TAB_ID}
                             <LibraryProfilesPanel
                                 profiles={$page.data.customData?.profiles ?? {}} />
                         {:else if $page.data.form}
@@ -437,7 +618,7 @@
             <!-- ── Sticky save bar (shown only when SJSF form is dirty and not on custom tabs) ─────────── -->
             {#if isDirty && !activeTab?.custom}
                 <div
-                    class="border-border bg-card/95 fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between gap-4 border-t px-4 py-3 shadow-lg backdrop-blur md:right-4 md:bottom-4 md:left-auto md:max-w-md md:rounded-lg md:border md:shadow-xl"
+                    class="border-primary/30 bg-card/95 fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between gap-4 border-t px-4 py-3 shadow-lg backdrop-blur md:right-4 md:bottom-4 md:left-auto md:max-w-md md:rounded-lg md:border md:shadow-xl"
                     role="status"
                     aria-live="polite">
                     <div class="min-w-0">
@@ -459,7 +640,7 @@
                                 <Loader2 class="size-4 animate-spin" />
                                 Loading...
                             {:else}
-                                Save ({navigator?.platform?.includes("Mac") ? "⌘S" : "Ctrl+S"})
+                                Save ({saveShortcut})
                             {/if}
                         </Button>
                     </div>

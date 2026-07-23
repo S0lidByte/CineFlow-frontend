@@ -17,7 +17,7 @@
      */
     import type { ActionData, PageData } from "../../../routes/(protected)/settings/$types";
     import type { FormState } from "@sjsf/form";
-    import { BasicForm } from "@sjsf/form";
+    import { BasicForm, getValueSnapshot } from "@sjsf/form";
     import { createMeta, setupSvelteKitForm } from "@sjsf/sveltekit/client";
     import * as defaults from "./form-defaults";
     import { setShadcnContext } from "$lib/components/shadcn-context";
@@ -25,6 +25,7 @@
     import { icons } from "@sjsf/lucide-icons";
     import { Alert, AlertDescription, AlertTitle } from "$lib/components/ui/alert/index.js";
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
+    import Check from "@lucide/svelte/icons/check";
     import { getTabById } from "./sections";
     import { tick } from "svelte";
 
@@ -54,7 +55,7 @@
     let formHost: HTMLDivElement | null = $state(null);
 
     // svelte-ignore state_referenced_locally
-    const { form } = setupSvelteKitForm(meta, {
+    const { form, request } = setupSvelteKitForm(meta, {
         ...defaults,
         schema: (pageData.form?.schema ?? { type: "object" }) as Record<string, unknown>,
         data: pageData.form ? pageData : { form: { schema: { type: "object" } } },
@@ -85,12 +86,31 @@
     /** Whether the form has unsaved changes (mirrors `form.isChanged`). */
     const isDirty = $derived(form?.isChanged ?? false);
 
-    // Reset saveStatus to idle whenever the user makes a new change so stale
-    // "error" state doesn't linger after they start editing again.
+    // Reset saveStatus to idle on any new edit; also auto-dismiss success after 4 s
+    // so the banner doesn't linger after the user starts working again.
+    let successTimer: ReturnType<typeof setTimeout> | null = null;
     $effect(() => {
         if (isDirty) {
+            if (successTimer) {
+                clearTimeout(successTimer);
+                successTimer = null;
+            }
             saveStatus = "idle";
         }
+    });
+    $effect(() => {
+        if (saveStatus === "success") {
+            if (successTimer) clearTimeout(successTimer);
+            successTimer = setTimeout(() => {
+                saveStatus = "idle";
+            }, 4000);
+        }
+        return () => {
+            if (successTimer) {
+                clearTimeout(successTimer);
+                successTimer = null;
+            }
+        };
     });
 
     // Keep the page-shell's formStore in sync with the live form state.
@@ -202,6 +222,26 @@
             observer.disconnect();
         };
     });
+
+    // Intercept form submit event and delegate to SJSF request runner
+    $effect(() => {
+        const host = formHost;
+        if (!host) return;
+
+        const formEl = host.querySelector("form");
+        if (!formEl) return;
+
+        const handleSubmit = (e: SubmitEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            void request.run(getValueSnapshot(form), e);
+        };
+
+        formEl.addEventListener("submit", handleSubmit);
+        return () => {
+            formEl.removeEventListener("submit", handleSubmit);
+        };
+    });
 </script>
 
 {#if saveStatus === "error"}
@@ -212,70 +252,105 @@
             Settings were not persisted. Review form errors and retry.
         </AlertDescription>
     </Alert>
+{:else if saveStatus === "success"}
+    <div
+        class="mb-4 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm"
+        role="status"
+        aria-live="polite">
+        <Check class="size-4 shrink-0 text-emerald-500" />
+        <span class="font-medium text-emerald-600 dark:text-emerald-400"
+            >Settings saved successfully.</span>
+    </div>
 {/if}
 
 <div class="settings-form-host" bind:this={formHost}>
-    <BasicForm {form} method="POST" class="settings-form" />
+    <BasicForm {form} method="POST" action="?tab={activeTabId}" class="settings-form" />
 </div>
 
 <style>
     /**
      * Form field layout and theming.
-     * All rules target the SJSF data-slot attributes so they stay encapsulated
-     * to the settings form and don't bleed into other components.
+     * Targets SJSF data-slot attributes so styles stay scoped to settings forms.
      */
 
     :global(.settings-form) {
-        display: grid;
-        gap: 0.65rem;
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 1rem;
+    }
+
+    :global(.settings-form > form),
+    :global(.settings-form fieldset[data-slot="field-set"]),
+    :global(.settings-form [data-slot="field"]:has([data-slot="field"])),
+    :global(.settings-form [data-slot="field-group"]),
+    :global(.settings-form [data-layout="object-properties"]),
+    :global(.settings-form [data-layout="object-property"]) {
+        width: 100%;
     }
 
     :global(.settings-form [data-slot="field-group"]),
     :global(.settings-form [data-layout="object-properties"]) {
         display: grid !important;
-        gap: 0.65rem;
+        gap: 0.85rem;
         grid-template-columns: 1fr;
+        width: 100%;
     }
 
     @media (min-width: 768px) {
-        :global(.settings-form) {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.75rem;
-        }
-
         :global(.settings-form [data-slot="field-group"]),
         :global(.settings-form [data-layout="object-properties"]) {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.65rem;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 0.85rem;
         }
 
-        /* Nested object / array fields span full width */
+        /* Nested object / array fields span full width of the 2-column grid */
         :global(.settings-form [data-slot="field"]:has([data-slot="field"])),
         :global(.settings-form [data-slot="field-group"] > fieldset[data-slot="field-set"]),
+        :global(.settings-form [data-layout="array-field"]),
+        :global(.settings-form [data-layout="array-item"]),
         :global(
             .settings-form [data-layout="object-property"]:has(fieldset[data-slot="field-set"])
         ),
+        :global(.settings-form [data-layout="object-property"]:has([data-layout="array-field"])),
         :global(
             .settings-form [data-slot="field-group"] > [data-slot="field"]:has([data-slot="field"])
         ) {
             grid-column: 1 / -1;
         }
-
-        /* Root schema wrappers span full width */
-        :global(.settings-form > form > [data-slot="field"]),
-        :global(.settings-form > form > fieldset[data-slot="field-set"]) {
-            grid-column: 1 / -1;
-        }
     }
 
-    /* Soften object legends into section dividers instead of model-name banners */
+    /* Top-level section fieldset cards */
+    :global(.settings-form fieldset[data-slot="field-set"]) {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        min-inline-size: 0;
+        border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+        border-radius: 0.75rem;
+        background: color-mix(in oklab, var(--color-card) 40%, transparent);
+        backdrop-filter: blur(4px);
+        padding: 1.25rem;
+        margin: 0 0 0.5rem 0;
+        box-shadow: 0 1px 3px color-mix(in oklab, var(--color-black) 8%, transparent);
+    }
+
     :global(.settings-form legend[data-slot="field-legend"]) {
-        font-size: 0.85rem;
+        float: none;
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        text-align: left;
+        font-size: 0.95rem;
         font-weight: 600;
-        letter-spacing: 0.01em;
-        margin-bottom: 0.4rem;
-        color: color-mix(in oklab, var(--color-foreground) 82%, transparent);
+        letter-spacing: -0.01em;
+        margin: 0 0 0.5rem;
+        padding: 0 0 0.5rem 0.65rem;
+        border-bottom: 1px solid color-mix(in oklab, var(--color-primary) 20%, var(--color-border));
+        border-left: 3.5px solid color-mix(in oklab, var(--color-primary) 65%, transparent);
+        color: var(--color-foreground);
     }
 
     :global(.settings-form legend.settings-collapsible-legend) {
@@ -283,22 +358,27 @@
         user-select: none;
         display: flex;
         align-items: center;
-        gap: 0.4rem;
-        border-radius: 0.375rem;
-        padding: 0.15rem 0.25rem;
-        margin-left: -0.25rem;
+        gap: 0.5rem;
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.5rem 0.5rem;
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        width: calc(100% + 1rem);
+        max-width: none;
+        transition: background 0.15s ease;
     }
 
     :global(.settings-form legend.settings-collapsible-legend:hover) {
-        background: color-mix(in oklab, var(--color-muted) 55%, transparent);
+        background: color-mix(in oklab, var(--color-primary) 12%, var(--color-muted));
     }
 
     :global(.settings-form legend.settings-collapsible-legend::before) {
         content: "▾";
         display: inline-block;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         opacity: 0.75;
         transition: transform 0.15s ease;
+        flex-shrink: 0;
     }
 
     :global(.settings-form fieldset[data-collapsed] > legend.settings-collapsible-legend::before) {
@@ -306,40 +386,58 @@
     }
 
     :global(.settings-form fieldset[data-collapsed]) {
-        padding-bottom: 0.25rem;
+        padding-bottom: 0.35rem;
     }
 
+    /* Individual property field cards */
     :global(.settings-form [data-slot="field"]) {
-        border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
-        border-radius: 0.5rem;
-        background: color-mix(in oklab, var(--color-card) 88%, transparent);
-        padding: 0.55rem 0.7rem;
+        border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+        border-radius: 0.625rem;
+        background: color-mix(in oklab, var(--color-muted) 20%, transparent);
+        padding: 0.75rem 0.875rem;
         min-width: 0;
+        gap: 0.45rem;
+        transition:
+            border-color 0.15s ease,
+            background 0.15s ease;
     }
 
-    /* Nested groups: lighter chrome so the page is not a wall of identical cards */
+    :global(.settings-form [data-slot="field"]:hover) {
+        border-color: color-mix(in oklab, var(--color-primary) 30%, var(--color-border));
+        background: color-mix(in oklab, var(--color-muted) 30%, transparent);
+    }
+
+    :global(.settings-form fieldset[data-slot="field-set"] > [data-slot="field-group"]) {
+        padding-top: 0.5rem;
+        padding-left: 0.25rem;
+    }
+
     :global(.settings-form [data-slot="field"] [data-slot="field"]) {
-        background: color-mix(in oklab, var(--color-background) 55%, transparent);
-        border-color: color-mix(in oklab, var(--color-border) 55%, transparent);
+        background: color-mix(in oklab, var(--color-background) 50%, transparent);
+        border-color: color-mix(in oklab, var(--color-border) 50%, transparent);
     }
 
     :global(.settings-form [data-slot="field-label"]) {
         font-weight: 600;
         font-size: 0.875rem;
-        color: color-mix(in oklab, var(--color-foreground) 90%, transparent);
+        color: var(--color-foreground);
     }
 
     :global(.settings-form [data-slot="field-description"]) {
         color: var(--color-muted-foreground);
-        font-size: 0.74rem;
-        line-height: 1.35;
-        margin-top: 0.1rem;
+        font-size: 0.75rem;
+        line-height: 1.4;
+        margin-top: 0.15rem;
     }
 
     :global(.settings-form [data-slot="input"]),
     :global(.settings-form [data-slot="textarea"]),
     :global(.settings-form [data-slot="select-trigger"]) {
-        min-height: 2rem;
+        min-height: 2.25rem;
+        border-radius: 0.375rem;
+        background: color-mix(in oklab, var(--color-background) 70%, transparent);
+        border: 1px solid color-mix(in oklab, var(--color-input) 80%, transparent);
+        font-size: 0.875rem;
     }
 
     :global(.settings-form :focus-visible) {
@@ -362,9 +460,60 @@
             border-color 0.25s ease;
     }
 
+    /* Completely suppress residual SJSF default submit button containers */
+    :global(.settings-form [data-slot="submit"]),
+    :global(.settings-form button[type="submit"]),
+    :global(.settings-form > form > button[type="submit"]) {
+        display: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Switch fields: clean horizontal row with text left and toggle right */
+    :global(.settings-form [data-slot="field"]:has(button[role="switch"])) {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.75rem 0.875rem;
+    }
+
+    :global(
+        .settings-form
+            [data-slot="field"]:has(button[role="switch"])
+            > [data-slot="field-label-group"]
+    ) {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Array "Add item" and action controls — compact inline buttons */
+    :global(.settings-form [data-slot="button-group"]),
+    :global(.settings-form [data-layout="array-field"] > [data-slot="button-group"]),
+    :global(.settings-form button[type="button"]:is([data-slot="button"])) {
+        width: fit-content;
+        max-width: 100%;
+        justify-self: start;
+    }
+
+    :global(.settings-form [data-layout="array-field"] [data-slot="button-group"]) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    :global(.settings-form [data-layout="array-field"] [data-slot="button-group"] > *) {
+        width: auto;
+        flex: 0 0 auto;
+    }
+
     /**
-     * Compact Ranking attribute objects: SJSF already uses
-     * object-property grids; force Fetch / Custom Rank / Rank onto one row.
+     * Compact Ranking attribute objects: force Fetch / Custom Rank / Rank onto one row.
      */
     @media (min-width: 900px) {
         :global(
@@ -377,7 +526,6 @@
                         > [data-layout="object-property"]:nth-child(3)
                 )
         ) {
-            /* keep attribute wrappers full width inside category */
             grid-column: 1 / -1;
         }
 

@@ -7,6 +7,17 @@
  */
 export type SectionTabId = string;
 
+/** Top-level sidebar group that a tab belongs to. */
+export type SectionGroup = "core" | "media-stack" | "acquisition" | "tuning";
+
+/** Sidebar group metadata — label + icon shown as the collapsible group header. */
+export const SECTION_GROUPS: Record<SectionGroup, { label: string; icon: string }> = {
+    core: { label: "Core", icon: "settings-2" },
+    "media-stack": { label: "Media Stack", icon: "layers" },
+    acquisition: { label: "Discovery & Acquisition", icon: "scan-search" },
+    tuning: { label: "Tuning & Infrastructure", icon: "sliders-horizontal" }
+};
+
 export interface SectionTab {
     id: SectionTabId;
     label: string;
@@ -16,6 +27,8 @@ export interface SectionTab {
     description: string;
     /** Top-level schema keys for this section (comma-separated for API paths) */
     keys: string[];
+    /** Sidebar group this tab belongs to */
+    group: SectionGroup;
     /** Whether changes in this section require backend restart to take effect */
     restartRequired?: boolean;
     /**
@@ -26,12 +39,21 @@ export interface SectionTab {
     custom?: boolean;
 }
 
-/** Tab groupings: General, Filesystem, Library Updaters, Downloaders, Content, Scraping, Ranking, Infra */
+/**
+ * Stable ID for the library-profiles custom tab.
+ * Use this constant instead of the raw string to prevent typo drift across
+ * the server load function, page shell, and any future consumers.
+ */
+export const LIBRARY_PROFILES_TAB_ID = "library-profiles" as const;
+
+/** All settings tabs, ordered within each group as they appear in the sidebar. */
 export const SETTINGS_TABS: SectionTab[] = [
+    // ── Core ──────────────────────────────────────────────────────────────────
     {
         id: "general",
         label: "General",
         icon: "settings",
+        group: "core",
         description: "API key, log level, network tracing, and core runtime options.",
         keys: [
             "version",
@@ -44,10 +66,13 @@ export const SETTINGS_TABS: SectionTab[] = [
             "tracemalloc"
         ]
     },
+
+    // ── Media Stack ───────────────────────────────────────────────────────────
     {
         id: "filesystem",
         label: "Filesystem",
         icon: "folder-tree",
+        group: "media-stack",
         description: "Paths, mount points, and storage configuration for the media library.",
         keys: ["filesystem"],
         restartRequired: true
@@ -56,6 +81,7 @@ export const SETTINGS_TABS: SectionTab[] = [
         id: "updaters",
         label: "Library Updaters",
         icon: "library",
+        group: "media-stack",
         description:
             "Configure library update providers (e.g. Plex, Emby, Jellyfin) and sync intervals.",
         keys: ["updaters"]
@@ -64,21 +90,26 @@ export const SETTINGS_TABS: SectionTab[] = [
         id: "library-profiles",
         label: "Library Profiles",
         icon: "book-open",
+        group: "media-stack",
         description: "Organize media into separate library folders based on metadata rules.",
         keys: [],
         custom: true
     },
+
+    // ── Discovery & Acquisition ───────────────────────────────────────────────
     {
         id: "downloaders",
         label: "Downloaders",
         icon: "download",
+        group: "acquisition",
         description: "Debrid and download service settings, credentials, and download behavior.",
         keys: ["downloaders"]
     },
     {
         id: "content",
-        label: "Content",
+        label: "Content Sources",
         icon: "file-text",
+        group: "acquisition",
         description: "Content sources, watchlists, and media discovery providers.",
         keys: ["content"]
     },
@@ -86,23 +117,45 @@ export const SETTINGS_TABS: SectionTab[] = [
         id: "scraping",
         label: "Scraping",
         icon: "scan-search",
+        group: "acquisition",
         description: "Scraper sources, indexers, and scrape scheduling options.",
         keys: ["scraping", "indexer"]
     },
+
+    // ── Tuning & Infrastructure ───────────────────────────────────────────────
     {
         id: "ranking",
         label: "Ranking",
         icon: "list-ordered",
+        group: "tuning",
         description:
             "RTN quality filters and ranks. Log rejects map to denied by: <category>_<attribute> (e.g. audio_dolby_digital_plus).",
         keys: ["ranking"]
     },
     {
-        id: "infra",
-        label: "Infra",
-        icon: "server",
-        description: "Database, notifications, post-processing, logging, and stream configuration.",
-        keys: ["database", "notifications", "post_processing", "logging", "stream"],
+        id: "database",
+        label: "Database",
+        icon: "database",
+        group: "tuning",
+        description: "Database connection, migrations, and storage backend configuration.",
+        keys: ["database"],
+        restartRequired: true
+    },
+    {
+        id: "notifications",
+        label: "Notifications",
+        icon: "bell",
+        group: "tuning",
+        description: "Apprise notification endpoints, events, and alert thresholds.",
+        keys: ["notifications"]
+    },
+    {
+        id: "ops",
+        label: "Operations",
+        icon: "activity",
+        group: "tuning",
+        description: "Post-processing, logging verbosity, and stream proxy configuration.",
+        keys: ["post_processing", "logging", "stream"],
         restartRequired: true
     }
 ];
@@ -122,4 +175,9 @@ export function getTabById(id: SectionTabId): SectionTab | undefined {
 /** Paths string for API: keys joined by comma */
 export function getPathsForTab(tab: SectionTab): string {
     return tab.keys.join(",");
+}
+
+/** Return all tabs that belong to a given group, in declaration order. */
+export function getTabsByGroup(group: SectionGroup): SectionTab[] {
+    return SETTINGS_TABS.filter((t) => t.group === group);
 }

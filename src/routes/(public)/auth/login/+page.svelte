@@ -15,8 +15,8 @@
     import { resolve } from "$app/paths";
     import Fingerprint from "@lucide/svelte/icons/fingerprint";
     import { doesBrowserSupportPasskeys } from "$lib/passkeys";
-    import { page } from "$app/state";
     import Star from "@lucide/svelte/icons/star";
+    import { readable } from "svelte/store";
     import { createScopedLogger } from "$lib/logger";
 
     const logger = createScopedLogger("login");
@@ -49,27 +49,18 @@
         : null;
 
     const { form: loginFormData, enhance: loginEnhance, message: loginMessage } = loginForm;
-    const {
-        form: registerFormData,
-        enhance: registerEnhance,
-        message: registerMessage
-    } = registerForm ?? { form: null, enhance: null, message: null };
+    const dummyStore = readable(null);
+    const registerFormData = registerForm ? registerForm.form : dummyStore;
+    const registerEnhance = registerForm ? registerForm.enhance : () => {};
+    const registerMessage = registerForm ? registerForm.message : dummyStore;
 
     $effect(() => {
         if ($loginMessage) {
-            if (page.status >= 200 && page.status < 300) {
-                toast.success($loginMessage);
-            } else {
-                toast.error($loginMessage);
-            }
+            toast.info($loginMessage);
         }
 
         if ($registerMessage) {
-            if (page.status >= 200 && page.status < 300) {
-                toast.success($registerMessage);
-            } else {
-                toast.error($registerMessage);
-            }
+            toast.info($registerMessage);
         }
     });
 

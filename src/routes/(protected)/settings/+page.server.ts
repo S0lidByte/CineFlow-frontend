@@ -9,6 +9,7 @@ import {
     DEFAULT_TAB_ID,
     getPathsForTab,
     getTabById,
+    LIBRARY_PROFILES_TAB_ID,
     SETTINGS_TABS
 } from "$lib/components/settings/sections";
 import {
@@ -48,7 +49,7 @@ async function getFullSettingsSchema(
 
     const res = await providers.riven.GET("/api/v1/settings/schema", {
         baseUrl,
-        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
+        headers: { "x-api-key": apiKey },
         fetch: fetchFn
     });
     if (res.error || !res.data) {
@@ -197,6 +198,15 @@ function sanitizeSettingsSchemaTitles(schema: Record<string, unknown>): void {
     }
 }
 
+/**
+ * Declarative map of schema key → SJSF UI component override.
+ * Adding a new custom widget only requires a new entry here — no changes
+ * to buildSettingsUiSchema itself.
+ */
+const WIDGET_OVERRIDES: Record<string, Record<string, unknown>> = {
+    api_key: { "ui:components": { textWidget: "apiKeyWidget" } }
+};
+
 function buildSettingsUiSchema(properties: Record<string, unknown>, keys: string[]): UiSchemaRoot {
     const order = keys.filter((k) => properties[k] !== undefined);
     const ui: Record<string, unknown> = {
@@ -204,8 +214,12 @@ function buildSettingsUiSchema(properties: Record<string, unknown>, keys: string
         // Page shell already shows the section title — hide root schema model name.
         "ui:options": { title: false, description: false }
     };
-    if (keys.includes("api_key")) {
-        ui["api_key"] = { "ui:components": { textWidget: "apiKeyWidget" } };
+
+    // Merge any widget overrides whose key is present in the current tab's schema.
+    for (const [key, override] of Object.entries(WIDGET_OVERRIDES)) {
+        if (properties[key] !== undefined) {
+            ui[key] = override;
+        }
     }
 
     // Removed `ui:widget: "hidden"` for `library_profiles` because the property is now fully
@@ -221,7 +235,7 @@ async function getSchemaForKeys(
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/schema/keys", {
         baseUrl,
-        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
+        headers: { "x-api-key": apiKey },
         fetch: fetchFn,
         params: { query: { keys, title: "Settings" } }
     });
@@ -239,7 +253,7 @@ async function getSettingsForPaths(
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
-        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
+        headers: { "x-api-key": apiKey },
         fetch: fetchFn,
         params: { path: { paths } }
     });
@@ -407,7 +421,7 @@ export const load: PageServerLoad = async ({
 
     // Custom tabs rely on external/custom layout components, skip the SJSF loader
     if (tab.custom) {
-        if (tab.id === "library-profiles") {
+        if (tab.id === LIBRARY_PROFILES_TAB_ID) {
             try {
                 const [filesystem, fullSchema] = await Promise.all([
                     fetchFilesystem(locals.backendUrl, locals.apiKey, fetch),
@@ -474,15 +488,18 @@ export const load: PageServerLoad = async ({
         });
     }
 
-    // Hide library_profiles from the filesystem schema to prevent duplication with the dedicated tab
-    // Pydantic separates nested models into a root `$defs` object and uses `$ref` pointers.
-    pruneLibraryProfilesFromSchema(schema);
+    // Deep-clone schema before mutation so the cached reference is never altered.
+    // pruneLibraryProfilesFromSchema mutates its argument in-place; without cloning,
+    // a cache hit would return an already-pruned object and prune again (idempotent
+    // now, but fragile as logic evolves).
+    const workingSchema = structuredClone(schema);
+    pruneLibraryProfilesFromSchema(workingSchema);
     pruneLibraryProfilesFromValue(initialValue);
-    sanitizeSettingsSchemaTitles(schema);
+    sanitizeSettingsSchemaTitles(workingSchema);
 
-    const props = (schema.properties ?? {}) as Record<string, unknown>;
+    const props = (workingSchema.properties ?? {}) as Record<string, unknown>;
     const uiSchema = buildSettingsUiSchema(props, tab.keys) as unknown as UiSchemaRoot;
-    setCachedSettingsSchema(schemaCacheKey, schema);
+    setCachedSettingsSchema(schemaCacheKey, workingSchema);
     perfCount("settings.schema.cache.set", 1, {
         tab: tab.id,
         pathCount: paths.split(",").filter(Boolean).length
@@ -505,7 +522,7 @@ export const load: PageServerLoad = async ({
         searchIndex: buildSearchIndex(fullSchema),
         focusPath: url.searchParams.get("focus") ?? null,
         form: {
-            schema,
+            schema: workingSchema,
             initialValue,
             uiSchema
         } satisfies InitialFormData
@@ -547,7 +564,14 @@ export const actions = {
             perfCount("settings.schema.cache.hit", 1, { tab: tab.id });
         } else {
             perfCount("settings.schema.cache.miss", 1, { tab: tab.id });
-            schema = await getSchemaForKeys(locals.backendUrl, locals.apiKey, paths, fetch);
+            const rawSchema = await getSchemaForKeys(
+                locals.backendUrl,
+                locals.apiKey,
+                paths,
+                fetch
+            );
+            // Clone before mutation so the cached object stays pristine.
+            schema = structuredClone(rawSchema);
             pruneLibraryProfilesFromSchema(schema);
             sanitizeSettingsSchemaTitles(schema);
             setCachedSettingsSchema(schemaCacheKey, schema);
@@ -573,6 +597,16 @@ export const actions = {
 
         const [form] = await handleForm(request.signal, requestFormData);
         if (!form.isValid) {
+            console.error(
+                "[SETTINGS_SUBMIT_FAIL] Form invalid for tab:",
+                tab.id,
+                "errors:",
+                JSON.stringify(form.errors)
+            );
+            logger.warn("Form validation failed during settings submit", {
+                tab: tab.id,
+                errors: form.errors
+            });
             endPerfMark(mark, {
                 tab: tab.id,
                 valid: false
@@ -581,6 +615,27 @@ export const actions = {
         }
 
         const payload = form.data as Record<string, unknown>;
+
+        // Ensure all requested keys in `paths` exist in `payload` by populating missing keys
+        // from backend current settings (e.g. read-only fields like `version` or un-edited fields).
+        try {
+            const currentSettings = await getSettingsForPaths(
+                locals.backendUrl,
+                locals.apiKey,
+                paths,
+                fetch
+            );
+            for (const key of paths.split(",")) {
+                const k = key.trim();
+                if (k && payload[k] === undefined && currentSettings[k] !== undefined) {
+                    payload[k] = currentSettings[k];
+                }
+            }
+        } catch (e) {
+            logger.warn("Failed to fetch current settings fallback during payload completion", {
+                error: e
+            });
+        }
 
         // If saving the filesystem tab, we must salvage the existing library_profiles
         // from the backend so the POST payload doesn't accidentally wipe them out.
@@ -601,6 +656,10 @@ export const actions = {
                     !isRecord(currentRes.data) ||
                     !isRecord(currentRes.data.filesystem)
                 ) {
+                    console.error(
+                        "[SETTINGS_SUBMIT_FAIL] Salvage library_profiles error:",
+                        currentRes.error
+                    );
                     logger.error("Failed to salvage library_profiles during filesystem save", {
                         error: currentRes.error ?? "missing filesystem payload"
                     });
@@ -618,6 +677,7 @@ export const actions = {
                         currentFs.library_profiles;
                 }
             } catch (e) {
+                console.error("[SETTINGS_SUBMIT_FAIL] Salvage library_profiles exception:", e);
                 logger.error("Failed to salvage library_profiles during filesystem save", {
                     error: e
                 });
@@ -639,6 +699,14 @@ export const actions = {
         });
 
         if (res.error) {
+            console.error(
+                "[SETTINGS_SUBMIT_FAIL] Backend POST error for tab:",
+                tab.id,
+                "paths:",
+                paths,
+                "error:",
+                JSON.stringify(res.error)
+            );
             endPerfMark(mark, {
                 tab: tab.id,
                 valid: true,
