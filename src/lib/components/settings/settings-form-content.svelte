@@ -407,7 +407,7 @@
         display: flex;
         flex-direction: column;
         width: 100%;
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     :global(.settings-form > form),
@@ -422,7 +422,7 @@
     :global(.settings-form [data-slot="field-group"]),
     :global(.settings-form [data-layout="object-properties"]) {
         display: grid !important;
-        gap: 0.85rem;
+        gap: 0.75rem;
         grid-template-columns: 1fr;
         width: 100%;
     }
@@ -431,7 +431,7 @@
         :global(.settings-form [data-slot="field-group"]),
         :global(.settings-form [data-layout="object-properties"]) {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 0.85rem;
+            gap: 0.75rem;
         }
 
         /* Nested object / array fields span full width of the 2-column grid */
@@ -450,7 +450,7 @@
         }
     }
 
-    /* Top-level section fieldset cards */
+    /* Top-level section fieldset cards — Ranking-density surfaces */
     :global(.settings-form fieldset[data-slot="field-set"]) {
         display: flex;
         flex-direction: column;
@@ -461,9 +461,15 @@
         border-radius: 0.75rem;
         background: color-mix(in oklab, var(--color-card) 40%, transparent);
         backdrop-filter: blur(4px);
-        padding: 1.25rem;
-        margin: 0 0 0.5rem 0;
-        box-shadow: 0 1px 3px color-mix(in oklab, var(--color-black) 8%, transparent);
+        padding: 0.75rem;
+        margin: 0 0 0.25rem 0;
+        box-shadow: none;
+    }
+
+    @media (min-width: 768px) {
+        :global(.settings-form fieldset[data-slot="field-set"]) {
+            padding: 1rem;
+        }
     }
 
     /* Provider cards (Scraping / Downloaders / Content): nested provider fieldsets.
@@ -534,13 +540,14 @@
         max-width: 100%;
         box-sizing: border-box;
         text-align: left;
-        font-size: 0.95rem;
+        /* Ranking-adjacent: plain dense section title (no heavy left accent) */
+        font-size: 0.875rem;
         font-weight: 600;
         letter-spacing: -0.01em;
         margin: 0 0 0.5rem;
-        padding: 0 0 0.5rem 0.65rem;
-        border-bottom: 1px solid color-mix(in oklab, var(--color-primary) 20%, var(--color-border));
-        border-left: 3.5px solid color-mix(in oklab, var(--color-primary) 65%, transparent);
+        padding: 0 0 0.5rem;
+        border-bottom: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+        border-left: none;
         color: var(--color-foreground);
     }
 

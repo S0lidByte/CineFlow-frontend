@@ -2,10 +2,9 @@
 
 ## [1.6.1-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.6.0-beta.1...riven-frontend-v1.6.1-beta.1) (2026-07-23)
 
-
 ### Bug Fixes
 
-* **details:** prevent blank media pages from duplicate each keys ([#58](https://github.com/S0lidByte/CineFlow-frontend/issues/58)) ([a19d7c8](https://github.com/S0lidByte/CineFlow-frontend/commit/a19d7c8beeee2abf12169184c3f091ee3d371a58))
+- **details:** prevent blank media pages from duplicate each keys ([#58](https://github.com/S0lidByte/CineFlow-frontend/issues/58)) ([a19d7c8](https://github.com/S0lidByte/CineFlow-frontend/commit/a19d7c8beeee2abf12169184c3f091ee3d371a58))
 
 ## [1.6.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.5.0-beta.1...riven-frontend-v1.6.0-beta.1) (2026-07-23)
 
