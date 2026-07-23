@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.7.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.6.1-beta.1...riven-frontend-v1.7.0-beta.1) (2026-07-23)
+
+### Features
+
+- **settings:** align non-ranking tabs to Ranking chrome pattern ([#60](https://github.com/S0lidByte/CineFlow-frontend/issues/60)) ([66d847c](https://github.com/S0lidByte/CineFlow-frontend/commit/66d847ca5805c565e6a9cba5744080aac2243044))
+
 ## [1.6.1-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.6.0-beta.1...riven-frontend-v1.6.1-beta.1) (2026-07-23)
 
 ### Bug Fixes
