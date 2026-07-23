@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.5-beta.1...riven-frontend-v1.4.0-beta.1) (2026-07-23)
+
+
+### Features
+
+* **settings:** layout polish across all tabs ([#53](https://github.com/S0lidByte/CineFlow-frontend/issues/53)) ([3b5f694](https://github.com/S0lidByte/CineFlow-frontend/commit/3b5f6947a4e39e318b5d397d7d42cf8dc5a20024))
+
 ## [1.4.0-beta.1] — 2026-07-23
 
 ### Added
