@@ -10,6 +10,7 @@ import {
     getPathsForTab,
     getTabById,
     LIBRARY_PROFILES_TAB_ID,
+    RANKING_TAB_ID,
     SETTINGS_TABS
 } from "$lib/components/settings/sections";
 import {
@@ -184,11 +185,15 @@ function sanitizeSettingsSchemaTitles(schema: Record<string, unknown>): void {
                 obj.title = humanizeSchemaKey(propertyKey);
             } else {
                 // Def title without a property key — strip suffix to readable form
-                obj.title = humanizeSchemaKey(obj.title.replace(/(Config|Model|Dict|ParametersDict|Parameters)$/i, ""));
+                obj.title = humanizeSchemaKey(
+                    obj.title.replace(/(Config|Model|Dict|ParametersDict|Parameters)$/i, "")
+                );
             }
         } else if (typeof obj.title === "string" && /(Config|Model|Dict)$/i.test(obj.title)) {
             // Soft-clean titles that embed Config/Model even when not fully matched above
-            obj.title = humanizeSchemaKey(obj.title.replace(/(Config|Model|Dict|ParametersDict)$/i, ""));
+            obj.title = humanizeSchemaKey(
+                obj.title.replace(/(Config|Model|Dict|ParametersDict)$/i, "")
+            );
         }
 
         if (obj.properties && typeof obj.properties === "object") {
@@ -466,6 +471,66 @@ export const load: PageServerLoad = async ({
                 error(503, "Failed to load library profiles.");
             }
         }
+
+        if (tab.id === RANKING_TAB_ID) {
+            try {
+                const [rankingRes, metaRes, fullSchema] = await Promise.all([
+                    providers.riven.GET("/api/v1/settings/get/{paths}", {
+                        baseUrl: locals.backendUrl,
+                        headers: { "x-api-key": locals.apiKey },
+                        fetch,
+                        params: { path: { paths: "ranking" } }
+                    }),
+                    fetch(`${locals.backendUrl}/api/v1/ranking/meta`, {
+                        headers: { "x-api-key": locals.apiKey }
+                    }),
+                    getFullSettingsSchema(locals.backendUrl, locals.apiKey, fetch)
+                ]);
+
+                if (rankingRes.error) {
+                    throw new Error("Failed to load ranking settings");
+                }
+
+                let meta = {
+                    deny_keys: {} as Record<string, string>,
+                    attribute_titles: {} as Record<string, string>,
+                    categories: {} as Record<string, string>
+                };
+                if (metaRes.ok) {
+                    const body = (await metaRes.json()) as {
+                        deny_keys?: Record<string, string>;
+                        attribute_titles?: Record<string, string>;
+                        categories?: Record<string, string>;
+                    };
+                    meta = {
+                        deny_keys: body.deny_keys ?? {},
+                        attribute_titles: body.attribute_titles ?? {},
+                        categories: body.categories ?? {}
+                    };
+                }
+
+                const ranking = (rankingRes.data as Record<string, unknown>)["ranking"] as Record<
+                    string,
+                    unknown
+                >;
+
+                return {
+                    tabs: SETTINGS_TABS,
+                    activeTabId: tab.id,
+                    paths: "ranking",
+                    searchIndex: buildSearchIndex(fullSchema),
+                    focusPath: url.searchParams.get("focus") ?? null,
+                    customData: {
+                        ranking,
+                        rankingMeta: meta
+                    }
+                };
+            } catch (e) {
+                logger.error("Failed to load ranking settings tab", { error: e });
+                error(503, "Failed to load ranking settings.");
+            }
+        }
+
         error(404, "Custom tab not found");
     }
 

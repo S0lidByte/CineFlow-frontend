@@ -150,12 +150,12 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         ]
     },
     ranking: {
-        headline: "RTN quality filters — log rejects map to denied by: category_attribute.",
+        headline: "Fetch off → logs show denied by: category_attribute (e.g. audio_ddp).",
         howToUse: [
-            "Open a category (Audio, Quality, Extras…) and set Fetch / Rank per attribute.",
-            "When Fetch is off, RTN rejects with denied by: audio_dolby_digital_plus style keys.",
-            "Use Cmd+K and search ddp, remux, or trash to jump to the exact control.",
-            "Expand 'How rejects map' below for log examples and deny-key reference."
+            "Pick a category chip, then toggle Fetch / Custom / Rank in the matrix.",
+            "Use presets for Balanced, WEB-DL permissive, Strict, or Anime baselines.",
+            "Paste a release title in Release tester to preview accept/reject without saving.",
+            "Copy deny keys from the matrix or tester result when debugging scrape logs."
         ],
         tips: [
             "Disney+/Amazon WEB-DL often needs audio_dolby_digital_plus fetch enabled.",

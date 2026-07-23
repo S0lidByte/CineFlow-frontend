@@ -46,6 +46,9 @@ export interface SectionTab {
  */
 export const LIBRARY_PROFILES_TAB_ID = "library-profiles" as const;
 
+/** Stable ID for the custom Ranking / RTN panel. */
+export const RANKING_TAB_ID = "ranking" as const;
+
 /** All settings tabs, ordered within each group as they appear in the sidebar. */
 export const SETTINGS_TABS: SectionTab[] = [
     // ── Core ──────────────────────────────────────────────────────────────────
@@ -128,9 +131,9 @@ export const SETTINGS_TABS: SectionTab[] = [
         label: "Ranking",
         icon: "list-ordered",
         group: "tuning",
-        description:
-            "RTN quality filters and ranks. Log rejects map to denied by: <category>_<attribute> (e.g. audio_dolby_digital_plus).",
-        keys: ["ranking"]
+        description: "RTN quality filters, presets, and a release tester for deny-key debugging.",
+        keys: ["ranking"],
+        custom: true
     },
     {
         id: "database",

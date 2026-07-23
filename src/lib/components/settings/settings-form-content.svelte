@@ -133,6 +133,118 @@
         return depth;
     }
 
+    /** Strip schema noise like "TorrentioConfig" / "FooDict" from legend text nodes. */
+    function sanitizeLegendTitle(raw: string): string {
+        return raw
+            .replace(/\b(\w+)(?:Config|Dict|Model|Settings)\b/g, "$1")
+            .replace(/\s{2,}/g, " ")
+            .trim();
+    }
+
+    function legendTitleText(legend: HTMLElement): string {
+        // Prefer explicit title node; fall back to concatenated text without chevron noise.
+        const titleEl =
+            legend.querySelector<HTMLElement>("[data-layout='object-field-title']") ??
+            legend.querySelector<HTMLElement>(":scope > div, :scope > span");
+        const raw = (titleEl?.textContent ?? legend.textContent ?? "").replace(/[▾▾]/g, "").trim();
+        return sanitizeLegendTitle(raw);
+    }
+
+    /**
+     * Polish legends: sanitize titles, hide root duplicate of page H1, force left-aligned rows.
+     */
+    function polishLegends(root: HTMLElement, tabId: string): void {
+        const tab = getTabById(tabId);
+        const tabLabel = (tab?.label ?? "").trim().toLowerCase();
+
+        root.querySelectorAll<HTMLElement>('legend[data-slot="field-legend"]').forEach((legend) => {
+            // Kill SJSF justify-between that shoves titles to the far right.
+            legend.classList.remove("justify-between");
+            legend.style.justifyContent = "flex-start";
+            legend
+                .querySelectorAll<HTMLElement>("[data-layout='object-field-title-row']")
+                .forEach((row) => {
+                    row.classList.remove("justify-between");
+                    row.style.justifyContent = "flex-start";
+                    row.style.gap = "0.5rem";
+                    row.style.width = "auto";
+                    row.style.flex = "1 1 auto";
+                    row.style.minWidth = "0";
+                });
+
+            // Sanitize visible title text once.
+            if (legend.dataset.settingsTitleSanitized !== "1") {
+                const walk = (node: Node) => {
+                    if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+                        const next = sanitizeLegendTitle(node.textContent);
+                        if (next !== node.textContent) node.textContent = next;
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        node.childNodes.forEach(walk);
+                    }
+                };
+                walk(legend);
+                legend.dataset.settingsTitleSanitized = "1";
+            }
+
+            // Mark provider legends whose "Enabled" checkbox is on (for CSS badge).
+            const fs = legend.closest<HTMLFieldSetElement>('fieldset[data-slot="field-set"]');
+            if (fs) {
+                const enabledOn = Array.from(
+                    fs.querySelectorAll<HTMLElement>('[data-slot="field"]')
+                ).some((field) => {
+                    // Only fields owned by this fieldset (not nested provider cards)
+                    if (field.closest('fieldset[data-slot="field-set"]') !== fs) return false;
+                    const label = (
+                        field.querySelector("[data-slot='field-label']")?.textContent ?? ""
+                    )
+                        .trim()
+                        .toLowerCase();
+                    if (label !== "enabled") return false;
+                    return !!field.querySelector(
+                        'button[data-slot="checkbox"][data-state="checked"], button[role="switch"][data-state="checked"], input[type="checkbox"]:checked'
+                    );
+                });
+                if (enabledOn) legend.dataset.settingsEnabled = "1";
+                else delete legend.dataset.settingsEnabled;
+            }
+        });
+
+        // Hide the section legend that duplicates the page H1 (tab label).
+        // SJSF often wraps tab content as form > fieldset(root, no legend) > … > fieldset(legend=Tab).
+        root.querySelectorAll<HTMLFieldSetElement>('fieldset[data-slot="field-set"]').forEach((fs) => {
+            const depth = fieldsetDepth(fs);
+            if (depth > 1) return;
+            const legend = fs.querySelector<HTMLElement>(':scope > legend[data-slot="field-legend"]');
+            if (!legend || !tabLabel) return;
+            const title = legendTitleText(legend).toLowerCase();
+            const matchesTab =
+                title === tabLabel ||
+                title === `${tabLabel} configuration` ||
+                title === `${tabLabel} settings`;
+            if (!matchesTab) return;
+
+            legend.dataset.settingsHiddenRoot = "1";
+            legend.hidden = true;
+            // Keep the section body visible — page H1 replaces this legend.
+            fs.removeAttribute("data-collapsed");
+            const group = fs.querySelector<HTMLElement>(':scope > [data-slot="field-group"]');
+            if (group) group.hidden = false;
+            const desc = fs.querySelector<HTMLElement>(
+                ':scope > [data-slot="field-description"]'
+            );
+            if (desc) {
+                const d = (desc.textContent ?? "").trim().toLowerCase();
+                if (
+                    !d ||
+                    d === `${tabLabel} configuration` ||
+                    d.includes(`${tabLabel} configuration`)
+                ) {
+                    desc.hidden = true;
+                }
+            }
+        });
+    }
+
     function enhanceCollapsibleSections(root: HTMLElement): () => void {
         const cleanups: Array<() => void> = [];
         const fieldsets = root.querySelectorAll<HTMLFieldSetElement>(
@@ -145,11 +257,10 @@
             );
             const content = fs.querySelector<HTMLElement>(':scope > [data-slot="field-group"]');
             if (!legend || !content) return;
+            if (legend.dataset.settingsHiddenRoot === "1") return;
             if (legend.dataset.settingsCollapsible === "1") return;
 
-            const directNested = content.querySelectorAll(
-                ':scope fieldset[data-slot="field-set"]'
-            );
+            const directNested = content.querySelectorAll(':scope fieldset[data-slot="field-set"]');
             // Only wrap groups that contain nested objects (real sections).
             // Ranking leaf attribute bags (fetch/rank triplets) stay expanded and non-collapsible.
             if (directNested.length === 0) return;
@@ -200,6 +311,7 @@
 
     $effect(() => {
         const host = formHost;
+        const tabId = activeTabId;
         if (!host) return;
 
         let dispose = () => {};
@@ -208,6 +320,7 @@
         const run = async () => {
             await tick();
             dispose();
+            polishLegends(host, tabId);
             dispose = enhanceCollapsibleSections(host);
         };
 
@@ -270,7 +383,12 @@
 {/if}
 
 <div class="settings-form-host" bind:this={formHost}>
-    <BasicForm {form} method="POST" action="?tab={activeTabId}" class="settings-form" />
+    <BasicForm
+        {form}
+        method="POST"
+        action="?tab={activeTabId}"
+        class="settings-form"
+        data-settings-tab={activeTabId} />
 </div>
 
 <style>
@@ -342,9 +460,66 @@
         box-shadow: 0 1px 3px color-mix(in oklab, var(--color-black) 8%, transparent);
     }
 
+    /* Provider cards (Scraping / Downloaders / Content): nested provider fieldsets.
+       Note: BasicForm is <form class="settings-form"> — no nested <form>. */
+    :global(
+        .settings-form[data-settings-tab="scraping"] > fieldset[data-slot="field-set"] fieldset[data-slot="field-set"],
+        .settings-form[data-settings-tab="downloaders"] > fieldset[data-slot="field-set"] fieldset[data-slot="field-set"],
+        .settings-form[data-settings-tab="content"] > fieldset[data-slot="field-set"] fieldset[data-slot="field-set"]
+    ) {
+        border-color: color-mix(in oklab, var(--color-border) 70%, transparent);
+        background: linear-gradient(
+            135deg,
+            color-mix(in oklab, var(--color-card) 55%, transparent),
+            color-mix(in oklab, var(--color-primary) 4%, transparent)
+        );
+    }
+
+    /* SJSF boolean fields render as checkbox buttons — accent nested provider cards when Enabled is on */
+    :global(
+        .settings-form[data-settings-tab="scraping"]
+            fieldset[data-slot="field-set"]:has(legend[data-settings-enabled="1"]),
+        .settings-form[data-settings-tab="downloaders"]
+            fieldset[data-slot="field-set"]:has(legend[data-settings-enabled="1"]),
+        .settings-form[data-settings-tab="content"]
+            fieldset[data-slot="field-set"]:has(legend[data-settings-enabled="1"])
+    ) {
+        border-color: color-mix(in oklab, var(--color-primary) 35%, var(--color-border));
+        box-shadow:
+            0 0 0 1px color-mix(in oklab, var(--color-primary) 18%, transparent),
+            0 1px 3px color-mix(in oklab, var(--color-black) 8%, transparent);
+    }
+
+    :global(
+        .settings-form[data-settings-tab="scraping"] legend[data-slot="field-legend"]::after,
+        .settings-form[data-settings-tab="downloaders"] legend[data-slot="field-legend"]::after,
+        .settings-form[data-settings-tab="content"] legend[data-slot="field-legend"]::after
+    ) {
+        content: none;
+    }
+
+    :global(
+        .settings-form legend[data-slot="field-legend"][data-settings-enabled="1"]::after
+    ) {
+        content: "Enabled";
+        margin-left: auto;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: color-mix(in oklab, var(--color-primary) 90%, white);
+        background: color-mix(in oklab, var(--color-primary) 18%, transparent);
+        border: 1px solid color-mix(in oklab, var(--color-primary) 30%, transparent);
+        border-radius: 999px;
+        padding: 0.15rem 0.45rem;
+    }
+
     :global(.settings-form legend[data-slot="field-legend"]) {
         float: none;
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start !important;
+        gap: 0.5rem;
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
@@ -359,11 +534,29 @@
         color: var(--color-foreground);
     }
 
+    /* SJSF title row must not push the label to the far right */
+    :global(.settings-form legend[data-slot="field-legend"] [data-layout="object-field-title-row"]),
+    :global(.settings-form legend[data-slot="field-legend"] .justify-between) {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start !important;
+        gap: 0.5rem;
+        width: auto;
+        max-width: 100%;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    :global(.settings-form legend[data-slot="field-legend"][data-settings-hidden-root="1"]) {
+        display: none !important;
+    }
+
     :global(.settings-form legend.settings-collapsible-legend) {
         cursor: pointer;
         user-select: none;
         display: flex;
         align-items: center;
+        justify-content: flex-start !important;
         gap: 0.5rem;
         border-radius: 0.5rem;
         padding: 0.35rem 0.5rem 0.5rem;
@@ -385,14 +578,29 @@
         opacity: 0.75;
         transition: transform 0.15s ease;
         flex-shrink: 0;
+        order: -1;
     }
 
     :global(.settings-form fieldset[data-collapsed] > legend.settings-collapsible-legend::before) {
         transform: rotate(-90deg);
     }
 
+    /* Collapsed sections: one compact header row, no hollow card body */
     :global(.settings-form fieldset[data-collapsed]) {
-        padding-bottom: 0.35rem;
+        gap: 0;
+        padding-top: 0.65rem;
+        padding-bottom: 0.65rem;
+        min-height: 0;
+    }
+
+    :global(.settings-form fieldset[data-collapsed] > legend[data-slot="field-legend"]) {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    :global(.settings-form fieldset[data-collapsed] > [data-slot="field-description"]) {
+        display: none !important;
     }
 
     /* Individual property fields — flat rows, no card wall */
@@ -445,6 +653,8 @@
     :global(.settings-form [data-slot="input"]),
     :global(.settings-form [data-slot="textarea"]),
     :global(.settings-form [data-slot="select-trigger"]) {
+        width: 100%;
+        min-width: 0;
         min-height: 2.25rem;
         border-radius: 0.375rem;
         background: color-mix(in oklab, var(--color-background) 70%, transparent);
@@ -482,8 +692,10 @@
         overflow: hidden !important;
     }
 
-    /* Switch fields: clean horizontal row with text left and toggle right */
-    :global(.settings-form [data-slot="field"]:has(button[role="switch"])) {
+    /* Boolean rows: label left, control right (switch or checkbox button) */
+    :global(.settings-form [data-slot="field"]:has(button[role="switch"])),
+    :global(.settings-form [data-slot="field"]:has(button[data-slot="checkbox"])),
+    :global(.settings-form [data-slot="field"]:has(input[type="checkbox"])) {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -496,6 +708,12 @@
     :global(
         .settings-form
             [data-slot="field"]:has(button[role="switch"])
+            > [data-slot="field-label-group"],
+        .settings-form
+            [data-slot="field"]:has(button[data-slot="checkbox"])
+            > [data-slot="field-label-group"],
+        .settings-form
+            [data-slot="field"]:has(input[type="checkbox"])
             > [data-slot="field-label-group"]
     ) {
         flex: 1;
@@ -503,20 +721,31 @@
         order: 0;
     }
 
-    :global(.settings-form [data-slot="field"]:has(button[role="switch"]) button[role="switch"]) {
+    :global(.settings-form [data-slot="field"]:has(button[role="switch"]) button[role="switch"]),
+    :global(
+        .settings-form [data-slot="field"]:has(button[data-slot="checkbox"]) button[data-slot="checkbox"]
+    ),
+    :global(.settings-form [data-slot="field"]:has(input[type="checkbox"]) input[type="checkbox"]) {
         order: 1;
         flex-shrink: 0;
     }
 
-    /* Checkbox fields — same title-first row when using native checkbox layout */
-    :global(.settings-form [data-slot="field"]:has(input[type="checkbox"])) {
+    /* Leaf scalar fields stretch to fill their grid cell */
+    :global(.settings-form [data-slot="field"]:not(:has([data-slot="field"]))) {
         display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    :global(
+        .settings-form
+            [data-slot="field"]:has(button[role="switch"]):not(:has([data-slot="field"])),
+        .settings-form
+            [data-slot="field"]:has(button[data-slot="checkbox"]):not(:has([data-slot="field"])),
+        .settings-form
+            [data-slot="field"]:has(input[type="checkbox"]):not(:has([data-slot="field"]))
+    ) {
         flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid color-mix(in oklab, var(--color-border) 40%, transparent);
     }
 
     /* Array "Add item" and action controls — compact inline buttons */

@@ -33,6 +33,7 @@
     import SettingsFormContent from "$lib/components/settings/settings-form-content.svelte";
     import SettingsTabGuide from "$lib/components/settings/settings-tab-guide.svelte";
     import LibraryProfilesPanel from "$lib/components/settings/library-profiles-panel.svelte";
+    import RankingPanel from "$lib/components/settings/ranking-panel.svelte";
     import { cn } from "$lib/utils";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
@@ -43,6 +44,7 @@
         SECTION_GROUPS,
         getTabsByGroup,
         LIBRARY_PROFILES_TAB_ID,
+        RANKING_TAB_ID,
         type SectionGroup
     } from "$lib/components/settings/sections";
     import SettingsSearch from "$lib/components/settings/settings-search.svelte";
@@ -58,7 +60,6 @@
     import Check from "@lucide/svelte/icons/check";
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
     import ChevronRight from "@lucide/svelte/icons/chevron-right";
-    import Info from "@lucide/svelte/icons/info";
 
     /** Maps the icon name stored in {@link SectionTab.icon} to a Svelte component. */
     // Imported ICON_MAP from $lib/components/settings/icon-map
@@ -76,7 +77,6 @@
     let tabSwitchFocus: string | null = null;
     let showDiscardConfirm = $state(false);
     let pendingFocusPath = $state<string | null>(null);
-    let rankingDenyHelpOpen = $state(false);
 
     /**
      * Tracks which sidebar groups are expanded.
@@ -516,54 +516,6 @@
                         <SettingsTabGuide tab={activeTab} />
                     {/if}
 
-                    {#if $page.data.activeTabId === "ranking"}
-                        <div
-                            class="border-border/60 bg-muted/20 mb-4 rounded-lg border px-3 py-2">
-                            <button
-                                type="button"
-                                class="text-muted-foreground hover:text-foreground flex w-full items-center justify-between gap-2 text-left text-xs font-medium"
-                                aria-expanded={rankingDenyHelpOpen}
-                                onclick={() => (rankingDenyHelpOpen = !rankingDenyHelpOpen)}>
-                                <span class="flex items-center gap-2">
-                                    <Info class="text-primary size-3.5 shrink-0" />
-                                    Deny-key reference
-                                    <span class="text-muted-foreground/80 font-normal">
-                                        ·
-                                        <code class="text-[10px]">denied by: category_attribute</code>
-                                    </span>
-                                </span>
-                                <ChevronDown
-                                    class={cn(
-                                        "size-3.5 transition-transform",
-                                        rankingDenyHelpOpen && "rotate-180"
-                                    )} />
-                            </button>
-                            {#if rankingDenyHelpOpen}
-                                <ul
-                                    class="text-muted-foreground border-border/50 mt-2 list-disc space-y-1 border-t pt-2 pl-5 text-xs leading-relaxed">
-                                    <li>
-                                        Examples:
-                                        <code class="text-foreground/90"
-                                            >audio_dolby_digital_plus</code
-                                        >,
-                                        <code class="text-foreground/90">quality_remux</code>,
-                                        <code class="text-foreground/90">extras_dubbed</code>
-                                    </li>
-                                    <li>
-                                        When <strong class="text-foreground">Fetch</strong> is off, RTN
-                                        rejects outright — no rank score is applied.
-                                    </li>
-                                    <li>
-                                        Disney+/Amazon WEB-DL often needs
-                                        <strong class="text-foreground"
-                                            >audio_dolby_digital_plus</strong>
-                                        fetch enabled.
-                                    </li>
-                                </ul>
-                            {/if}
-                        </div>
-                    {/if}
-
                     <!-- Loading overlay shown while navigating to a new tab -->
                     {#if $navigating}
                         <div
@@ -582,6 +534,19 @@
                         {#if activeTab?.custom && $page.data.activeTabId === LIBRARY_PROFILES_TAB_ID}
                             <LibraryProfilesPanel
                                 profiles={$page.data.customData?.profiles ?? {}} />
+                        {:else if activeTab?.custom && $page.data.activeTabId === RANKING_TAB_ID}
+                            <RankingPanel
+                                ranking={($page.data.customData?.ranking ??
+                                    {}) as import("$lib/components/settings/ranking-presets").RankingSettings}
+                                meta={($page.data.customData?.rankingMeta ?? {
+                                    deny_keys: {},
+                                    attribute_titles: {},
+                                    categories: {}
+                                }) as {
+                                    deny_keys: Record<string, string>;
+                                    attribute_titles: Record<string, string>;
+                                    categories: Record<string, string>;
+                                }} />
                         {:else if $page.data.form}
                             <SettingsFormContent
                                 {formStore}
