@@ -120,9 +120,19 @@
 
     /**
      * Make nested object fieldsets collapsible.
-     * Categories that contain other fieldsets start collapsed (first sibling stays open)
-     * so Ranking/Content-style trees are scannable instead of an endless card wall.
+     * Policy: depth 0–1 open by default; depth ≥2 collapsed (first sibling at depth 2 stays open).
+     * Ranking leaf attribute bags (fetch/rank) stay non-collapsible so Fetch|Rank stay visible.
      */
+    function fieldsetDepth(fs: HTMLElement): number {
+        let depth = 0;
+        let parent = fs.parentElement?.closest('fieldset[data-slot="field-set"]') ?? null;
+        while (parent) {
+            depth += 1;
+            parent = parent.parentElement?.closest('fieldset[data-slot="field-set"]') ?? null;
+        }
+        return depth;
+    }
+
     function enhanceCollapsibleSections(root: HTMLElement): () => void {
         const cleanups: Array<() => void> = [];
         const fieldsets = root.querySelectorAll<HTMLFieldSetElement>(
@@ -137,34 +147,30 @@
             if (!legend || !content) return;
             if (legend.dataset.settingsCollapsible === "1") return;
 
-            const childFieldsets = content.querySelectorAll(
+            const directNested = content.querySelectorAll(
                 ':scope fieldset[data-slot="field-set"]'
             );
-            // Only wrap groups that contain nested objects (real sections), not leaf attribute bags.
-            if (childFieldsets.length === 0 && activeTabId !== "ranking") return;
-            if (childFieldsets.length === 0) {
-                // On ranking, also collapse leaf attribute objects (fetch/rank triplets)
-                // when they sit under a category fieldset.
-                const parentFs = fs.parentElement?.closest('fieldset[data-slot="field-set"]');
-                if (!parentFs) return;
-            }
+            // Only wrap groups that contain nested objects (real sections).
+            // Ranking leaf attribute bags (fetch/rank triplets) stay expanded and non-collapsible.
+            if (directNested.length === 0) return;
+
+            const depth = fieldsetDepth(fs);
+            const parentFs = fs.parentElement?.closest('fieldset[data-slot="field-set"]');
+            const siblings = parentFs
+                ? Array.from(
+                      parentFs.querySelectorAll<HTMLFieldSetElement>(
+                          ':scope > [data-slot="field-group"] fieldset[data-slot="field-set"]'
+                      )
+                  ).filter((sib) => fieldsetDepth(sib) === depth)
+                : [];
+            const isFirstSibling = siblings.length > 0 ? siblings[0] === fs : !parentFs;
+            // Depth 0–1 open; depth ≥2 collapsed except first sibling for scanability.
+            const openByDefault = depth <= 1 || (depth === 2 && isFirstSibling);
 
             legend.dataset.settingsCollapsible = "1";
             legend.setAttribute("role", "button");
             legend.tabIndex = 0;
             legend.classList.add("settings-collapsible-legend");
-
-            const parentFs = fs.parentElement?.closest('fieldset[data-slot="field-set"]');
-            const siblings = parentFs
-                ? Array.from(
-                      parentFs.querySelectorAll<HTMLFieldSetElement>(
-                          ':scope > [data-slot="field-group"] > fieldset[data-slot="field-set"]'
-                      )
-                  )
-                : [];
-            const isFirstSibling = siblings.length > 0 ? siblings[0] === fs : !parentFs;
-            // Top-level section open; nested categories: first open, rest collapsed.
-            const openByDefault = !parentFs || isFirstSibling;
 
             const setOpen = (open: boolean) => {
                 fs.toggleAttribute("data-collapsed", !open);
@@ -389,22 +395,20 @@
         padding-bottom: 0.35rem;
     }
 
-    /* Individual property field cards */
+    /* Individual property fields — flat rows, no card wall */
     :global(.settings-form [data-slot="field"]) {
-        border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
-        border-radius: 0.625rem;
-        background: color-mix(in oklab, var(--color-muted) 20%, transparent);
-        padding: 0.75rem 0.875rem;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        padding: 0.35rem 0;
         min-width: 0;
-        gap: 0.45rem;
-        transition:
-            border-color 0.15s ease,
-            background 0.15s ease;
+        gap: 0.35rem;
+        transition: none;
     }
 
     :global(.settings-form [data-slot="field"]:hover) {
-        border-color: color-mix(in oklab, var(--color-primary) 30%, var(--color-border));
-        background: color-mix(in oklab, var(--color-muted) 30%, transparent);
+        border-color: transparent;
+        background: transparent;
     }
 
     :global(.settings-form fieldset[data-slot="field-set"] > [data-slot="field-group"]) {
@@ -413,8 +417,8 @@
     }
 
     :global(.settings-form [data-slot="field"] [data-slot="field"]) {
-        background: color-mix(in oklab, var(--color-background) 50%, transparent);
-        border-color: color-mix(in oklab, var(--color-border) 50%, transparent);
+        background: transparent;
+        border: none;
     }
 
     :global(.settings-form [data-slot="field-label"]) {
@@ -423,11 +427,19 @@
         color: var(--color-foreground);
     }
 
+    /* Descriptions live in label tooltips — hide inline prose to cut noise */
     :global(.settings-form [data-slot="field-description"]) {
+        display: none !important;
+    }
+
+    /* Fieldset-level description under legend stays visible (section context) */
+    :global(.settings-form legend[data-slot="field-legend"] + [data-slot="field-description"]),
+    :global(.settings-form fieldset[data-slot="field-set"] > [data-slot="field-description"]) {
+        display: block !important;
         color: var(--color-muted-foreground);
         font-size: 0.75rem;
         line-height: 1.4;
-        margin-top: 0.15rem;
+        margin: -0.25rem 0 0.5rem;
     }
 
     :global(.settings-form [data-slot="input"]),
@@ -451,13 +463,11 @@
     }
 
     :global(.settings-form [data-settings-focus="true"]) {
-        border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
+        border-radius: 0.5rem;
         box-shadow:
             0 0 0 2px color-mix(in oklab, var(--color-primary) 35%, transparent),
             0 0 0 6px color-mix(in oklab, var(--color-primary) 12%, transparent);
-        transition:
-            box-shadow 0.25s ease,
-            border-color 0.25s ease;
+        transition: box-shadow 0.25s ease;
     }
 
     /* Completely suppress residual SJSF default submit button containers */
@@ -479,7 +489,8 @@
         align-items: center;
         justify-content: space-between;
         gap: 0.75rem;
-        padding: 0.75rem 0.875rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid color-mix(in oklab, var(--color-border) 40%, transparent);
     }
 
     :global(
@@ -489,6 +500,23 @@
     ) {
         flex: 1;
         min-width: 0;
+        order: 0;
+    }
+
+    :global(.settings-form [data-slot="field"]:has(button[role="switch"]) button[role="switch"]) {
+        order: 1;
+        flex-shrink: 0;
+    }
+
+    /* Checkbox fields — same title-first row when using native checkbox layout */
+    :global(.settings-form [data-slot="field"]:has(input[type="checkbox"])) {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid color-mix(in oklab, var(--color-border) 40%, transparent);
     }
 
     /* Array "Add item" and action controls — compact inline buttons */
