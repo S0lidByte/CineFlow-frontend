@@ -2,10 +2,9 @@
 
 ## [1.6.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.5.0-beta.1...riven-frontend-v1.6.0-beta.1) (2026-07-23)
 
-
 ### Features
 
-* **settings:** visual hierarchy polish across all tabs ([#56](https://github.com/S0lidByte/CineFlow-frontend/issues/56)) ([63a97aa](https://github.com/S0lidByte/CineFlow-frontend/commit/63a97aac1d1e339a982eee3be97ad3f7f3cc5adc))
+- **settings:** visual hierarchy polish across all tabs ([#56](https://github.com/S0lidByte/CineFlow-frontend/issues/56)) ([63a97aa](https://github.com/S0lidByte/CineFlow-frontend/commit/63a97aac1d1e339a982eee3be97ad3f7f3cc5adc))
 
 ## [1.5.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.4.0-beta.1...riven-frontend-v1.5.0-beta.1) (2026-07-23)
 
