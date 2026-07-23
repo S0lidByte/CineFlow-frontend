@@ -484,7 +484,7 @@
                     This panel is the only bordered container so there is no nested-card look.
                 -->
                 <div
-                    class="border-border/70 bg-card/50 ring-primary/8 relative min-w-0 flex-1 rounded-xl border p-4 shadow-md ring-1 md:p-6"
+                    class="border-border/70 bg-card/50 ring-primary/8 relative min-w-0 flex-1 min-h-[calc(100vh-10rem)] flex flex-col rounded-xl border p-4 shadow-md ring-1 md:p-6 pb-12"
                     aria-busy={isNavigating}>
                     <!-- Panel section chrome -->
                     <div

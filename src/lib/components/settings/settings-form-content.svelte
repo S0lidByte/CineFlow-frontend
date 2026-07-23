@@ -244,27 +244,27 @@
 
     :global(.settings-form) {
         display: grid;
-        gap: 0.75rem;
+        gap: 1rem;
         grid-template-columns: 1fr;
     }
 
     :global(.settings-form [data-slot="field-group"]),
     :global(.settings-form [data-layout="object-properties"]) {
         display: grid !important;
-        gap: 0.65rem;
+        gap: 0.75rem;
         grid-template-columns: 1fr;
     }
 
     @media (min-width: 768px) {
         :global(.settings-form) {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.75rem;
+            gap: 1rem;
         }
 
         :global(.settings-form [data-slot="field-group"]),
         :global(.settings-form [data-layout="object-properties"]) {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.65rem;
+            gap: 0.75rem;
         }
 
         /* Nested object / array fields span full width */
@@ -291,16 +291,20 @@
         }
     }
 
-    /* Section headers: left-aligned full-width legends with divider */
+    /* Top-level section fieldset cards */
     :global(.settings-form fieldset[data-slot="field-set"]) {
         display: flex;
         flex-direction: column;
         align-items: stretch;
-        gap: 0.5rem;
+        gap: 0.75rem;
         min-inline-size: 0;
-        border: none;
-        padding: 0;
-        margin: 0;
+        border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+        border-radius: 0.75rem;
+        background: color-mix(in oklab, var(--color-card) 40%, transparent);
+        backdrop-filter: blur(4px);
+        padding: 1.25rem;
+        margin: 0 0 0.5rem 0;
+        box-shadow: 0 1px 3px color-mix(in oklab, var(--color-black) 8%, transparent);
     }
 
     :global(.settings-form legend[data-slot="field-legend"]) {
@@ -310,14 +314,14 @@
         max-width: 100%;
         box-sizing: border-box;
         text-align: left;
-        font-size: 0.85rem;
+        font-size: 0.95rem;
         font-weight: 600;
-        letter-spacing: 0.01em;
-        margin: 0 0 0.15rem;
-        padding: 0 0 0.45rem 0.55rem;
-        border-bottom: 1px solid color-mix(in oklab, var(--color-primary) 22%, var(--color-border));
-        border-left: 3px solid color-mix(in oklab, var(--color-primary) 55%, transparent);
-        color: color-mix(in oklab, var(--color-foreground) 92%, transparent);
+        letter-spacing: -0.01em;
+        margin: 0 0 0.5rem;
+        padding: 0 0 0.5rem 0.65rem;
+        border-bottom: 1px solid color-mix(in oklab, var(--color-primary) 20%, var(--color-border));
+        border-left: 3.5px solid color-mix(in oklab, var(--color-primary) 65%, transparent);
+        color: var(--color-foreground);
     }
 
     :global(.settings-form legend.settings-collapsible-legend) {
@@ -325,13 +329,14 @@
         user-select: none;
         display: flex;
         align-items: center;
-        gap: 0.4rem;
-        border-radius: 0.375rem;
-        padding: 0.25rem 0.35rem 0.5rem;
-        margin-left: -0.35rem;
-        margin-right: -0.35rem;
-        width: calc(100% + 0.7rem);
+        gap: 0.5rem;
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.5rem 0.5rem;
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        width: calc(100% + 1rem);
         max-width: none;
+        transition: background 0.15s ease;
     }
 
     :global(.settings-form legend.settings-collapsible-legend:hover) {
@@ -341,7 +346,7 @@
     :global(.settings-form legend.settings-collapsible-legend::before) {
         content: "▾";
         display: inline-block;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         opacity: 0.75;
         transition: transform 0.15s ease;
         flex-shrink: 0;
@@ -352,54 +357,56 @@
     }
 
     :global(.settings-form fieldset[data-collapsed]) {
-        padding-bottom: 0.15rem;
+        padding-bottom: 0.35rem;
     }
 
-    /* Field cards with subtle primary accent */
+    /* Individual property field cards */
     :global(.settings-form [data-slot="field"]) {
-        border: 1px solid color-mix(in oklab, var(--color-border) 50%, transparent);
-        border-radius: 0.5rem;
-        background: linear-gradient(
-            135deg,
-            color-mix(in oklab, var(--color-card) 70%, transparent),
-            color-mix(in oklab, var(--color-primary) 4%, var(--color-card))
-        );
-        padding: 0.45rem 0.6rem;
+        border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+        border-radius: 0.625rem;
+        background: color-mix(in oklab, var(--color-muted) 20%, transparent);
+        padding: 0.75rem 0.875rem;
         min-width: 0;
-        gap: 0.35rem;
+        gap: 0.45rem;
+        transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    :global(.settings-form [data-slot="field"]:hover) {
+        border-color: color-mix(in oklab, var(--color-primary) 30%, var(--color-border));
+        background: color-mix(in oklab, var(--color-muted) 30%, transparent);
     }
 
     :global(.settings-form fieldset[data-slot="field-set"] > [data-slot="field-group"]) {
-        padding-top: 0.35rem;
+        padding-top: 0.5rem;
         padding-left: 0.25rem;
-        border-left: 1px solid color-mix(in oklab, var(--color-primary) 18%, transparent);
-        margin-left: 0.15rem;
     }
 
     :global(.settings-form [data-slot="field"] [data-slot="field"]) {
-        background: color-mix(in oklab, var(--color-background) 40%, transparent);
-        border-color: color-mix(in oklab, var(--color-border) 40%, transparent);
+        background: color-mix(in oklab, var(--color-background) 50%, transparent);
+        border-color: color-mix(in oklab, var(--color-border) 50%, transparent);
     }
-
-    /* Nested object groups */
 
     :global(.settings-form [data-slot="field-label"]) {
         font-weight: 600;
         font-size: 0.875rem;
-        color: color-mix(in oklab, var(--color-foreground) 90%, transparent);
+        color: var(--color-foreground);
     }
 
     :global(.settings-form [data-slot="field-description"]) {
         color: var(--color-muted-foreground);
-        font-size: 0.74rem;
-        line-height: 1.35;
-        margin-top: 0.1rem;
+        font-size: 0.75rem;
+        line-height: 1.4;
+        margin-top: 0.15rem;
     }
 
     :global(.settings-form [data-slot="input"]),
     :global(.settings-form [data-slot="textarea"]),
     :global(.settings-form [data-slot="select-trigger"]) {
-        min-height: 2rem;
+        min-height: 2.25rem;
+        border-radius: 0.375rem;
+        background: color-mix(in oklab, var(--color-background) 70%, transparent);
+        border: 1px solid color-mix(in oklab, var(--color-input) 80%, transparent);
+        font-size: 0.875rem;
     }
 
     :global(.settings-form :focus-visible) {
@@ -441,6 +448,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 0.75rem;
+        padding: 0.75rem 0.875rem;
     }
 
     :global(.settings-form [data-slot="field"]:has(button[role="switch"]) > [data-slot="field-label-group"]) {
