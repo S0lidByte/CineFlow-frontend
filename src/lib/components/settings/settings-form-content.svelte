@@ -424,10 +424,14 @@
 
     /* Completely suppress residual SJSF default submit button containers */
     :global(.settings-form [data-slot="submit"]),
+    :global(.settings-form button[type="submit"]),
     :global(.settings-form > form > button[type="submit"]) {
         display: none !important;
         margin: 0 !important;
         padding: 0 !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
     }
 
     /* Switch fields: clean horizontal row with text left and toggle right */
