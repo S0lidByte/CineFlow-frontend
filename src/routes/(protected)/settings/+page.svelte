@@ -116,11 +116,17 @@
         }
     });
 
-    /** Programmatically submits the SJSF-managed `<form>` inside `.settings-form`. */
+    /** Programmatically submits the SJSF-managed `<form>` inside `.settings-form-host`. */
     function submitSettingsForm(): void {
         if ($navigating) return;
-        const formEl = document.querySelector(".settings-form form");
-        (formEl as HTMLFormElement)?.requestSubmit();
+        const formEl =
+            document.querySelector<HTMLFormElement>("form.settings-form") ??
+            document.querySelector<HTMLFormElement>(".settings-form-host form") ??
+            document.querySelector<HTMLFormElement>(".settings-form form") ??
+            document.querySelector<HTMLFormElement>("form[action]");
+        if (formEl) {
+            formEl.requestSubmit();
+        }
     }
 
     /**
