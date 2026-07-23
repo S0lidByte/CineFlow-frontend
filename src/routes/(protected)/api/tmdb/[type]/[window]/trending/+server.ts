@@ -1,7 +1,7 @@
 import type { RequestHandler } from "./$types";
 import { json, error } from "@sveltejs/kit";
 import { TMDBMediaType, TMDBTimeWindow } from "$lib/providers";
-import providers from "$lib/providers";
+import providers from "$lib/server/providers";
 import { transformTMDBList, type TMDBListItem } from "$lib/providers/parser";
 import { createCustomFetch } from "$lib/custom-fetch";
 import { createScopedLogger } from "$lib/logger";

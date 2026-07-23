@@ -3,7 +3,7 @@
     import Hls from "hls.js";
 
     interface VideoPlayerProps {
-        itemId: number;
+        itemId: string | number;
         class?: string;
     }
 
@@ -12,9 +12,10 @@
     let videoElement: HTMLVideoElement | undefined = $state();
     let hls: Hls;
     let error = $state<string | null>(null);
+    const playbackItemId = $derived(String(itemId));
 
     // Direct stream URL (Original method)
-    const directUrl = $derived(`/api/stream/${itemId}`);
+    const directUrl = $derived(`/api/stream/${playbackItemId}`);
     // HLS Proxy URL
     const hlsParams = new URLSearchParams({
         pix_fmt: "yuv420p",
@@ -22,7 +23,7 @@
         level: "4.1"
         // resolution: '1920x1080' // Optional: Uncomment to force 1080p
     });
-    const hlsUrl = $derived(`/api/stream/${itemId}/hls/index.m3u8?${hlsParams.toString()}`);
+    const hlsUrl = $derived(`/api/stream/${playbackItemId}/hls/index.m3u8?${hlsParams.toString()}`);
 
     function needsHls(): boolean {
         // Simple check: Create a dummy video and ask if it plays HEVC

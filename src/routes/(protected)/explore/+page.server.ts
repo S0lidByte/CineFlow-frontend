@@ -3,7 +3,7 @@ import { zod4 } from "sveltekit-superforms/adapters";
 import { searchSchema } from "$lib/schemas/search";
 import type { PageServerLoad } from "./$types";
 import { parseSearchQuery } from "$lib/search-parser";
-import providers from "$lib/providers";
+import providers from "$lib/server/providers";
 import {
     transformTMDBList,
     type TMDBListItem,

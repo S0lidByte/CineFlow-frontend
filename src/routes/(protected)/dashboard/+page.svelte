@@ -14,8 +14,11 @@
     import { fly } from "svelte/transition";
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     import { cubicOut } from "svelte/easing";
+    import { resolve } from "$app/paths";
 
     let { data }: { data: PageData } = $props();
+
+    const failedCount = $derived((data.statistics?.states?.Failed ?? 0).toLocaleString());
 
     function transformStatesToArray(states: Record<string, number> | undefined) {
         if (!states) return [];
@@ -33,25 +36,20 @@
     const contentBreakdown = $derived.by(() => {
         if (!data.statistics) return [];
         return [
-            { key: "Movies", value: data.statistics.total_movies, c: "#ef4444" },
-            { key: "Shows", value: data.statistics.total_shows, c: "#14b8a6" },
-            { key: "Seasons", value: data.statistics.total_seasons, c: "#60a5fa" },
-            { key: "Episodes", value: data.statistics.total_episodes, c: "#f59e0b" }
+            { key: "Movies", value: data.statistics.total_movies ?? 0, c: "#ef4444" },
+            { key: "Shows", value: data.statistics.total_shows ?? 0, c: "#14b8a6" },
+            { key: "Seasons", value: data.statistics.total_seasons ?? 0, c: "#60a5fa" },
+            { key: "Episodes", value: data.statistics.total_episodes ?? 0, c: "#f59e0b" }
         ];
     });
 
     const completionRate = $derived.by(() => {
-        if (
-            !data.statistics ||
-            data.statistics.total_items === 0 ||
-            data.statistics.states.Completed === undefined
-        ) {
+        const total = data.statistics?.total_items ?? 0;
+        const completed = data.statistics?.states?.Completed;
+        if (!total || completed === undefined) {
             return "0%";
         }
-        return (
-            ((data.statistics.states.Completed / data.statistics.total_items) * 100).toFixed(2) +
-            "%"
-        );
+        return ((completed / total) * 100).toFixed(2) + "%";
     });
 
     const unreleasedCount = $derived.by(() => {
@@ -76,51 +74,84 @@
     title,
     value,
     sub,
-    tone = "default"
+    tone = "default",
+    href
 }: {
     title: string;
     value: string | undefined;
     sub?: string;
-    tone?: "default" | "warning";
+    tone?: "default" | "warning" | "danger";
+    href?: string;
 })}
-    <Card.Root class={cn("", tone === "warning" && "border-amber-600/30")}>
-        <Card.Header class="pb-2">
-            <Card.Title class="text-sm font-medium text-neutral-300">{title}</Card.Title>
-        </Card.Header>
-        <Card.Content>
-            <div
-                class={cn(
-                    "text-2xl font-semibold tracking-tight",
-                    tone === "warning" ? "text-amber-300" : "text-neutral-50"
-                )}>
-                {value}
-            </div>
-            {#if sub}
-                <p class="mt-1 text-sm text-neutral-400">{sub}</p>
-            {/if}
-        </Card.Content>
-    </Card.Root>
+    {@const cardClass = cn(
+        href && "transition-colors hover:bg-white/[0.03]",
+        tone === "warning" && "border-amber-600/30",
+        tone === "danger" && "border-red-600/30"
+    )}
+    {@const valueClass = cn(
+        "text-2xl font-semibold tracking-tight",
+        tone === "warning" && "text-amber-300",
+        tone === "danger" && "text-red-300",
+        tone === "default" && "text-neutral-50"
+    )}
+    {#if href}
+        <a
+            href={resolve(href as "/")}
+            class="focus-visible:ring-primary/50 block rounded-xl focus-visible:ring-2 focus-visible:outline-none">
+            <Card.Root class={cardClass}>
+                <Card.Header class="pb-2">
+                    <Card.Title class="text-sm font-medium text-neutral-300">{title}</Card.Title>
+                </Card.Header>
+                <Card.Content>
+                    <div class={valueClass}>{value}</div>
+                    {#if sub}
+                        <p class="mt-1 text-sm text-neutral-400">{sub}</p>
+                    {/if}
+                </Card.Content>
+            </Card.Root>
+        </a>
+    {:else}
+        <Card.Root class={cardClass}>
+            <Card.Header class="pb-2">
+                <Card.Title class="text-sm font-medium text-neutral-300">{title}</Card.Title>
+            </Card.Header>
+            <Card.Content>
+                <div class={valueClass}>{value}</div>
+                {#if sub}
+                    <p class="mt-1 text-sm text-neutral-400">{sub}</p>
+                {/if}
+            </Card.Content>
+        </Card.Root>
+    {/if}
 {/snippet}
 
 <PageShell>
     <h1 class="mb-8 text-3xl font-bold tracking-tight">Media Library Statistics</h1>
 
-    <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {@render KPICard({
             title: "Total Items",
-            value: data.statistics?.total_items.toLocaleString(),
+            value: (data.statistics?.total_items ?? 0).toLocaleString(),
             sub: "All indexed items"
         })}
         {@render KPICard({
             title: "Completed",
-            value: data.statistics?.states.Completed?.toLocaleString(),
+            value: (data.statistics?.states?.Completed ?? 0).toLocaleString(),
             sub: "Fully processed"
         })}
         {@render KPICard({
             title: "Incomplete",
-            value: data.statistics?.incomplete_items.toLocaleString(),
-            sub: "Pending processing",
-            tone: "warning"
+            value: (data.statistics?.incomplete_items ?? 0).toLocaleString(),
+            sub: "Pending processing — open library",
+            tone: "warning",
+            href: "/library"
+        })}
+        {@render KPICard({
+            title: "Failed",
+            value: failedCount,
+            sub: "Click to filter library",
+            tone: "danger",
+            href: "/library?states=Failed"
         })}
         {@render KPICard({
             title: "Unreleased",
@@ -285,19 +316,19 @@
                                 <Badge
                                     variant="default"
                                     class="rounded-xl bg-green-600/20 px-2 py-1 text-xs font-medium text-green-400">
-                                    {serviceName}
+                                    {getServiceDisplayName(serviceName)}
                                 </Badge>
                             {:else if status === false}
                                 <Badge
                                     variant="destructive"
                                     class="rounded-xl px-2 py-1 text-xs font-medium">
-                                    {serviceName}
+                                    {getServiceDisplayName(serviceName)}
                                 </Badge>
                             {:else}
                                 <Badge
                                     variant="secondary"
                                     class="rounded-xl px-2 py-1 text-xs font-medium">
-                                    {serviceName}
+                                    {getServiceDisplayName(serviceName)}
                                 </Badge>
                             {/if}
                         {/each}

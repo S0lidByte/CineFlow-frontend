@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import providers from "$lib/providers";
+import providers from "$lib/server/providers";
 import { TMDB_IMAGE_BASE_URL } from "$lib/providers";
 import type { RequestHandler } from "./$types";
 
