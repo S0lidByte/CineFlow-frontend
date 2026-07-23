@@ -133,10 +133,12 @@
         return depth;
     }
 
-    /** Strip schema noise like "TorrentioConfig" / "FooDict" from legend text nodes. */
+    /** Strip schema noise like "TorrentioConfig" / "FooDict" and split CamelCase titles. */
     function sanitizeLegendTitle(raw: string): string {
         return raw
-            .replace(/\b(\w+)(?:Config|Dict|Model|Settings)\b/g, "$1")
+            .replace(/\b(\w+)(?:Config|Dict|Model|Settings|Provider)\b/g, "$1")
+            .replace(/\s+Provider$/i, "")
+            .replace(/([a-z])([A-Z])/g, "$1 $2")
             .replace(/\s{2,}/g, " ")
             .trim();
     }

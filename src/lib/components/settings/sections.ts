@@ -172,7 +172,9 @@ export function getTabIdForSettingsKey(key: string): SectionTabId | undefined {
 }
 
 export function getTabById(id: SectionTabId): SectionTab | undefined {
-    return SETTINGS_TABS.find((t) => t.id === id);
+    // Friendly aliases for older or natural URLs
+    const normalized = id === "operations" ? "ops" : id;
+    return SETTINGS_TABS.find((t) => t.id === normalized);
 }
 
 /** Paths string for API: keys joined by comma */

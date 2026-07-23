@@ -212,9 +212,9 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         ]
     },
     ops: {
-        headline: "Post-processing, logging verbosity, and stream proxy configuration.",
+        headline: "Subtitles, log files, and the stream proxy that feeds Plex.",
         howToUse: [
-            "Post-processing: configure subtitle fetch, file naming hooks, and completion scripts.",
+            "Post-processing: enable subtitles, pick languages (ISO 639-2), and set OpenSubtitles credentials.",
             "Logging: set log rotation, retention, and output format.",
             "Stream: tune chunk sizes, CDN validation, and timeout values for Plex playback."
         ],
