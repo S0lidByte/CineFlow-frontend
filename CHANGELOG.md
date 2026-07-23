@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.7.0...riven-frontend-v1.7.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **release:** disable beta tags and pin last release to 1.7.0 ([#64](https://github.com/S0lidByte/CineFlow-frontend/issues/64)) ([f08a6c3](https://github.com/S0lidByte/CineFlow-frontend/commit/f08a6c3830d743a838f639d657f4ce563db3c53b))
+
 ## [1.7.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.6.1-beta.1...riven-frontend-v1.7.0) (2026-07-23)
 
 ### Features
