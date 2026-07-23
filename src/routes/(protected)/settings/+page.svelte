@@ -337,11 +337,12 @@
                                         <Button
                                             {...props}
                                             type="button"
-                                            class="min-w-[10rem]"
+                                            size="sm"
+                                            class="h-8 gap-1.5 px-3 text-xs"
                                             onclick={submitSettingsForm}
                                             disabled={isNavigating}
                                             aria-live="polite">
-                                            <AlertCircle class="size-4" />
+                                            <AlertCircle class="size-3.5" />
                                             Save changes
                                         </Button>
                                     {/snippet}
@@ -364,7 +365,7 @@
 
                     <!-- Single search button — rendered once, visible on all screen sizes -->
                     <button
-                        class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors"
+                        class="text-muted-foreground hover:text-foreground border-border/50 bg-background/50 hover:bg-muted/50 flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs transition-colors"
                         onclick={() => (searchOpen = true)}>
                         <SearchIcon class="size-3.5" />
                         <span class="hidden sm:inline">Search settings</span>

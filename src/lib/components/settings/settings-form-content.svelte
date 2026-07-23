@@ -422,7 +422,29 @@
             border-color 0.25s ease;
     }
 
-    /* Array "Add item" — content-width, left-aligned (not full bleed) */
+    /* Completely suppress residual SJSF default submit button containers */
+    :global(.settings-form [data-slot="submit"]),
+    :global(.settings-form > form > button[type="submit"]) {
+        display: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Switch fields: clean horizontal row with text left and toggle right */
+    :global(.settings-form [data-slot="field"]:has(button[role="switch"])) {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    :global(.settings-form [data-slot="field"]:has(button[role="switch"]) > [data-slot="field-label-group"]) {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Array "Add item" and action controls — compact inline buttons */
     :global(.settings-form [data-slot="button-group"]),
     :global(.settings-form [data-layout="array-field"] > [data-slot="button-group"]),
     :global(.settings-form button[type="button"]:is([data-slot="button"])) {
