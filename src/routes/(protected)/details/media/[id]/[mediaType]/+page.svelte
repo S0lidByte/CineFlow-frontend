@@ -394,7 +394,7 @@
         {@render sectionHeading(title)}
         <Carousel.Root opts={{ dragFree: true, slidesToScroll: "auto" }}>
             <Carousel.Content class="-ml-3">
-                {#each items as item (item.id)}
+                {#each items as item, i (`${item.media_type}-${item.id}-${i}`)}
                     <Carousel.Item class="basis-auto pl-3">
                         <a
                             href={resolve(`/details/media/${item.id}/${item.media_type}` as "/")}
@@ -871,7 +871,7 @@
                                     delay: 250,
                                     easing: cubicOut
                                 }}>
-                                {#each data.mediaDetails?.details.genres as genre (genre.id)}
+                                {#each data.mediaDetails?.details.genres as genre, genreIdx (`${genre.id}-${genreIdx}`)}
                                     <span
                                         class="border-border bg-muted/50 text-muted-foreground rounded-xl border px-3 py-1 text-sm"
                                         >{genre.name}</span>
@@ -988,7 +988,7 @@
                         {@render sectionHeading("Seasons")}
                         <Carousel.Root opts={{ dragFree: true, slidesToScroll: "auto" }}>
                             <Carousel.Content>
-                                {#each data.mediaDetails?.details.seasons as season (season.id)}
+                                {#each data.mediaDetails?.details.seasons as season, seasonIdx (`${season.id}-${season.number}-${seasonIdx}`)}
                                     {@const rivenSeason = data.riven?.seasons?.find(
                                         (s) => s.season_number === season.number
                                     )}
@@ -1033,7 +1033,7 @@
                         {@render sectionHeading("Episodes")}
                         <div
                             class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3 2xl:grid-cols-4">
-                            {#each data.mediaDetails?.details.episodes.filter((ep) => ep.seasonNumber?.toString() === selectedSeason) as episode (episode.id)}
+                            {#each data.mediaDetails?.details.episodes.filter((ep) => ep.seasonNumber?.toString() === selectedSeason) as episode, epIdx (`${episode.id}-${episode.seasonNumber}-${episode.number}-${epIdx}`)}
                                 {@const rivenSeason = data.riven?.seasons?.find(
                                     (s) => s.season_number === Number(selectedSeason)
                                 )}
@@ -1118,7 +1118,7 @@
                         {@render sectionHeading("Cast")}
                         <Carousel.Root opts={{ dragFree: true, slidesToScroll: "auto" }}>
                             <Carousel.Content class="-ml-3">
-                                {#each data.mediaDetails.details.cast as member (member.id)}
+                                {#each data.mediaDetails.details.cast as member, castIdx (`${member.id}-${member.character ?? ""}-${castIdx}`)}
                                     <Carousel.Item class="basis-auto pl-3">
                                         <a
                                             href={resolve(
@@ -1210,7 +1210,7 @@
                                             class="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
                                             >Production</span>
                                         <div class="flex flex-wrap gap-2">
-                                            {#each data.mediaDetails.details.production_companies as company (company.id)}
+                                            {#each data.mediaDetails.details.production_companies as company, companyIdx (`${company.id}-${companyIdx}`)}
                                                 <span
                                                     class="text-muted-foreground rounded border border-white/10 bg-white/5 px-2 py-1 text-xs">
                                                     {company.name}
@@ -1350,7 +1350,7 @@
                                                 class="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
                                                 >Audio</span>
                                             <div class="flex flex-wrap gap-2">
-                                                {#each meta.audio_tracks as track ((track.language ?? "") + (track.codec ?? "") + Math.random())}
+                                                {#each meta.audio_tracks as track, trackIdx (`${track.language ?? ""}-${track.codec ?? ""}-${trackIdx}`)}
                                                     <Badge
                                                         variant="secondary"
                                                         class="text-muted-foreground border border-white/10 bg-white/5 font-mono text-xs backdrop-blur-sm"
@@ -1375,7 +1375,7 @@
                                                 class="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
                                                 >Subtitles</span>
                                             <div class="flex flex-wrap gap-2">
-                                                {#each meta.subtitle_tracks as track ((track.language ?? "") + (track.codec ?? "") + Math.random())}
+                                                {#each meta.subtitle_tracks as track, trackIdx (`${track.language ?? ""}-${track.codec ?? ""}-${trackIdx}`)}
                                                     <Badge
                                                         variant="secondary"
                                                         class="text-muted-foreground border border-white/10 bg-white/5 text-[10px] backdrop-blur-sm"
