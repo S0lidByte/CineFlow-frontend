@@ -1,8 +1,12 @@
 {
+    "last-release-sha": "8c88acfa1d10c4febec2803109a52e5a59470386",
     "packages": {
         ".": {
             "release-type": "node",
-            "prerelease": true
+            "component": "riven-frontend",
+            "include-component-in-tag": true,
+            "include-v-in-tag": true,
+            "prerelease": false
         }
     }
 }

@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.7.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.6.1-beta.1...riven-frontend-v1.7.0-beta.1) (2026-07-23)
+## [1.7.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.6.1-beta.1...riven-frontend-v1.7.0) (2026-07-23)
 
 ### Features
 
