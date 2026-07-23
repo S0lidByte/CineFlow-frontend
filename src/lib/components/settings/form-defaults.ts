@@ -39,9 +39,14 @@ import addFormats from "ajv-formats";
 const PATH_FORMAT_REGEX = /^[/.].*/;
 const MULTI_HOST_URI_REGEX = /^.+$/;
 
-export const validator = <T>(options: ValidatorFactoryOptions) =>
+export const validator = <T>(options: ValidatorFactoryOptions & { ajvOptions?: Record<string, unknown> }) =>
     createFormValidator<T>({
         ...options,
+        ajvOptions: {
+            coerceTypes: true,
+            useDefaults: true,
+            ...options?.ajvOptions
+        },
         ajvPlugins: (ajv) => {
             addFormComponents(addFormats(ajv));
 

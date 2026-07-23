@@ -592,6 +592,10 @@ export const actions = {
 
         const [form] = await handleForm(request.signal, requestFormData);
         if (!form.isValid) {
+            logger.warn("Form validation failed during settings submit", {
+                tab: tab.id,
+                errors: form.errors
+            });
             endPerfMark(mark, {
                 tab: tab.id,
                 valid: false
