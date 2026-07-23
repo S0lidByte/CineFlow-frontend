@@ -17,7 +17,7 @@
      */
     import type { ActionData, PageData } from "../../../routes/(protected)/settings/$types";
     import type { FormState } from "@sjsf/form";
-    import { BasicForm } from "@sjsf/form";
+    import { BasicForm, getValueSnapshot } from "@sjsf/form";
     import { createMeta, setupSvelteKitForm } from "@sjsf/sveltekit/client";
     import * as defaults from "./form-defaults";
     import { setShadcnContext } from "$lib/components/shadcn-context";
@@ -55,7 +55,7 @@
     let formHost: HTMLDivElement | null = $state(null);
 
     // svelte-ignore state_referenced_locally
-    const { form } = setupSvelteKitForm(meta, {
+    const { form, request } = setupSvelteKitForm(meta, {
         ...defaults,
         schema: (pageData.form?.schema ?? { type: "object" }) as Record<string, unknown>,
         data: pageData.form ? pageData : { form: { schema: { type: "object" } } },
@@ -210,6 +210,26 @@
             if (timer) clearTimeout(timer);
             dispose();
             observer.disconnect();
+        };
+    });
+
+    // Intercept form submit event and delegate to SJSF request runner
+    $effect(() => {
+        const host = formHost;
+        if (!host) return;
+
+        const formEl = host.querySelector("form");
+        if (!formEl) return;
+
+        const handleSubmit = (e: SubmitEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            void request.run(getValueSnapshot(form), e);
+        };
+
+        formEl.addEventListener("submit", handleSubmit);
+        return () => {
+            formEl.removeEventListener("submit", handleSubmit);
         };
     });
 </script>
