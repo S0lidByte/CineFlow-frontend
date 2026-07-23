@@ -2,36 +2,21 @@
 
 ## [1.4.0-beta.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.3.5-beta.1...riven-frontend-v1.4.0-beta.1) (2026-07-23)
 
-
 ### Features
 
-* **settings:** layout polish across all tabs ([#53](https://github.com/S0lidByte/CineFlow-frontend/issues/53)) ([3b5f694](https://github.com/S0lidByte/CineFlow-frontend/commit/3b5f6947a4e39e318b5d397d7d42cf8dc5a20024))
+- **settings:** grouped sidebar navigation into Core, Media Stack, Discovery, and Tuning categories ([#53](https://github.com/S0lidByte/CineFlow-frontend/issues/53)) ([3b5f694](https://github.com/S0lidByte/CineFlow-frontend/commit/3b5f6947a4e39e318b5d397d7d42cf8dc5a20024))
+- **settings:** per-tab inline guides and full guide reference dialogs
+- **settings:** Cmd+K global search palette for settings sections and schema fields
+- **settings:** full-height responsive card layout and floating header spacing polish
 
-## [1.4.0-beta.1] — 2026-07-23
+### Bug Fixes
 
-### Added
-
-- **Settings sidebar navigation** — replaced the flat tab strip with a two-level grouped sidebar. Tabs are organized into four logical categories: _Core_, _Media Stack_, _Discovery & Acquisition_, and _Tuning & Infrastructure_. Groups are collapsible and their open/closed state is remembered per browser session.
-- **Settings tab: Database** — dedicated tab for PostgreSQL connection string and pool configuration, split out from the former _Infrastructure_ tab.
-- **Settings tab: Notifications** — dedicated tab for Apprise webhook endpoints and per-event alert toggles, split out from the former _Infrastructure_ tab.
-- **Settings tab: Operations** — dedicated tab for post-processing scripts, logging verbosity, and stream proxy settings, split out from the former _Infrastructure_ tab.
-- **Per-tab inline guides** — every settings tab now ships a focused guide (headline, how-to steps, tips, cautions, key concepts) surfaced in a collapsible banner above the form. A _Full guide_ dialog provides the complete reference without leaving the page.
-- **Inline save confirmation** — a green success banner appears inside the form panel immediately after a successful save and auto-dismisses after 4 seconds, complementing the existing toast notification.
-- **Settings Cmd+K palette** — search across all settings sections and schema fields; selecting a field navigates to its tab and scrolls the matching control into view.
-
-### Changed
-
-- **Settings sidebar — mobile** — on small screens the grouped sidebar falls back to a compact horizontal pill strip showing all tabs without group headers.
-- **Search button** — deduped from three render sites to one; now consistently visible at all screen sizes in the settings header.
-- **Keyboard shortcut labels** — `⌘S` / `Ctrl+S` and `⌘K` / `Ctrl+K` labels throughout the settings page now resolve the correct symbol for the current OS automatically.
-- **Settings schema requests** — removed write-role headers (`x-actor-roles`) from read-only GET schema and GET values requests; headers are now only sent on POST save actions.
-- **Settings discard dialog** — form state is no longer wiped before navigation commits; avoids data loss if the route transition throws.
-
-### Fixed
-
-- **Settings page blank on first load** — default sidebar group now opens correctly when arriving via a direct URL (e.g. `/settings?tab=ranking`) before `$page.data` is resolved.
-- **Settings schema cache corruption** — the server-side schema cache no longer receives a mutated (pre-pruned) schema object; `structuredClone` is applied before any in-place pruning, ensuring subsequent cache hits return the original unmodified schema.
-- **Settings search Cmd+K field scroll** — reduced DOM traversal from two full passes to one; field focus highlight now returns the best match on the first scan.
+- **settings:** intercept native `<form>` submit events and bind to SJSF `request.run()` for `__sjsf_json_chunks` payload serialization
+- **settings:** fix SvelteKit 2 reserved action name crash by changing form action URL from `?/default&tab=...` to `?tab=...`
+- **settings:** enable AJV type coercion (`coerceTypes: true`) for FormData numeric and boolean conversions
+- **settings:** complete missing key payloads from backend defaults to prevent `Missing values for paths: version` 400 errors
+- **settings:** prevent blank page on initial load when deep-linking directly to specific setting tabs
+- **settings:** clone server-side schema cache using `structuredClone` to prevent schema mutation across user sessions
 
 ---
 

@@ -10,4 +10,3 @@ scripts/trakt.apib
 src/lib/providers/*
 !src/lib/providers/index.ts
 !src/lib/providers/parser.ts
-CHANGELOG.md
