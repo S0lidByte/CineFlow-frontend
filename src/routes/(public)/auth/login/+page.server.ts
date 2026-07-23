@@ -13,8 +13,9 @@ const logger = createScopedLogger("auth");
 
 function getAuthInfo() {
     const authProviders = getAuthProviders();
-    const isSignupEnabled =
-        !!(authProviders.credential?.enabled && !authProviders.credential?.disableSignup);
+    const isSignupEnabled = !!(
+        authProviders.credential?.enabled && !authProviders.credential?.disableSignup
+    );
     const isCredentialEnabled = !!authProviders.credential?.enabled;
     return { authProviders, isSignupEnabled, isCredentialEnabled };
 }

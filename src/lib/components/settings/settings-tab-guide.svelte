@@ -81,13 +81,15 @@
 
         {#if expanded}
             <div class="border-primary/15 bg-background/30 border-t px-4 py-3">
-                <ol class="text-muted-foreground list-decimal space-y-1.5 pl-4 text-xs leading-relaxed">
+                <ol
+                    class="text-muted-foreground list-decimal space-y-1.5 pl-4 text-xs leading-relaxed">
                     {#each guide.howToUse as step, i (i)}
                         <li>{step}</li>
                     {/each}
                 </ol>
                 {#if guide.tips?.length}
-                    <div class="mt-3 flex gap-2 rounded-lg border border-primary/15 bg-primary/5 p-2.5">
+                    <div
+                        class="border-primary/15 bg-primary/5 mt-3 flex gap-2 rounded-lg border p-2.5">
                         <Lightbulb class="text-primary mt-0.5 size-3.5 shrink-0" />
                         <ul class="text-muted-foreground space-y-1 text-xs">
                             {#each guide.tips as tip, i (i)}
@@ -160,8 +162,7 @@
                 {/if}
 
                 {#if guide.cautions?.length}
-                    <div
-                        class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+                    <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
                         <h3
                             class="mb-1.5 flex items-center gap-2 font-semibold text-amber-600 dark:text-amber-400">
                             <TriangleAlert class="size-4" />
@@ -179,8 +180,11 @@
                     Press <kbd
                         class="border-border bg-muted rounded border px-1.5 py-0.5 font-mono text-[10px]"
                         >Ctrl+K</kbd>
-                    (or <kbd class="border-border bg-muted rounded border px-1.5 py-0.5 font-mono text-[10px]"
-                        >⌘K</kbd>) anywhere on Settings to jump to a specific field.
+                    (or
+                    <kbd
+                        class="border-border bg-muted rounded border px-1.5 py-0.5 font-mono text-[10px]"
+                        >⌘K</kbd
+                    >) anywhere on Settings to jump to a specific field.
                 </p>
             </div>
         </Dialog.Content>

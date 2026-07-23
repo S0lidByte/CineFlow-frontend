@@ -564,7 +564,12 @@ export const actions = {
             perfCount("settings.schema.cache.hit", 1, { tab: tab.id });
         } else {
             perfCount("settings.schema.cache.miss", 1, { tab: tab.id });
-            const rawSchema = await getSchemaForKeys(locals.backendUrl, locals.apiKey, paths, fetch);
+            const rawSchema = await getSchemaForKeys(
+                locals.backendUrl,
+                locals.apiKey,
+                paths,
+                fetch
+            );
             // Clone before mutation so the cached object stays pristine.
             schema = structuredClone(rawSchema);
             pruneLibraryProfilesFromSchema(schema);
@@ -592,7 +597,12 @@ export const actions = {
 
         const [form] = await handleForm(request.signal, requestFormData);
         if (!form.isValid) {
-            console.error("[SETTINGS_SUBMIT_FAIL] Form invalid for tab:", tab.id, "errors:", JSON.stringify(form.errors));
+            console.error(
+                "[SETTINGS_SUBMIT_FAIL] Form invalid for tab:",
+                tab.id,
+                "errors:",
+                JSON.stringify(form.errors)
+            );
             logger.warn("Form validation failed during settings submit", {
                 tab: tab.id,
                 errors: form.errors
@@ -646,7 +656,10 @@ export const actions = {
                     !isRecord(currentRes.data) ||
                     !isRecord(currentRes.data.filesystem)
                 ) {
-                    console.error("[SETTINGS_SUBMIT_FAIL] Salvage library_profiles error:", currentRes.error);
+                    console.error(
+                        "[SETTINGS_SUBMIT_FAIL] Salvage library_profiles error:",
+                        currentRes.error
+                    );
                     logger.error("Failed to salvage library_profiles during filesystem save", {
                         error: currentRes.error ?? "missing filesystem payload"
                     });
@@ -686,7 +699,14 @@ export const actions = {
         });
 
         if (res.error) {
-            console.error("[SETTINGS_SUBMIT_FAIL] Backend POST error for tab:", tab.id, "paths:", paths, "error:", JSON.stringify(res.error));
+            console.error(
+                "[SETTINGS_SUBMIT_FAIL] Backend POST error for tab:",
+                tab.id,
+                "paths:",
+                paths,
+                "error:",
+                JSON.stringify(res.error)
+            );
             endPerfMark(mark, {
                 tab: tab.id,
                 valid: true,

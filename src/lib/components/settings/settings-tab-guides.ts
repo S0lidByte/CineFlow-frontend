@@ -46,12 +46,16 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Requires backend restart — schedule changes during low activity.",
             "Wrong mount paths cause streams to 404 or show empty folders in Plex."
         ],
-        tips: [
-            "Library Profiles moved to their own tab — use that for per-profile folder rules."
-        ],
+        tips: ["Library Profiles moved to their own tab — use that for per-profile folder rules."],
         highlights: [
-            { title: "VFS", detail: "Riven mounts debrid content through FUSE with HTTP range support." },
-            { title: "Paths", detail: "Keep paths consistent between Docker volumes and host binds." }
+            {
+                title: "VFS",
+                detail: "Riven mounts debrid content through FUSE with HTTP range support."
+            },
+            {
+                title: "Paths",
+                detail: "Keep paths consistent between Docker volumes and host binds."
+            }
         ]
     },
     updaters: {
@@ -66,8 +70,14 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Pair with Content settings if you use watchlists to auto-request media."
         ],
         highlights: [
-            { title: "Plex token", detail: "Found under Plex account settings → Authorized devices." },
-            { title: "Sync", detail: "Drives what the backend believes is already in your library." }
+            {
+                title: "Plex token",
+                detail: "Found under Plex account settings → Authorized devices."
+            },
+            {
+                title: "Sync",
+                detail: "Drives what the backend believes is already in your library."
+            }
         ]
     },
     "library-profiles": {
@@ -97,12 +107,13 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         cautions: [
             "Invalid debrid tokens cause the entire scrape→download pipeline to fail silently until logs are checked."
         ],
-        tips: [
-            "After token rotation, save here and retry a single failed item from the Library."
-        ],
+        tips: ["After token rotation, save here and retry a single failed item from the Library."],
         highlights: [
             { title: "Real Debrid", detail: "Primary path for instant cached releases." },
-            { title: "Proxy", detail: "Optional; required in some restricted network environments." }
+            {
+                title: "Proxy",
+                detail: "Optional; required in some restricted network environments."
+            }
         ]
     },
     content: {
@@ -128,9 +139,7 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Enable scrapers that match your indexer capabilities and quality preferences.",
             "Set concurrency and timeouts — too aggressive scraping triggers indexer bans."
         ],
-        cautions: [
-            "Indexer misconfiguration is the #1 cause of 'no results' after a request."
-        ],
+        cautions: ["Indexer misconfiguration is the #1 cause of 'no results' after a request."],
         tips: [
             "Ranking filters apply after scrape — if everything is rejected, check Ranking tab deny keys.",
             "Indexer and scraper sections are grouped here; use search to jump to a provider."
@@ -176,7 +185,10 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "The backend runs migrations on startup — ensure the database user has ALTER TABLE privileges."
         ],
         highlights: [
-            { title: "Connection string", detail: "postgresql+psycopg2://user:pass@host/dbname format." },
+            {
+                title: "Connection string",
+                detail: "postgresql+psycopg2://user:pass@host/dbname format."
+            },
             { title: "Pool", detail: "Default pool of 5 is fine for single-user setups." }
         ]
     },
@@ -192,7 +204,10 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Apprise supports 80+ services — use the Apprise URL format for each provider."
         ],
         highlights: [
-            { title: "Apprise", detail: "Single URL scheme covers Discord, Slack, email, Telegram, and more." },
+            {
+                title: "Apprise",
+                detail: "Single URL scheme covers Discord, Slack, email, Telegram, and more."
+            },
             { title: "Events", detail: "Subscribe only to the pipeline events you care about." }
         ]
     },

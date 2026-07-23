@@ -12,10 +12,10 @@ export type SectionGroup = "core" | "media-stack" | "acquisition" | "tuning";
 
 /** Sidebar group metadata — label + icon shown as the collapsible group header. */
 export const SECTION_GROUPS: Record<SectionGroup, { label: string; icon: string }> = {
-    "core":        { label: "Core",                   icon: "settings-2" },
-    "media-stack": { label: "Media Stack",             icon: "layers" },
-    "acquisition": { label: "Discovery & Acquisition", icon: "scan-search" },
-    "tuning":      { label: "Tuning & Infrastructure", icon: "sliders-horizontal" }
+    core: { label: "Core", icon: "settings-2" },
+    "media-stack": { label: "Media Stack", icon: "layers" },
+    acquisition: { label: "Discovery & Acquisition", icon: "scan-search" },
+    tuning: { label: "Tuning & Infrastructure", icon: "sliders-horizontal" }
 };
 
 export interface SectionTab {
@@ -83,7 +83,7 @@ export const SETTINGS_TABS: SectionTab[] = [
         icon: "library",
         group: "media-stack",
         description:
-            "Configure library update providers (e.g. Plex, Emby, Jellyfin) and sync intervals."  ,
+            "Configure library update providers (e.g. Plex, Emby, Jellyfin) and sync intervals.",
         keys: ["updaters"]
     },
     {
@@ -129,7 +129,7 @@ export const SETTINGS_TABS: SectionTab[] = [
         icon: "list-ordered",
         group: "tuning",
         description:
-            "RTN quality filters and ranks. Log rejects map to denied by: <category>_<attribute> (e.g. audio_dolby_digital_plus)."  ,
+            "RTN quality filters and ranks. Log rejects map to denied by: <category>_<attribute> (e.g. audio_dolby_digital_plus).",
         keys: ["ranking"]
     },
     {

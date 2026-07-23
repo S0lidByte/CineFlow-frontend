@@ -39,7 +39,12 @@
     import { navigating, page } from "$app/stores";
     import { writable } from "svelte/store";
     import { ICON_MAP } from "$lib/components/settings/icon-map";
-    import { SECTION_GROUPS, getTabsByGroup, LIBRARY_PROFILES_TAB_ID, type SectionGroup } from "$lib/components/settings/sections";
+    import {
+        SECTION_GROUPS,
+        getTabsByGroup,
+        LIBRARY_PROFILES_TAB_ID,
+        type SectionGroup
+    } from "$lib/components/settings/sections";
     import SettingsSearch from "$lib/components/settings/settings-search.svelte";
     import Kbd from "$lib/components/ui/kbd/kbd.svelte";
     import SearchIcon from "@lucide/svelte/icons/search";
@@ -84,13 +89,17 @@
         try {
             const raw = sessionStorage.getItem(SESSION_KEY);
             if (raw) return JSON.parse(raw) as Record<SectionGroup, boolean>;
-        } catch { /* ignore */ }
+        } catch {
+            /* ignore */
+        }
         // Read active tab from URL (always available at init; $page.data may not be resolved yet)
-        const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+        const params = new URLSearchParams(
+            typeof window !== "undefined" ? window.location.search : ""
+        );
         const activeTabId = params.get("tab") ?? "general";
-        const activeGroup = $page.data.tabs?.find(
-            (t: { id: string; group?: string }) => t.id === activeTabId
-        )?.group as SectionGroup | undefined ?? "core";
+        const activeGroup =
+            ($page.data.tabs?.find((t: { id: string; group?: string }) => t.id === activeTabId)
+                ?.group as SectionGroup | undefined) ?? "core";
         return {
             core: activeGroup === "core",
             "media-stack": activeGroup === "media-stack",
@@ -102,7 +111,11 @@
 
     function toggleGroup(group: SectionGroup): void {
         groupOpen = { ...groupOpen, [group]: !groupOpen[group] };
-        try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(groupOpen)); } catch { /* ignore */ }
+        try {
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(groupOpen));
+        } catch {
+            /* ignore */
+        }
     }
 
     /** Ensure the group containing the newly active tab is always visible. */
@@ -112,7 +125,11 @@
         )?.group as SectionGroup | undefined;
         if (activeGroup && !groupOpen[activeGroup]) {
             groupOpen = { ...groupOpen, [activeGroup]: true };
-            try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(groupOpen)); } catch { /* ignore */ }
+            try {
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify(groupOpen));
+            } catch {
+                /* ignore */
+            }
         }
     });
 
@@ -250,9 +267,7 @@
      * Platform-aware keyboard shortcut label.
      * Derived once; avoids repeating navigator?.platform?.includes("Mac") throughout the template.
      */
-    const isMac = $derived(
-        typeof navigator !== "undefined" && navigator.platform?.includes("Mac")
-    );
+    const isMac = $derived(typeof navigator !== "undefined" && navigator.platform?.includes("Mac"));
     const saveShortcut = $derived(isMac ? "⌘S" : "Ctrl+S");
     const searchShortcut = $derived(isMac ? "⌘K" : "Ctrl+K");
 
@@ -281,10 +296,11 @@
     <title>Settings - Riven</title>
 </svelte:head>
 
-<PageShell class="relative h-full pt-16 md:pt-20 px-4 md:px-6 lg:px-8">
+<PageShell class="relative h-full px-4 pt-16 md:px-6 md:pt-20 lg:px-8">
     <div
-        class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/10 to-transparent"
-        aria-hidden="true"></div>
+        class="from-primary/10 pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b to-transparent"
+        aria-hidden="true">
+    </div>
     <Tooltip.Provider>
         <div class="relative w-full">
             <!-- ── Page header ─────────────────────────────────────────────── -->
@@ -305,9 +321,7 @@
                     </nav>
 
                     <div class="mt-1 flex flex-wrap items-center gap-2">
-                        <h1 class="text-foreground text-3xl font-bold tracking-tight">
-                            Settings
-                        </h1>
+                        <h1 class="text-foreground text-3xl font-bold tracking-tight">Settings</h1>
                         {#if activeTab?.restartRequired}
                             <Badge
                                 class="border-amber-500/30 bg-amber-500/20 text-xs font-medium text-amber-600 dark:text-amber-400">
@@ -399,7 +413,9 @@
                                         : "border-border/50 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                 )}
                                 onclick={() => handleTabClick(tab.id)}
-                                aria-current={$page.data.activeTabId === tab.id ? "true" : undefined}>
+                                aria-current={$page.data.activeTabId === tab.id
+                                    ? "true"
+                                    : undefined}>
                                 {#if IconComponent}
                                     <IconComponent class="size-3.5 shrink-0" />
                                 {/if}
@@ -411,17 +427,20 @@
                     <!-- Desktop: two-level grouped sidebar -->
                     <div class="hidden w-full flex-col gap-0.5 lg:flex">
                         {#each Object.entries(SECTION_GROUPS) as [groupId, groupMeta] (groupId)}
-                            {@const group = groupId as import("$lib/components/settings/sections").SectionGroup}
+                            {@const group =
+                                groupId as import("$lib/components/settings/sections").SectionGroup}
                             {@const GroupIcon = ICON_MAP[groupMeta.icon] as Component | undefined}
                             {@const groupTabs = getTabsByGroup(group)}
                             {@const isGroupOpen = groupOpen[group]}
-                            {@const hasActiveTab = groupTabs.some(t => t.id === $page.data.activeTabId)}
+                            {@const hasActiveTab = groupTabs.some(
+                                (t) => t.id === $page.data.activeTabId
+                            )}
 
                             <div class="mb-1">
                                 <!-- Group header button -->
                                 <button
                                     class={cn(
-                                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors",
+                                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-semibold tracking-wider uppercase transition-colors",
                                         hasActiveTab
                                             ? "text-primary"
                                             : "text-muted-foreground hover:text-foreground"
@@ -443,17 +462,21 @@
                                 {#if isGroupOpen}
                                     <div class="mt-0.5 flex flex-col gap-0.5 pl-2">
                                         {#each groupTabs as tab (tab.id)}
-                                            {@const IconComponent = ICON_MAP[tab.icon] as Component | undefined}
+                                            {@const IconComponent = ICON_MAP[tab.icon] as
+                                                | Component
+                                                | undefined}
                                             <Tooltip.Root>
                                                 <Tooltip.Trigger
                                                     class={cn(
                                                         "flex w-full cursor-pointer items-center gap-2 rounded-md border-l-2 py-1.5 pr-3 pl-2 text-left text-sm transition-all",
                                                         $page.data.activeTabId === tab.id
                                                             ? "border-primary bg-primary/12 text-primary font-medium shadow-sm"
-                                                            : "border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground font-normal"
+                                                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground border-transparent font-normal"
                                                     )}
                                                     onclick={() => handleTabClick(tab.id)}
-                                                    aria-current={$page.data.activeTabId === tab.id ? "true" : undefined}>
+                                                    aria-current={$page.data.activeTabId === tab.id
+                                                        ? "true"
+                                                        : undefined}>
                                                     {#if IconComponent}
                                                         <IconComponent class="size-3.5 shrink-0" />
                                                     {/if}
@@ -484,7 +507,7 @@
                     This panel is the only bordered container so there is no nested-card look.
                 -->
                 <div
-                    class="border-border/70 bg-card/50 ring-primary/8 relative min-w-0 flex-1 min-h-[calc(100vh-10rem)] flex flex-col rounded-xl border p-4 shadow-md ring-1 md:p-6 pb-12"
+                    class="border-border/70 bg-card/50 ring-primary/8 relative flex min-h-[calc(100vh-10rem)] min-w-0 flex-1 flex-col rounded-xl border p-4 pb-12 shadow-md ring-1 md:p-6"
                     aria-busy={isNavigating}>
                     <!-- Panel section chrome -->
                     <div
@@ -536,10 +559,12 @@
                             </div>
                             {#if rankingDenyHelpOpen}
                                 <ul
-                                    class="text-muted-foreground mt-2 list-disc space-y-1 border-t border-primary/15 pt-2 pl-5 text-xs leading-relaxed">
+                                    class="text-muted-foreground border-primary/15 mt-2 list-disc space-y-1 border-t pt-2 pl-5 text-xs leading-relaxed">
                                     <li>
                                         Examples:
-                                        <code class="text-foreground/90">audio_dolby_digital_plus</code>,
+                                        <code class="text-foreground/90"
+                                            >audio_dolby_digital_plus</code
+                                        >,
                                         <code class="text-foreground/90">quality_remux</code>,
                                         <code class="text-foreground/90">extras_dubbed</code>
                                     </li>
@@ -549,7 +574,8 @@
                                     </li>
                                     <li>
                                         Disney+/Amazon WEB-DL often needs
-                                        <strong class="text-foreground">audio_dolby_digital_plus</strong>
+                                        <strong class="text-foreground"
+                                            >audio_dolby_digital_plus</strong>
                                         fetch enabled.
                                     </li>
                                 </ul>

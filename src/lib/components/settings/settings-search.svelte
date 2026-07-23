@@ -37,10 +37,13 @@
         new Map(
             entries
                 .map((e) => e.tabId)
-                .filter((id, i, arr) => arr.indexOf(id) === i)   // unique tab IDs
+                .filter((id, i, arr) => arr.indexOf(id) === i) // unique tab IDs
                 .map((tabId) => {
                     const tab = getTabById(tabId);
-                    return [tabId, tab ? (ICON_MAP[tab.icon] as Component | undefined) : undefined] as const;
+                    return [
+                        tabId,
+                        tab ? (ICON_MAP[tab.icon] as Component | undefined) : undefined
+                    ] as const;
                 })
         )
     );

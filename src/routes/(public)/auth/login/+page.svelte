@@ -52,7 +52,7 @@
     const { form: loginFormData, enhance: loginEnhance, message: loginMessage } = loginForm;
     const dummyStore = readable(null);
     const registerFormData = registerForm ? registerForm.form : dummyStore;
-    const registerEnhance = registerForm ? registerForm.enhance : (() => {});
+    const registerEnhance = registerForm ? registerForm.enhance : () => {};
     const registerMessage = registerForm ? registerForm.message : dummyStore;
 
     $effect(() => {

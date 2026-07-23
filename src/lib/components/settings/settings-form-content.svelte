@@ -91,16 +91,26 @@
     let successTimer: ReturnType<typeof setTimeout> | null = null;
     $effect(() => {
         if (isDirty) {
-            if (successTimer) { clearTimeout(successTimer); successTimer = null; }
+            if (successTimer) {
+                clearTimeout(successTimer);
+                successTimer = null;
+            }
             saveStatus = "idle";
         }
     });
     $effect(() => {
         if (saveStatus === "success") {
             if (successTimer) clearTimeout(successTimer);
-            successTimer = setTimeout(() => { saveStatus = "idle"; }, 4000);
+            successTimer = setTimeout(() => {
+                saveStatus = "idle";
+            }, 4000);
         }
-        return () => { if (successTimer) { clearTimeout(successTimer); successTimer = null; } };
+        return () => {
+            if (successTimer) {
+                clearTimeout(successTimer);
+                successTimer = null;
+            }
+        };
     });
 
     // Keep the page-shell's formStore in sync with the live form state.
@@ -248,7 +258,8 @@
         role="status"
         aria-live="polite">
         <Check class="size-4 shrink-0 text-emerald-500" />
-        <span class="text-emerald-600 dark:text-emerald-400 font-medium">Settings saved successfully.</span>
+        <span class="font-medium text-emerald-600 dark:text-emerald-400"
+            >Settings saved successfully.</span>
     </div>
 {/if}
 
@@ -301,9 +312,7 @@
         :global(
             .settings-form [data-layout="object-property"]:has(fieldset[data-slot="field-set"])
         ),
-        :global(
-            .settings-form [data-layout="object-property"]:has([data-layout="array-field"])
-        ),
+        :global(.settings-form [data-layout="object-property"]:has([data-layout="array-field"])),
         :global(
             .settings-form [data-slot="field-group"] > [data-slot="field"]:has([data-slot="field"])
         ) {
@@ -388,7 +397,9 @@
         padding: 0.75rem 0.875rem;
         min-width: 0;
         gap: 0.45rem;
-        transition: border-color 0.15s ease, background 0.15s ease;
+        transition:
+            border-color 0.15s ease,
+            background 0.15s ease;
     }
 
     :global(.settings-form [data-slot="field"]:hover) {
@@ -471,7 +482,11 @@
         padding: 0.75rem 0.875rem;
     }
 
-    :global(.settings-form [data-slot="field"]:has(button[role="switch"]) > [data-slot="field-label-group"]) {
+    :global(
+        .settings-form
+            [data-slot="field"]:has(button[role="switch"])
+            > [data-slot="field-label-group"]
+    ) {
         flex: 1;
         min-width: 0;
     }
