@@ -164,7 +164,7 @@
             return;
         }
 
-        if (form?.isChanged || customDirty?.isDirty) {
+        if (isDirty) {
             tabSwitchTarget = tabId;
             tabSwitchFocus = focusPath ?? null;
             showDiscardConfirm = true;
