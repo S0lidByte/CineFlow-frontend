@@ -48,6 +48,8 @@
         type SectionGroup
     } from "$lib/components/settings/sections";
     import SettingsSearch from "$lib/components/settings/settings-search.svelte";
+    import SettingsStatusBadge from "$lib/components/settings/settings-status-badge.svelte";
+    import { clearCustomDirty, customDirtyStore } from "$lib/components/settings/settings-dirty";
     import Kbd from "$lib/components/ui/kbd/kbd.svelte";
     import SearchIcon from "@lucide/svelte/icons/search";
     import ChevronDown from "@lucide/svelte/icons/chevron-down";
@@ -57,8 +59,6 @@
 
     // Lucide icons used in the tab nav and header
     import Loader2 from "@lucide/svelte/icons/loader-2";
-    import Check from "@lucide/svelte/icons/check";
-    import AlertCircle from "@lucide/svelte/icons/alert-circle";
     import ChevronRight from "@lucide/svelte/icons/chevron-right";
 
     /** Maps the icon name stored in {@link SectionTab.icon} to a Svelte component. */
@@ -71,6 +71,7 @@
      */
     const formStore = writable<FormState<unknown> | null>(null);
     const form = $derived($formStore);
+    const customDirty = $derived($customDirtyStore);
 
     /** Target tab id while a discard-and-switch is being confirmed. */
     let tabSwitchTarget: string | null = null;
@@ -163,7 +164,7 @@
             return;
         }
 
-        if (form?.isChanged) {
+        if (form?.isChanged || customDirty?.isDirty) {
             tabSwitchTarget = tabId;
             tabSwitchFocus = focusPath ?? null;
             showDiscardConfirm = true;
@@ -175,6 +176,7 @@
 
     function navigateToTab(tabId: string, focusPath?: string): void {
         formStore.set(null);
+        clearCustomDirty();
         const params = new SvelteURLSearchParams();
         params.set("tab", tabId);
         if (focusPath) {
@@ -195,7 +197,9 @@
             const focus = tabSwitchFocus ?? undefined;
             tabSwitchTarget = null;
             tabSwitchFocus = null;
+            customDirty?.discard();
             formStore.set(null);
+            clearCustomDirty();
             navigateToTab(target, focus);
             // reset() is called optimistically — SJSF reset is synchronous and safe here
             // because navigateToTab calls goto() which schedules the route change asynchronously.
@@ -223,10 +227,13 @@
     }
 
     /**
-     * `form.isChanged` is the SJSF equivalent of `isDirty`.
-     * Used for the save bar, header status, and tab-switch guard.
+     * Dirty when SJSF form is changed, or a custom panel reports dirty via
+     * {@link customDirtyStore} (Library Profiles). Ranking keeps local dirty only.
      */
-    const isDirty = $derived(form?.isChanged ?? false);
+    const isDirty = $derived(form?.isChanged || customDirty?.isDirty || false);
+
+    /** SJSF-only dirty — sticky save bar and shell save chrome apply only here. */
+    const isSjsfDirty = $derived(form?.isChanged ?? false);
 
     /**
      * True while SvelteKit is navigating (loading a new tab's data).
@@ -278,7 +285,7 @@
     function handleKeydown(e: KeyboardEvent): void {
         if ((e.ctrlKey || e.metaKey) && e.key === "s") {
             e.preventDefault();
-            if (isDirty && !isNavigating) {
+            if (!activeTab?.custom && isSjsfDirty && !isNavigating) {
                 submitSettingsForm();
             }
         }
@@ -348,12 +355,11 @@
                 <div class="mt-2 flex items-center gap-2 md:mt-0">
                     {#if !activeTab?.custom}
                         {#if isNavigating || !form}
-                            <div
-                                class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-                                <Loader2 class="size-3.5 animate-spin" />
-                                {isNavigating ? "Loading section…" : "Preparing form…"}
-                            </div>
-                        {:else if isDirty}
+                            <SettingsStatusBadge
+                                variant="loading"
+                                label={isNavigating ? "Loading section…" : "Preparing form…"} />
+                        {:else if isSjsfDirty}
+                            <SettingsStatusBadge variant="unsaved" label="Unsaved" />
                             <Tooltip.Root>
                                 <Tooltip.Trigger>
                                     {#snippet child({ props })}
@@ -365,7 +371,6 @@
                                             onclick={submitSettingsForm}
                                             disabled={isNavigating}
                                             aria-live="polite">
-                                            <AlertCircle class="size-3.5" />
                                             Save changes
                                         </Button>
                                     {/snippet}
@@ -377,12 +382,7 @@
                                 </Tooltip.Content>
                             </Tooltip.Root>
                         {:else}
-                            <div
-                                class="flex items-center gap-1.5 text-xs font-medium text-emerald-500"
-                                aria-live="polite">
-                                <Check class="size-3.5" />
-                                All changes saved
-                            </div>
+                            <SettingsStatusBadge variant="saved" label="Saved" />
                         {/if}
                     {/if}
 
@@ -562,14 +562,14 @@
             </div>
 
             <!-- ── Sticky save bar (shown only when SJSF form is dirty and not on custom tabs) ─────────── -->
-            {#if isDirty && !activeTab?.custom}
+            {#if isSjsfDirty && !activeTab?.custom}
                 <div
-                    class="border-primary/30 bg-card/95 fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between gap-4 border-t px-4 py-3 shadow-lg backdrop-blur md:right-4 md:bottom-4 md:left-auto md:max-w-md md:rounded-lg md:border md:shadow-xl"
+                    class="border-border/60 bg-card/95 fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between gap-4 border-t px-4 py-3 shadow-lg backdrop-blur md:right-4 md:bottom-4 md:left-auto md:max-w-md md:rounded-lg md:border md:shadow-xl"
                     role="status"
                     aria-live="polite">
                     <div class="min-w-0">
-                        <span class="text-sm font-medium text-amber-500">Unsaved changes</span>
-                        <p class="text-muted-foreground truncate text-xs">
+                        <SettingsStatusBadge variant="unsaved" label="Unsaved" />
+                        <p class="text-muted-foreground mt-1 truncate text-xs">
                             Review and save this section to persist updates.
                         </p>
                     </div>
@@ -579,14 +579,14 @@
                             size="sm"
                             onclick={() => form?.reset()}
                             disabled={isNavigating}>
-                            Discard changes
+                            Discard
                         </Button>
                         <Button size="sm" onclick={submitSettingsForm} disabled={isNavigating}>
                             {#if isNavigating}
-                                <Loader2 class="size-4 animate-spin" />
-                                Loading...
+                                <Loader2 class="size-3.5 animate-spin" />
+                                Loading…
                             {:else}
-                                Save ({saveShortcut})
+                                Save
                             {/if}
                         </Button>
                     </div>
