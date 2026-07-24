@@ -23,7 +23,8 @@ jobs:
               id: release
 
     # release-please writes CHANGELOG.md without our Prettier rules (md printWidth 70).
-    # Format and push so Lint on the release PR does not fail every time.
+    # Format and commit via the Contents API so the commit is GitHub-verified
+    # (repo ruleset requires signed commits; raw git commit/push is unsigned).
     format-changelog:
         needs: release-please
         if: ${{ needs.release-please.outputs.pr }}
@@ -69,7 +70,10 @@ jobs:
             - name: Install dependencies
               run: pnpm install
 
-            - name: Format CHANGELOG.md and commit if needed
+            - name: Format CHANGELOG.md and commit via API if needed
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  BRANCH: ${{ steps.branch.outputs.name }}
               run: |
                   set -euo pipefail
                   pnpm exec prettier --write CHANGELOG.md
@@ -77,8 +81,12 @@ jobs:
                     echo "CHANGELOG.md already formatted"
                     exit 0
                   fi
-                  git config user.name "github-actions[bot]"
-                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-                  git add CHANGELOG.md
-                  git commit -m "style(lint): format CHANGELOG.md with prettier"
-                  git push
+
+                  # Contents API commits are GitHub-signed (required by branch ruleset).
+                  FILE_SHA="$(gh api "repos/${GITHUB_REPOSITORY}/contents/CHANGELOG.md?ref=${BRANCH}" --jq .sha)"
+                  CONTENT_B64="$(base64 -w0 CHANGELOG.md)"
+                  gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/CHANGELOG.md" \
+                    -f message="style(lint): format CHANGELOG.md with prettier" \
+                    -f content="${CONTENT_B64}" \
+                    -f branch="${BRANCH}" \
+                    -f sha="${FILE_SHA}"
