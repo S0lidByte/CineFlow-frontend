@@ -83,10 +83,21 @@ jobs:
                   fi
 
                   # Contents API commits are GitHub-signed (required by branch ruleset).
+                  # Write the JSON body to disk — CHANGELOG base64 exceeds ARG_MAX for -f/--arg.
                   FILE_SHA="$(gh api "repos/${GITHUB_REPOSITORY}/contents/CHANGELOG.md?ref=${BRANCH}" --jq .sha)"
-                  CONTENT_B64="$(base64 -w0 CHANGELOG.md)"
+                  export FILE_SHA
+                  python3 - <<'PY'
+                  import base64, json, os, pathlib
+
+                  payload = {
+                      "message": "style(lint): format CHANGELOG.md with prettier",
+                      "content": base64.b64encode(pathlib.Path("CHANGELOG.md").read_bytes()).decode(),
+                      "branch": os.environ["BRANCH"],
+                      "sha": os.environ["FILE_SHA"],
+                  }
+                  pathlib.Path("/tmp/changelog-put.json").write_text(
+                      json.dumps(payload), encoding="utf-8"
+                  )
+                  PY
                   gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/CHANGELOG.md" \
-                    -f message="style(lint): format CHANGELOG.md with prettier" \
-                    -f content="${CONTENT_B64}" \
-                    -f branch="${BRANCH}" \
-                    -f sha="${FILE_SHA}"
+                    --input /tmp/changelog-put.json
