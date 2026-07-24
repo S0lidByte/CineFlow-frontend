@@ -2,10 +2,9 @@
 
 ## [1.8.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.7.1...riven-frontend-v1.8.0) (2026-07-24)
 
-
 ### Features
 
-* **settings:** unify dirty guard, sticky save, and tab polish ([#67](https://github.com/S0lidByte/CineFlow-frontend/issues/67)) ([b382022](https://github.com/S0lidByte/CineFlow-frontend/commit/b382022b6c5eb0b96dc18de30ae3564e25ed62cf))
+- **settings:** unify dirty guard, sticky save, and tab polish ([#67](https://github.com/S0lidByte/CineFlow-frontend/issues/67)) ([b382022](https://github.com/S0lidByte/CineFlow-frontend/commit/b382022b6c5eb0b96dc18de30ae3564e25ed62cf))
 
 ## [1.7.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.7.0...riven-frontend-v1.7.1) (2026-07-23)
 
