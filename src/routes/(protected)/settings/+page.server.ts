@@ -15,6 +15,7 @@ import {
 } from "$lib/components/settings/sections";
 import {
     buildFieldIndexFromSchema,
+    buildLibraryProfilesShortcutEntries,
     buildRankingShortcutEntries,
     buildSectionSearchEntries,
     mergeSearchEntries,
@@ -73,6 +74,7 @@ function buildSearchIndex(fullSchema: Record<string, unknown> | null): SettingsS
     return mergeSearchEntries(
         buildSectionSearchEntries(),
         buildRankingShortcutEntries(),
+        buildLibraryProfilesShortcutEntries(),
         buildFieldIndexFromSchema(fullSchema)
     );
 }

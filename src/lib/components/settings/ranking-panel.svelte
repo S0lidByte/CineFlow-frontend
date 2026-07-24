@@ -11,7 +11,7 @@
     import * as Tabs from "$lib/components/ui/tabs/index.js";
     import { toast } from "svelte-sonner";
     import { enhance } from "$app/forms";
-    import { untrack } from "svelte";
+    import { onDestroy, untrack } from "svelte";
     import Loader2 from "@lucide/svelte/icons/loader-2";
     import Check from "@lucide/svelte/icons/check";
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
@@ -26,6 +26,7 @@
         type RankingSettings,
         type CustomRankValue
     } from "./ranking-presets";
+    import { clearCustomDirty, customDirtyStore } from "./settings-dirty";
 
     interface RankingMeta {
         deny_keys: Record<string, string>;
@@ -55,6 +56,21 @@
     let baselineJson = $state(JSON.stringify(untrack(() => ranking)));
     let isDirty = $derived(JSON.stringify(localRanking) !== baselineJson);
     let isSaving = $state(false);
+
+    function discardChanges() {
+        localRanking = structuredClone(JSON.parse(baselineJson));
+    }
+
+    $effect(() => {
+        customDirtyStore.set({
+            isDirty,
+            discard: discardChanges
+        });
+    });
+
+    onDestroy(() => {
+        clearCustomDirty();
+    });
     let isTesting = $state(false);
     let panelTab = $state("filters");
     let activeCategory = $state("audio");
@@ -170,18 +186,7 @@
             toast.error(result.data?.error ?? "Ranking test failed");
         }
     }
-
-    function onKeydown(e: KeyboardEvent) {
-        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-            e.preventDefault();
-            if (isDirty && !isSaving) {
-                document.getElementById("ranking-save-submit")?.click();
-            }
-        }
-    }
 </script>
-
-<svelte:window onkeydown={onKeydown} />
 
 <div class="space-y-3">
     <!-- Compact toolbar: status + presets + save -->
@@ -224,9 +229,7 @@
                 variant="outline"
                 size="sm"
                 disabled={!isDirty || isSaving}
-                onclick={() => {
-                    localRanking = structuredClone(JSON.parse(baselineJson));
-                }}>
+                onclick={discardChanges}>
                 Discard
             </Button>
             <form

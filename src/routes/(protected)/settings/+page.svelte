@@ -146,6 +146,31 @@
         }
     }
 
+    /** Save the active tab — SJSF form or custom panel submit button. */
+    function submitActiveSettings(): void {
+        if ($navigating) return;
+        if (activeTab?.custom) {
+            const submitId =
+                $page.data.activeTabId === RANKING_TAB_ID
+                    ? "ranking-save-submit"
+                    : $page.data.activeTabId === LIBRARY_PROFILES_TAB_ID
+                      ? "library-profiles-save-submit"
+                      : null;
+            if (submitId) document.getElementById(submitId)?.click();
+            return;
+        }
+        submitSettingsForm();
+    }
+
+    /** Discard unsaved edits for the active tab. */
+    function discardActiveSettings(): void {
+        if (activeTab?.custom) {
+            customDirty?.discard();
+            return;
+        }
+        form?.reset();
+    }
+
     /**
      * Handles a tab button click or search selection.
      * If the form has unsaved changes, opens a confirmation dialog instead of
@@ -228,11 +253,11 @@
 
     /**
      * Dirty when SJSF form is changed, or a custom panel reports dirty via
-     * {@link customDirtyStore} (Library Profiles). Ranking keeps local dirty only.
+     * {@link customDirtyStore} (Library Profiles, Ranking).
      */
     const isDirty = $derived(form?.isChanged || customDirty?.isDirty || false);
 
-    /** SJSF-only dirty — sticky save bar and shell save chrome apply only here. */
+    /** SJSF form dirty — used for SJSF-specific loading chrome. */
     const isSjsfDirty = $derived(form?.isChanged ?? false);
 
     /**
@@ -285,8 +310,8 @@
     function handleKeydown(e: KeyboardEvent): void {
         if ((e.ctrlKey || e.metaKey) && e.key === "s") {
             e.preventDefault();
-            if (!activeTab?.custom && isSjsfDirty && !isNavigating) {
-                submitSettingsForm();
+            if (isDirty && !isNavigating) {
+                submitActiveSettings();
             }
         }
         if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -351,39 +376,45 @@
                     </p>
                 </div>
 
-                <!-- Save status + primary Save button (SJSF tabs only) -->
+                <!-- Save status + primary Save button -->
                 <div class="mt-2 flex items-center gap-2 md:mt-0">
-                    {#if !activeTab?.custom}
-                        {#if isNavigating || !form}
-                            <SettingsStatusBadge
-                                variant="loading"
-                                label={isNavigating ? "Loading section…" : "Preparing form…"} />
-                        {:else if isSjsfDirty}
+                    {#if activeTab?.custom}
+                        {#if isNavigating}
+                            <SettingsStatusBadge variant="loading" label="Loading section…" />
+                        {:else if customDirty?.isDirty}
                             <SettingsStatusBadge variant="unsaved" label="Unsaved" />
-                            <Tooltip.Root>
-                                <Tooltip.Trigger>
-                                    {#snippet child({ props })}
-                                        <Button
-                                            {...props}
-                                            type="button"
-                                            size="sm"
-                                            class="h-8 gap-1.5 px-3 text-xs"
-                                            onclick={submitSettingsForm}
-                                            disabled={isNavigating}
-                                            aria-live="polite">
-                                            Save changes
-                                        </Button>
-                                    {/snippet}
-                                </Tooltip.Trigger>
-                                <Tooltip.Content side="bottom">
-                                    Save <Kbd
-                                        class="border-primary-foreground/20 text-primary-foreground ml-1 bg-transparent"
-                                        >{saveShortcut}</Kbd>
-                                </Tooltip.Content>
-                            </Tooltip.Root>
                         {:else}
                             <SettingsStatusBadge variant="saved" label="Saved" />
                         {/if}
+                    {:else if isNavigating || !form}
+                        <SettingsStatusBadge
+                            variant="loading"
+                            label={isNavigating ? "Loading section…" : "Preparing form…"} />
+                    {:else if isSjsfDirty}
+                        <SettingsStatusBadge variant="unsaved" label="Unsaved" />
+                        <Tooltip.Root>
+                            <Tooltip.Trigger>
+                                {#snippet child({ props })}
+                                    <Button
+                                        {...props}
+                                        type="button"
+                                        size="sm"
+                                        class="h-8 gap-1.5 px-3 text-xs"
+                                        onclick={submitActiveSettings}
+                                        disabled={isNavigating}
+                                        aria-live="polite">
+                                        Save changes
+                                    </Button>
+                                {/snippet}
+                            </Tooltip.Trigger>
+                            <Tooltip.Content side="bottom">
+                                Save <Kbd
+                                    class="border-primary-foreground/20 text-primary-foreground ml-1 bg-transparent"
+                                    >{saveShortcut}</Kbd>
+                            </Tooltip.Content>
+                        </Tooltip.Root>
+                    {:else}
+                        <SettingsStatusBadge variant="saved" label="Saved" />
                     {/if}
 
                     <!-- Single search button — rendered once, visible on all screen sizes -->
@@ -561,8 +592,8 @@
                 </div>
             </div>
 
-            <!-- ── Sticky save bar (shown only when SJSF form is dirty and not on custom tabs) ─────────── -->
-            {#if isSjsfDirty && !activeTab?.custom}
+            <!-- ── Sticky save bar (any dirty tab) ─────────── -->
+            {#if isDirty}
                 <div
                     class="border-border/60 bg-card/95 fixed right-0 bottom-0 left-0 z-40 flex items-center justify-between gap-4 border-t px-4 py-3 shadow-lg backdrop-blur md:right-4 md:bottom-4 md:left-auto md:max-w-md md:rounded-lg md:border md:shadow-xl"
                     role="status"
@@ -577,11 +608,11 @@
                         <Button
                             variant="outline"
                             size="sm"
-                            onclick={() => form?.reset()}
+                            onclick={discardActiveSettings}
                             disabled={isNavigating}>
                             Discard
                         </Button>
-                        <Button size="sm" onclick={submitSettingsForm} disabled={isNavigating}>
+                        <Button size="sm" onclick={submitActiveSettings} disabled={isNavigating}>
                             {#if isNavigating}
                                 <Loader2 class="size-3.5 animate-spin" />
                                 Loading…

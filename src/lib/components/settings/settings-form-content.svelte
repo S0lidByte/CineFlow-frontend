@@ -472,7 +472,7 @@
         }
     }
 
-    /* Provider cards (Scraping / Downloaders / Content): nested provider fieldsets.
+    /* Provider cards: nested provider fieldsets with enabled accent.
        Note: BasicForm is <form class="settings-form"> — no nested <form>. */
     :global(
         .settings-form[data-settings-tab="scraping"]
@@ -482,6 +482,12 @@
             > fieldset[data-slot="field-set"]
             fieldset[data-slot="field-set"],
         .settings-form[data-settings-tab="content"]
+            > fieldset[data-slot="field-set"]
+            fieldset[data-slot="field-set"],
+        .settings-form[data-settings-tab="notifications"]
+            > fieldset[data-slot="field-set"]
+            fieldset[data-slot="field-set"],
+        .settings-form[data-settings-tab="ops"]
             > fieldset[data-slot="field-set"]
             fieldset[data-slot="field-set"]
     ) {
@@ -500,6 +506,10 @@
         .settings-form[data-settings-tab="downloaders"]
             fieldset[data-slot="field-set"]:has(legend[data-settings-enabled="1"]),
         .settings-form[data-settings-tab="content"]
+            fieldset[data-slot="field-set"]:has(legend[data-settings-enabled="1"]),
+        .settings-form[data-settings-tab="notifications"]
+            fieldset[data-slot="field-set"]:has(legend[data-settings-enabled="1"]),
+        .settings-form[data-settings-tab="ops"]
             fieldset[data-slot="field-set"]:has(legend[data-settings-enabled="1"])
     ) {
         border-color: color-mix(in oklab, var(--color-primary) 35%, var(--color-border));
@@ -511,7 +521,9 @@
     :global(
         .settings-form[data-settings-tab="scraping"] legend[data-slot="field-legend"]::after,
         .settings-form[data-settings-tab="downloaders"] legend[data-slot="field-legend"]::after,
-        .settings-form[data-settings-tab="content"] legend[data-slot="field-legend"]::after
+        .settings-form[data-settings-tab="content"] legend[data-slot="field-legend"]::after,
+        .settings-form[data-settings-tab="notifications"] legend[data-slot="field-legend"]::after,
+        .settings-form[data-settings-tab="ops"] legend[data-slot="field-legend"]::after
     ) {
         content: none;
     }
@@ -689,7 +701,8 @@
         margin-top: 0.25rem;
     }
 
-    :global(.settings-form [data-settings-focus="true"]) {
+    :global(.settings-form [data-settings-focus="true"]),
+    :global([data-settings-search-path][data-settings-focus="true"]) {
         border-radius: 0.5rem;
         box-shadow:
             0 0 0 2px color-mix(in oklab, var(--color-primary) 35%, transparent),
@@ -786,34 +799,5 @@
     :global(.settings-form [data-layout="array-field"] [data-slot="button-group"] > *) {
         width: auto;
         flex: 0 0 auto;
-    }
-
-    /**
-     * Compact Ranking attribute objects: force Fetch / Custom Rank / Rank onto one row.
-     */
-    @media (min-width: 900px) {
-        :global(
-            .settings-form
-                [data-layout="object-field"]
-                > [data-layout="object-properties"]
-                > [data-layout="object-property"]:has(
-                    [data-layout="object-field"]
-                        > [data-layout="object-properties"]
-                        > [data-layout="object-property"]:nth-child(3)
-                )
-        ) {
-            grid-column: 1 / -1;
-        }
-
-        :global(
-            .settings-form
-                [data-layout="object-field"]
-                > [data-layout="object-properties"]:has(
-                    > [data-layout="object-property"]:nth-child(3)
-                ):not(:has(> [data-layout="object-property"]:nth-child(4)))
-        ) {
-            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(4.5rem, 0.7fr) !important;
-            gap: 0.5rem;
-        }
     }
 </style>
