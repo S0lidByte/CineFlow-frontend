@@ -1,13 +1,13 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
-    import { onDestroy } from "svelte";
+    import { page } from "$app/stores";
+    import { onDestroy, untrack } from "svelte";
     import { Button } from "$lib/components/ui/button/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
     import { Switch } from "$lib/components/ui/switch/index.js";
     import { Badge } from "$lib/components/ui/badge/index.js";
     import * as Dialog from "$lib/components/ui/dialog/index.js";
-    import { untrack } from "svelte";
     import { toast } from "svelte-sonner";
     import ChevronDown from "@lucide/svelte/icons/chevron-down";
     import BookOpen from "@lucide/svelte/icons/book-open";
@@ -192,19 +192,19 @@
         }
     }
 
-    function handleKeydown(e: KeyboardEvent) {
-        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-            e.preventDefault();
-            if (isDirty && !isSaving) {
-                document.getElementById("library-profiles-save-submit")?.click();
-            }
-        }
-    }
-
     const CONTENT_TYPES = ["movie", "show"];
-</script>
 
-<svelte:window onkeydown={handleKeydown} />
+    /** Expand profiles when Cmd+K jumps to a library_profiles focus path. */
+    $effect(() => {
+        const focus = $page.url.searchParams.get("focus");
+        if (!focus?.startsWith("library_profiles")) return;
+        const keys = profileKeys();
+        if (keys.length === 0) return;
+        const next = { ...expanded };
+        for (const k of keys) next[k] = true;
+        expanded = next;
+    });
+</script>
 
 <div class="space-y-3">
     <SettingsPanelToolbar>
@@ -321,7 +321,8 @@
                             class="border-border/40 space-y-3 border-t px-3 pt-3 pb-3 md:px-4 md:pb-4">
                             <div class="grid gap-4 md:grid-cols-2">
                                 <div
-                                    class="border-border/60 bg-background/40 flex items-center justify-between rounded-lg border px-3 py-2.5 md:col-span-2">
+                                    class="border-border/60 bg-background/40 flex items-center justify-between rounded-lg border px-3 py-2.5 md:col-span-2"
+                                    data-settings-search-path="library_profiles.enabled">
                                     <div>
                                         <Label class="text-sm font-medium">Enabled</Label>
                                         <p class="text-muted-foreground text-xs">
@@ -334,10 +335,10 @@
                                         aria-label="Enable profile" />
                                 </div>
 
-                                <div class="flex flex-col gap-1.5">
-                                    <Label
-                                        class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                        >Name</Label>
+                                <div
+                                    class="flex flex-col gap-1.5"
+                                    data-settings-search-path="library_profiles.name">
+                                    <Label class="text-sm font-semibold">Name</Label>
                                     <Input
                                         value={profile.name}
                                         oninput={(e) =>
@@ -345,10 +346,10 @@
                                         placeholder="Human-readable profile name" />
                                 </div>
 
-                                <div class="flex flex-col gap-1.5">
-                                    <Label
-                                        class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                        >Library Path</Label>
+                                <div
+                                    class="flex flex-col gap-1.5"
+                                    data-settings-search-path="library_profiles.library_path">
+                                    <Label class="text-sm font-semibold">Library Path</Label>
                                     <Input
                                         value={profile.library_path}
                                         oninput={(e) =>
@@ -362,10 +363,10 @@
                                         <code class="bg-muted rounded px-1">/kids</code>)</span>
                                 </div>
 
-                                <div class="flex flex-col gap-2">
-                                    <Label
-                                        class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                        >Content Types</Label>
+                                <div
+                                    class="flex flex-col gap-2"
+                                    data-settings-search-path="library_profiles.filter_rules.content_types">
+                                    <Label class="text-sm font-semibold">Content Types</Label>
                                     <div class="flex gap-3">
                                         {#each CONTENT_TYPES as ct (ct)}
                                             {@const active = (
@@ -396,7 +397,8 @@
                                 </div>
 
                                 <div
-                                    class="border-border/60 bg-background/40 flex items-center justify-between rounded-lg border px-3 py-2.5">
+                                    class="border-border/60 bg-background/40 flex items-center justify-between rounded-lg border px-3 py-2.5"
+                                    data-settings-search-path="library_profiles.filter_rules.is_anime">
                                     <div>
                                         <Label class="text-sm font-medium">Anime only</Label>
                                         <p class="text-muted-foreground text-xs">
@@ -410,11 +412,11 @@
                                         aria-label="Anime only" />
                                 </div>
 
-                                <div class="flex flex-col gap-1.5 md:col-span-2">
-                                    <Label
-                                        class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                        >Genres <span
-                                            class="text-muted-foreground/70 font-normal normal-case"
+                                <div
+                                    class="flex flex-col gap-1.5 md:col-span-2"
+                                    data-settings-search-path="library_profiles.filter_rules.genres">
+                                    <Label class="text-sm font-semibold"
+                                        >Genres <span class="text-muted-foreground/70 font-normal"
                                             >(prefix with ! to exclude)</span
                                         ></Label>
                                     <div
@@ -444,220 +446,258 @@
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <SettingsDetailsCard
-                                        title="Advanced filters"
-                                        subtitle="ratings, year, networks, languages…"
-                                        class="bg-background/20">
-                                        <div class="grid gap-4 md:grid-cols-2">
-                                            <div class="flex flex-col gap-1.5">
-                                                <Label
-                                                    class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                                    >Year Range</Label>
-                                                <div class="flex items-center gap-2">
-                                                    <Input
-                                                        type="number"
-                                                        placeholder="From"
-                                                        value={profile.filter_rules?.min_year ?? ""}
-                                                        oninput={(e) =>
-                                                            setFilter(
-                                                                key,
-                                                                "min_year",
-                                                                e.currentTarget.value
-                                                                    ? Number(e.currentTarget.value)
-                                                                    : null
-                                                            )}
-                                                        class="w-24" />
-                                                    <span class="text-muted-foreground text-xs"
-                                                        >–</span>
-                                                    <Input
-                                                        type="number"
-                                                        placeholder="To"
-                                                        value={profile.filter_rules?.max_year ?? ""}
-                                                        oninput={(e) =>
-                                                            setFilter(
-                                                                key,
-                                                                "max_year",
-                                                                e.currentTarget.value
-                                                                    ? Number(e.currentTarget.value)
-                                                                    : null
-                                                            )}
-                                                        class="w-24" />
-                                                </div>
-                                            </div>
-
-                                            <div class="flex flex-col gap-1.5">
-                                                <Label
-                                                    class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                                    >Rating Range <span
-                                                        class="text-muted-foreground/70 font-normal normal-case"
-                                                        >(0–10)</span
-                                                    ></Label>
-                                                <div class="flex items-center gap-2">
-                                                    <Input
-                                                        type="number"
-                                                        placeholder="Min"
-                                                        min="0"
-                                                        max="10"
-                                                        step="0.1"
-                                                        value={profile.filter_rules?.min_rating ??
-                                                            ""}
-                                                        oninput={(e) =>
-                                                            setFilter(
-                                                                key,
-                                                                "min_rating",
-                                                                e.currentTarget.value
-                                                                    ? Number(e.currentTarget.value)
-                                                                    : null
-                                                            )}
-                                                        class="w-24" />
-                                                    <span class="text-muted-foreground text-xs"
-                                                        >–</span>
-                                                    <Input
-                                                        type="number"
-                                                        placeholder="Max"
-                                                        min="0"
-                                                        max="10"
-                                                        step="0.1"
-                                                        value={profile.filter_rules?.max_rating ??
-                                                            ""}
-                                                        oninput={(e) =>
-                                                            setFilter(
-                                                                key,
-                                                                "max_rating",
-                                                                e.currentTarget.value
-                                                                    ? Number(e.currentTarget.value)
-                                                                    : null
-                                                            )}
-                                                        class="w-24" />
-                                                </div>
-                                            </div>
-
-                                            <div class="flex flex-col gap-1.5 md:col-span-2">
-                                                <Label
-                                                    class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                                    >Content Ratings</Label>
+                                    <div data-settings-search-path="library_profiles.filter_rules">
+                                        <SettingsDetailsCard
+                                            title="Advanced filters"
+                                            subtitle="ratings, year, networks, languages…"
+                                            class="bg-background/20">
+                                            <div class="grid gap-4 md:grid-cols-2">
                                                 <div
-                                                    class="border-border/60 bg-background/40 flex min-h-[2.5rem] flex-wrap gap-1.5 rounded-lg border p-2">
-                                                    {#each profile.filter_rules?.content_ratings ?? [] as tag, i (tag)}
-                                                        <span
-                                                            class="border-border/70 bg-muted/50 text-foreground flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
-                                                            {tag}
-                                                            <button
-                                                                type="button"
-                                                                onclick={() =>
-                                                                    removeTag(
-                                                                        key,
-                                                                        "content_ratings",
-                                                                        i
-                                                                    )}
-                                                                class="opacity-60 hover:opacity-100"
-                                                                ><X class="size-3" /></button>
-                                                        </span>
-                                                    {/each}
-                                                    <input
-                                                        type="text"
-                                                        placeholder="G, PG, PG-13, TV-MA…"
-                                                        class="placeholder:text-muted-foreground/50 min-w-[10rem] flex-1 bg-transparent text-xs outline-none"
-                                                        onkeydown={(e) =>
-                                                            onTagKeydown(
-                                                                e,
-                                                                key,
-                                                                "content_ratings"
-                                                            )} />
+                                                    class="flex flex-col gap-1.5"
+                                                    data-settings-search-path="library_profiles.filter_rules.min_year">
+                                                    <Label class="text-sm font-semibold"
+                                                        >Year Range</Label>
+                                                    <div class="flex items-center gap-2">
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="From"
+                                                            value={profile.filter_rules?.min_year ??
+                                                                ""}
+                                                            oninput={(e) =>
+                                                                setFilter(
+                                                                    key,
+                                                                    "min_year",
+                                                                    e.currentTarget.value
+                                                                        ? Number(
+                                                                              e.currentTarget.value
+                                                                          )
+                                                                        : null
+                                                                )}
+                                                            class="w-24" />
+                                                        <span class="text-muted-foreground text-xs"
+                                                            >–</span>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="To"
+                                                            value={profile.filter_rules?.max_year ??
+                                                                ""}
+                                                            oninput={(e) =>
+                                                                setFilter(
+                                                                    key,
+                                                                    "max_year",
+                                                                    e.currentTarget.value
+                                                                        ? Number(
+                                                                              e.currentTarget.value
+                                                                          )
+                                                                        : null
+                                                                )}
+                                                            class="w-24" />
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="flex flex-col gap-1.5">
-                                                <Label
-                                                    class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                                    >Languages <span
-                                                        class="text-muted-foreground/70 font-normal normal-case"
-                                                        >(! to exclude)</span
-                                                    ></Label>
                                                 <div
-                                                    class="border-border/60 bg-background/40 flex min-h-[2.5rem] flex-wrap gap-1.5 rounded-lg border p-2">
-                                                    {#each profile.filter_rules?.languages ?? [] as tag, i (tag)}
-                                                        <span
-                                                            class="border-border/70 bg-muted/50 text-foreground flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
-                                                            {tag}
-                                                            <button
-                                                                type="button"
-                                                                onclick={() =>
-                                                                    removeTag(key, "languages", i)}
-                                                                class="opacity-60 hover:opacity-100"
-                                                                ><X class="size-3" /></button>
-                                                        </span>
-                                                    {/each}
-                                                    <input
-                                                        type="text"
-                                                        placeholder="en, !zh…"
-                                                        class="placeholder:text-muted-foreground/50 min-w-[6rem] flex-1 bg-transparent text-xs outline-none"
-                                                        onkeydown={(e) =>
-                                                            onTagKeydown(e, key, "languages")} />
+                                                    class="flex flex-col gap-1.5"
+                                                    data-settings-search-path="library_profiles.filter_rules.min_rating">
+                                                    <Label class="text-sm font-semibold"
+                                                        >Rating Range <span
+                                                            class="text-muted-foreground/70 font-normal"
+                                                            >(0–10)</span
+                                                        ></Label>
+                                                    <div class="flex items-center gap-2">
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="Min"
+                                                            min="0"
+                                                            max="10"
+                                                            step="0.1"
+                                                            value={profile.filter_rules
+                                                                ?.min_rating ?? ""}
+                                                            oninput={(e) =>
+                                                                setFilter(
+                                                                    key,
+                                                                    "min_rating",
+                                                                    e.currentTarget.value
+                                                                        ? Number(
+                                                                              e.currentTarget.value
+                                                                          )
+                                                                        : null
+                                                                )}
+                                                            class="w-24" />
+                                                        <span class="text-muted-foreground text-xs"
+                                                            >–</span>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="Max"
+                                                            min="0"
+                                                            max="10"
+                                                            step="0.1"
+                                                            value={profile.filter_rules
+                                                                ?.max_rating ?? ""}
+                                                            oninput={(e) =>
+                                                                setFilter(
+                                                                    key,
+                                                                    "max_rating",
+                                                                    e.currentTarget.value
+                                                                        ? Number(
+                                                                              e.currentTarget.value
+                                                                          )
+                                                                        : null
+                                                                )}
+                                                            class="w-24" />
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="flex flex-col gap-1.5">
-                                                <Label
-                                                    class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                                    >Countries <span
-                                                        class="text-muted-foreground/70 font-normal normal-case"
-                                                        >(! to exclude)</span
-                                                    ></Label>
                                                 <div
-                                                    class="border-border/60 bg-background/40 flex min-h-[2.5rem] flex-wrap gap-1.5 rounded-lg border p-2">
-                                                    {#each profile.filter_rules?.countries ?? [] as tag, i (tag)}
-                                                        <span
-                                                            class="border-border/70 bg-muted/50 text-foreground flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
-                                                            {tag}
-                                                            <button
-                                                                type="button"
-                                                                onclick={() =>
-                                                                    removeTag(key, "countries", i)}
-                                                                class="opacity-60 hover:opacity-100"
-                                                                ><X class="size-3" /></button>
-                                                        </span>
-                                                    {/each}
-                                                    <input
-                                                        type="text"
-                                                        placeholder="US, GB, !CN…"
-                                                        class="placeholder:text-muted-foreground/50 min-w-[6rem] flex-1 bg-transparent text-xs outline-none"
-                                                        onkeydown={(e) =>
-                                                            onTagKeydown(e, key, "countries")} />
+                                                    class="flex flex-col gap-1.5 md:col-span-2"
+                                                    data-settings-search-path="library_profiles.filter_rules.content_ratings">
+                                                    <Label class="text-sm font-semibold"
+                                                        >Content Ratings</Label>
+                                                    <div
+                                                        class="border-border/60 bg-background/40 flex min-h-[2.5rem] flex-wrap gap-1.5 rounded-lg border p-2">
+                                                        {#each profile.filter_rules?.content_ratings ?? [] as tag, i (tag)}
+                                                            <span
+                                                                class="border-border/70 bg-muted/50 text-foreground flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
+                                                                {tag}
+                                                                <button
+                                                                    type="button"
+                                                                    onclick={() =>
+                                                                        removeTag(
+                                                                            key,
+                                                                            "content_ratings",
+                                                                            i
+                                                                        )}
+                                                                    class="opacity-60 hover:opacity-100"
+                                                                    ><X class="size-3" /></button>
+                                                            </span>
+                                                        {/each}
+                                                        <input
+                                                            type="text"
+                                                            placeholder="G, PG, PG-13, TV-MA…"
+                                                            class="placeholder:text-muted-foreground/50 min-w-[10rem] flex-1 bg-transparent text-xs outline-none"
+                                                            onkeydown={(e) =>
+                                                                onTagKeydown(
+                                                                    e,
+                                                                    key,
+                                                                    "content_ratings"
+                                                                )} />
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="flex flex-col gap-1.5 md:col-span-2">
-                                                <Label
-                                                    class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-                                                    >Networks <span
-                                                        class="text-muted-foreground/70 font-normal normal-case"
-                                                        >(! to exclude)</span
-                                                    ></Label>
                                                 <div
-                                                    class="border-border/60 bg-background/40 flex min-h-[2.5rem] flex-wrap gap-1.5 rounded-lg border p-2">
-                                                    {#each profile.filter_rules?.networks ?? [] as tag, i (tag)}
-                                                        <span
-                                                            class="border-border/70 bg-muted/50 text-foreground flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
-                                                            {tag}
-                                                            <button
-                                                                type="button"
-                                                                onclick={() =>
-                                                                    removeTag(key, "networks", i)}
-                                                                class="opacity-60 hover:opacity-100"
-                                                                ><X class="size-3" /></button>
-                                                        </span>
-                                                    {/each}
-                                                    <input
-                                                        type="text"
-                                                        placeholder="HBO, Netflix, !Fox…"
-                                                        class="placeholder:text-muted-foreground/50 min-w-[8rem] flex-1 bg-transparent text-xs outline-none"
-                                                        onkeydown={(e) =>
-                                                            onTagKeydown(e, key, "networks")} />
+                                                    class="flex flex-col gap-1.5"
+                                                    data-settings-search-path="library_profiles.filter_rules.languages">
+                                                    <Label class="text-sm font-semibold"
+                                                        >Languages <span
+                                                            class="text-muted-foreground/70 font-normal"
+                                                            >(! to exclude)</span
+                                                        ></Label>
+                                                    <div
+                                                        class="border-border/60 bg-background/40 flex min-h-[2.5rem] flex-wrap gap-1.5 rounded-lg border p-2">
+                                                        {#each profile.filter_rules?.languages ?? [] as tag, i (tag)}
+                                                            <span
+                                                                class="border-border/70 bg-muted/50 text-foreground flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
+                                                                {tag}
+                                                                <button
+                                                                    type="button"
+                                                                    onclick={() =>
+                                                                        removeTag(
+                                                                            key,
+                                                                            "languages",
+                                                                            i
+                                                                        )}
+                                                                    class="opacity-60 hover:opacity-100"
+                                                                    ><X class="size-3" /></button>
+                                                            </span>
+                                                        {/each}
+                                                        <input
+                                                            type="text"
+                                                            placeholder="en, !zh…"
+                                                            class="placeholder:text-muted-foreground/50 min-w-[6rem] flex-1 bg-transparent text-xs outline-none"
+                                                            onkeydown={(e) =>
+                                                                onTagKeydown(
+                                                                    e,
+                                                                    key,
+                                                                    "languages"
+                                                                )} />
+                                                    </div>
+                                                </div>
+
+                                                <div
+                                                    class="flex flex-col gap-1.5"
+                                                    data-settings-search-path="library_profiles.filter_rules.countries">
+                                                    <Label class="text-sm font-semibold"
+                                                        >Countries <span
+                                                            class="text-muted-foreground/70 font-normal"
+                                                            >(! to exclude)</span
+                                                        ></Label>
+                                                    <div
+                                                        class="border-border/60 bg-background/40 flex min-h-[2.5rem] flex-wrap gap-1.5 rounded-lg border p-2">
+                                                        {#each profile.filter_rules?.countries ?? [] as tag, i (tag)}
+                                                            <span
+                                                                class="border-border/70 bg-muted/50 text-foreground flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
+                                                                {tag}
+                                                                <button
+                                                                    type="button"
+                                                                    onclick={() =>
+                                                                        removeTag(
+                                                                            key,
+                                                                            "countries",
+                                                                            i
+                                                                        )}
+                                                                    class="opacity-60 hover:opacity-100"
+                                                                    ><X class="size-3" /></button>
+                                                            </span>
+                                                        {/each}
+                                                        <input
+                                                            type="text"
+                                                            placeholder="US, GB, !CN…"
+                                                            class="placeholder:text-muted-foreground/50 min-w-[6rem] flex-1 bg-transparent text-xs outline-none"
+                                                            onkeydown={(e) =>
+                                                                onTagKeydown(
+                                                                    e,
+                                                                    key,
+                                                                    "countries"
+                                                                )} />
+                                                    </div>
+                                                </div>
+
+                                                <div
+                                                    class="flex flex-col gap-1.5 md:col-span-2"
+                                                    data-settings-search-path="library_profiles.filter_rules.networks">
+                                                    <Label class="text-sm font-semibold"
+                                                        >Networks <span
+                                                            class="text-muted-foreground/70 font-normal"
+                                                            >(! to exclude)</span
+                                                        ></Label>
+                                                    <div
+                                                        class="border-border/60 bg-background/40 flex min-h-[2.5rem] flex-wrap gap-1.5 rounded-lg border p-2">
+                                                        {#each profile.filter_rules?.networks ?? [] as tag, i (tag)}
+                                                            <span
+                                                                class="border-border/70 bg-muted/50 text-foreground flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
+                                                                {tag}
+                                                                <button
+                                                                    type="button"
+                                                                    onclick={() =>
+                                                                        removeTag(
+                                                                            key,
+                                                                            "networks",
+                                                                            i
+                                                                        )}
+                                                                    class="opacity-60 hover:opacity-100"
+                                                                    ><X class="size-3" /></button>
+                                                            </span>
+                                                        {/each}
+                                                        <input
+                                                            type="text"
+                                                            placeholder="HBO, Netflix, !Fox…"
+                                                            class="placeholder:text-muted-foreground/50 min-w-[8rem] flex-1 bg-transparent text-xs outline-none"
+                                                            onkeydown={(e) =>
+                                                                onTagKeydown(e, key, "networks")} />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </SettingsDetailsCard>
+                                        </SettingsDetailsCard>
+                                    </div>
                                 </div>
                             </div>
 

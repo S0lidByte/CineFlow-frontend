@@ -179,6 +179,99 @@ export function buildRankingShortcutEntries(): SettingsSearchEntry[] {
     }));
 }
 
+const LIBRARY_PROFILES_SHORTCUTS: {
+    path: string;
+    label: string;
+    description: string;
+    keywords: string[];
+}[] = [
+    {
+        path: "library_profiles.name",
+        label: "Profile name",
+        description: "Human-readable library profile name",
+        keywords: ["name", "profile"]
+    },
+    {
+        path: "library_profiles.library_path",
+        label: "Library path",
+        description: "VFS path prefix for a profile (e.g. /anime)",
+        keywords: ["path", "vfs", "library_path"]
+    },
+    {
+        path: "library_profiles.enabled",
+        label: "Profile enabled",
+        description: "Include this profile when matching media",
+        keywords: ["enabled", "toggle"]
+    },
+    {
+        path: "library_profiles.filter_rules.content_types",
+        label: "Content types",
+        description: "Restrict profile to movie and/or show",
+        keywords: ["movie", "show", "content_types"]
+    },
+    {
+        path: "library_profiles.filter_rules.is_anime",
+        label: "Anime only",
+        description: "Match only anime-flagged content",
+        keywords: ["anime", "is_anime"]
+    },
+    {
+        path: "library_profiles.filter_rules.genres",
+        label: "Genres filter",
+        description: "Include or exclude genres (!prefix to exclude)",
+        keywords: ["genres", "filter"]
+    },
+    {
+        path: "library_profiles.filter_rules.min_year",
+        label: "Year range",
+        description: "Minimum and maximum release year",
+        keywords: ["year", "min_year", "max_year"]
+    },
+    {
+        path: "library_profiles.filter_rules.min_rating",
+        label: "Rating range",
+        description: "Minimum and maximum rating (0–10)",
+        keywords: ["rating", "min_rating", "max_rating"]
+    },
+    {
+        path: "library_profiles.filter_rules.content_ratings",
+        label: "Content ratings",
+        description: "G, PG, TV-MA, and similar ratings",
+        keywords: ["content_ratings", "pg", "tv-ma"]
+    },
+    {
+        path: "library_profiles.filter_rules.languages",
+        label: "Languages filter",
+        description: "Include or exclude languages",
+        keywords: ["languages", "lang"]
+    },
+    {
+        path: "library_profiles.filter_rules.countries",
+        label: "Countries filter",
+        description: "Include or exclude countries",
+        keywords: ["countries"]
+    },
+    {
+        path: "library_profiles.filter_rules.networks",
+        label: "Networks filter",
+        description: "Include or exclude networks (HBO, Netflix, …)",
+        keywords: ["networks", "hbo", "netflix"]
+    }
+];
+
+/** Library Profiles field shortcuts (custom tab — not in JSON schema). */
+export function buildLibraryProfilesShortcutEntries(): SettingsSearchEntry[] {
+    return LIBRARY_PROFILES_SHORTCUTS.map((item) => ({
+        id: `field:${item.path}`,
+        kind: "field" as const,
+        tabId: "library-profiles",
+        label: item.label,
+        description: item.description,
+        path: item.path,
+        keywords: item.keywords
+    }));
+}
+
 export function mergeSearchEntries(...groups: SettingsSearchEntry[][]): SettingsSearchEntry[] {
     const byId = new Map<string, SettingsSearchEntry>();
     for (const group of groups) {
@@ -230,16 +323,27 @@ export function filterSearchEntries(
 
 /** Match a focus path to a rendered field card in the settings form.
  *
- * Single-pass scan: tests each field for an exact attr match first, then a
- * leaf-key attr match, then a text-content match. Tracks the best weak match
- * seen so far and returns it as a fallback — avoiding a second full traversal.
+ * Prefers custom-panel anchors (`data-settings-search-path`), then SJSF fields.
  */
 export function findFieldElement(focusPath: string): HTMLElement | null {
+    const normalizedPath = focusPath.toLowerCase();
+    const exactCustom = document.querySelector<HTMLElement>(
+        `[data-settings-search-path="${CSS.escape(focusPath)}"]`
+    );
+    if (exactCustom) return exactCustom;
+
+    const customNodes = document.querySelectorAll<HTMLElement>("[data-settings-search-path]");
+    for (const node of customNodes) {
+        const path = node.getAttribute("data-settings-search-path")?.toLowerCase() ?? "";
+        if (path === normalizedPath || path.endsWith(`.${normalizedPath.split(".").pop()}`)) {
+            return node;
+        }
+    }
+
     const form = document.querySelector(".settings-form");
     if (!form) return null;
 
     const leaf = focusPath.split(".").pop()?.toLowerCase() ?? "";
-    const normalizedPath = focusPath.toLowerCase();
     const leafHuman = leaf.replace(/_/g, " ");
     const fields = form.querySelectorAll<HTMLElement>('[data-slot="field"]');
 
@@ -276,7 +380,7 @@ export function highlightAndScrollToField(focusPath: string): boolean {
     const el = findFieldElement(focusPath);
     if (!el) return false;
 
-    // Expand any collapsed ancestor fieldsets so the target is visible.
+    // Expand any collapsed ancestor fieldsets / details so the target is visible.
     let ancestor: HTMLElement | null = el;
     while (ancestor) {
         if (
@@ -293,11 +397,14 @@ export function highlightAndScrollToField(focusPath: string): boolean {
             if (content) content.hidden = false;
             legend?.setAttribute("aria-expanded", "true");
         }
+        if (ancestor instanceof HTMLDetailsElement) {
+            ancestor.open = true;
+        }
         ancestor = ancestor.parentElement;
     }
 
     document
-        .querySelectorAll(".settings-form [data-settings-focus='true']")
+        .querySelectorAll("[data-settings-focus='true']")
         .forEach((node) => node.removeAttribute("data-settings-focus"));
 
     el.setAttribute("data-settings-focus", "true");

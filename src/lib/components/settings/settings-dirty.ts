@@ -1,12 +1,11 @@
 import { writable } from "svelte/store";
 
 /**
- * Dirty-state contract for custom settings panels (Library Profiles, etc.).
- * Ranking keeps its own local dirty tracking and does not use this store.
+ * Dirty-state contract for custom settings panels (Library Profiles, Ranking).
  *
  * The settings shell merges this with SJSF `form.isChanged` for:
  * - tab-switch discard confirmation
- * - (optionally) header status on custom tabs that report here
+ * - sticky save bar / header status on custom tabs that report here
  */
 export type CustomDirtyState = {
     isDirty: boolean;
