@@ -25,7 +25,9 @@
     import ExternalLink from "@lucide/svelte/icons/external-link";
     import {
         RANKING_PRESETS,
+        TITLE_MATCHING_MODES,
         applyRankingPreset,
+        applyTitleMatchingMode,
         clientValidatePatterns,
         countRejecting,
         denyKeyFor,
@@ -36,7 +38,8 @@
         patternsToLines,
         type RankingPreset,
         type RankingSettings,
-        type CustomRankValue
+        type CustomRankValue,
+        type TitleMatchingMode
     } from "./ranking-presets";
     import { clearCustomDirty, customDirtyStore } from "./settings-dirty";
 
@@ -46,6 +49,7 @@
         categories: Record<string, string>;
         soft_opt_in_links?: Record<string, { scraping_path: string; label: string }>;
         pattern_limits?: { max_patterns_per_list?: number; max_pattern_length?: number };
+        title_matching_modes?: TitleMatchingMode[];
     }
 
     interface TestResult {
@@ -56,6 +60,22 @@
         deny_reason?: string | null;
         deny_help?: string | null;
         scraping_hint?: string | null;
+        title_similarity_threshold?: number | null;
+        message?: string;
+    }
+
+    interface FunnelSummary {
+        found: boolean;
+        item_id?: number | null;
+        item_log?: string | null;
+        found_count: number;
+        ranked: number;
+        new: number;
+        already_known: number;
+        blacklisted: number;
+        rtn_rejected: number;
+        content_filtered: number;
+        rtn_top: { reason: string; count: number }[];
         message?: string;
     }
 
@@ -152,6 +172,12 @@
     let testResult = $state<TestResult | null>(null);
     let patternPreview = $state<PatternPreview | null>(null);
     let patternErrors = $state<string[]>([]);
+    let funnelItemId = $state("");
+    let funnelSummary = $state<FunnelSummary | null>(null);
+    let isLoadingFunnel = $state(false);
+    const matchingModes = $derived(
+        meta.title_matching_modes?.length ? meta.title_matching_modes : TITLE_MATCHING_MODES
+    );
 
     let requireText = $state(patternsToLines(untrack(() => ranking.require)));
     let excludeText = $state(patternsToLines(untrack(() => ranking.exclude)));
@@ -379,6 +405,43 @@
         ];
         patternErrors = all;
         return all.length === 0;
+    }
+
+    function applyMatchingMode(mode: TitleMatchingMode) {
+        localRanking = applyTitleMatchingMode(localRanking, mode);
+        toast.success(
+            mode.diagnose_only
+                ? `Applied diagnose mode: ${mode.label} (temporary)`
+                : `Applied matching mode: ${mode.label}`
+        );
+    }
+
+    function handleFunnelResult(result: {
+        type: string;
+        data?: FunnelSummary & { error?: string; success?: boolean };
+    }) {
+        isLoadingFunnel = false;
+        if (result.type === "success" && result.data?.success) {
+            funnelSummary = {
+                found: Boolean(result.data.found),
+                item_id: result.data.item_id,
+                item_log: result.data.item_log,
+                found_count: Number(result.data.found_count ?? 0),
+                ranked: Number(result.data.ranked ?? 0),
+                new: Number(result.data.new ?? 0),
+                already_known: Number(result.data.already_known ?? 0),
+                blacklisted: Number(result.data.blacklisted ?? 0),
+                rtn_rejected: Number(result.data.rtn_rejected ?? 0),
+                content_filtered: Number(result.data.content_filtered ?? 0),
+                rtn_top: Array.isArray(result.data.rtn_top) ? result.data.rtn_top : [],
+                message: result.data.message
+            };
+            if (!funnelSummary.found) {
+                toast.message(funnelSummary.message ?? "No recent funnel for this item");
+            }
+        } else {
+            toast.error(result.data?.error ?? "Funnel lookup failed");
+        }
     }
 </script>
 
@@ -749,6 +812,41 @@
 
         <Tabs.Content value="options" class="mt-3 space-y-3">
             <div class="border-border/60 bg-card/40 space-y-4 rounded-xl border p-4">
+                <div class="space-y-1">
+                    <h3 class="text-sm font-semibold">Title matching mode</h3>
+                    <p class="text-muted-foreground text-xs">
+                        Sets <span class="font-mono">title_similarity</span> for remake / alias diagnose.
+                        Does not silently accept wrong titles — keep Scraping → enable_aliases on for
+                        remakes.
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    {#each matchingModes as mode (mode.id)}
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant={mode.diagnose_only ? "outline" : "secondary"}
+                            onclick={() => applyMatchingMode(mode)}
+                            title={mode.description}>
+                            {mode.label}
+                            <span class="text-muted-foreground ml-1 font-mono text-[10px]">
+                                {mode.title_similarity}
+                            </span>
+                        </Button>
+                    {/each}
+                </div>
+                <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    class="h-7 text-xs"
+                    onclick={() => openScrapingFocus("scraping.enable_aliases")}>
+                    <ExternalLink class="size-3.5" />
+                    Open Scraping: enable aliases
+                </Button>
+            </div>
+
+            <div class="border-border/60 bg-card/40 space-y-4 rounded-xl border p-4">
                 <h3 class="text-sm font-semibold">Core options</h3>
                 <div class="grid gap-4 sm:grid-cols-2">
                     {#if localRanking.options && typeof localRanking.options === "object"}
@@ -923,8 +1021,20 @@
                                 {#if testResult.accepted}
                                     · rank {testResult.rank}
                                     · lev {testResult.lev_ratio.toFixed(3)}
+                                    {#if testResult.title_similarity_threshold != null}
+                                        · threshold {testResult.title_similarity_threshold.toFixed(
+                                            2
+                                        )}
+                                    {/if}
                                 {/if}
                             </p>
+                            {#if !testResult.accepted && testResult.title_similarity_threshold != null}
+                                <p class="text-muted-foreground text-xs">
+                                    Title similarity threshold:
+                                    {testResult.title_similarity_threshold.toFixed(2)}
+                                    (raise aliases / lower threshold only to diagnose remakes)
+                                </p>
+                            {/if}
                             {#if testResult.deny_reason}
                                 <p class="font-mono text-xs">
                                     deny key:
@@ -958,6 +1068,74 @@
                     </div>
                 </div>
             {/if}
+
+            <div class="border-border/60 bg-card/40 space-y-3 rounded-xl border p-4">
+                <div class="space-y-1">
+                    <h3 class="text-sm font-semibold">Scrape funnel summary</h3>
+                    <p class="text-muted-foreground text-xs">
+                        Top deny buckets from the last scrape of an item (found / ranked / new /
+                        rtn_top including title_mismatch). Cached after a scrape on this backend
+                        process.
+                    </p>
+                </div>
+                <form
+                    method="POST"
+                    action="/ranking?/funnel"
+                    use:enhance={({ formData }) => {
+                        formData.set("item_id", funnelItemId.trim());
+                        isLoadingFunnel = true;
+                        return async ({ result }) => {
+                            handleFunnelResult(
+                                result as {
+                                    type: string;
+                                    data?: FunnelSummary & { error?: string; success?: boolean };
+                                }
+                            );
+                        };
+                    }}
+                    class="flex flex-wrap items-end gap-2">
+                    <div class="space-y-1.5">
+                        <Label for="funnel-item-id">Media item id</Label>
+                        <Input
+                            id="funnel-item-id"
+                            class="h-8 w-36 font-mono text-xs"
+                            bind:value={funnelItemId}
+                            placeholder="e.g. 42" />
+                    </div>
+                    <input type="hidden" name="item_id" value={funnelItemId} />
+                    <Button type="submit" size="sm" variant="outline" disabled={isLoadingFunnel}>
+                        {#if isLoadingFunnel}
+                            <Loader2 class="size-3.5 animate-spin" />
+                            Loading…
+                        {:else}
+                            Load funnel
+                        {/if}
+                    </Button>
+                </form>
+                {#if funnelSummary?.found}
+                    <div class="bg-muted/40 space-y-2 rounded-lg p-3 text-xs">
+                        <p class="font-medium">
+                            {funnelSummary.item_log ?? `Item ${funnelSummary.item_id}`}
+                        </p>
+                        <p>
+                            found={funnelSummary.found_count} ranked={funnelSummary.ranked}
+                            new={funnelSummary.new} already_known={funnelSummary.already_known}
+                            blacklisted={funnelSummary.blacklisted}
+                            rtn_rejected={funnelSummary.rtn_rejected}
+                            content_filtered={funnelSummary.content_filtered}
+                        </p>
+                        {#if funnelSummary.rtn_top.length}
+                            <div class="flex flex-wrap gap-1.5">
+                                {#each funnelSummary.rtn_top as bucket (bucket.reason)}
+                                    <Badge variant="outline" class="font-mono text-[10px]">
+                                        {bucket.reason}:{bucket.count}
+                                    </Badge>
+                                {/each}
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
+            </div>
         </Tabs.Content>
     </Tabs.Root>
 </div>

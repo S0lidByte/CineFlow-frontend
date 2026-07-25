@@ -102,6 +102,9 @@ export const actions = {
             logger.error("Ranking pattern pre-validate failed", {
                 error: e instanceof Error ? e.message : String(e)
             });
+            return fail(502, {
+                error: "Could not validate ranking patterns before save. Try again."
+            });
         }
 
         try {
@@ -174,6 +177,10 @@ export const actions = {
                     deny_reason: (data.deny_reason as string | null) ?? null,
                     deny_help: (data.deny_help as string | null) ?? null,
                     scraping_hint: (data.scraping_hint as string | null) ?? null,
+                    title_similarity_threshold:
+                        data.title_similarity_threshold != null
+                            ? Number(data.title_similarity_threshold)
+                            : null,
                     message: (data.message as string) ?? ""
                 }
             };
@@ -240,6 +247,54 @@ export const actions = {
                 error: e instanceof Error ? e.message : String(e)
             });
             return fail(500, { error: "Pattern validation failed" });
+        }
+    },
+
+    funnel: async ({ request, fetch, locals }) => {
+        if (locals.user?.role !== "admin") error(403, "Forbidden");
+
+        const formData = await request.formData();
+        const itemIdRaw = formData.get("item_id");
+        const itemId = typeof itemIdRaw === "string" ? Number(itemIdRaw.trim()) : NaN;
+        if (!Number.isFinite(itemId) || itemId <= 0) {
+            return fail(400, { error: "Valid media item id is required" });
+        }
+
+        try {
+            const res = await fetch(`${locals.backendUrl}/api/v1/ranking/funnel/${itemId}`, {
+                headers: {
+                    "x-api-key": locals.apiKey,
+                    ...SETTINGS_WRITE_HEADERS
+                }
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                logger.error("Funnel summary HTTP error", { status: res.status, text });
+                return fail(res.status, { error: `Funnel lookup failed (${res.status})` });
+            }
+
+            const data = (await res.json()) as Record<string, unknown>;
+            return {
+                success: true,
+                found: Boolean(data.found),
+                item_id: data.item_id ?? itemId,
+                item_log: (data.item_log as string | null) ?? null,
+                found_count: Number(data.found_count ?? 0),
+                ranked: Number(data.ranked ?? 0),
+                new: Number(data.new ?? 0),
+                already_known: Number(data.already_known ?? 0),
+                blacklisted: Number(data.blacklisted ?? 0),
+                rtn_rejected: Number(data.rtn_rejected ?? 0),
+                content_filtered: Number(data.content_filtered ?? 0),
+                rtn_top: Array.isArray(data.rtn_top) ? data.rtn_top : [],
+                message: (data.message as string) ?? ""
+            };
+        } catch (e) {
+            logger.error("Funnel lookup failed", {
+                error: e instanceof Error ? e.message : String(e)
+            });
+            return fail(500, { error: "Funnel lookup failed" });
         }
     }
 } satisfies Actions;

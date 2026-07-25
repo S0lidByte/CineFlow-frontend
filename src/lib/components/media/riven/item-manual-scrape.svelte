@@ -268,13 +268,22 @@
         servicesCompleted: number;
         totalServices: number;
         message: string | null;
+        funnel: {
+            found: number;
+            ranked: number;
+            new: number;
+            rtn_rejected: number;
+            content_filtered: number;
+            rtn_top: { reason: string; count: number }[];
+        } | null;
     }>({
         isStreaming: false,
         currentService: null,
         totalStreams: 0,
         servicesCompleted: 0,
         totalServices: 0,
-        message: null
+        message: null,
+        funnel: null
     });
     let eventSourceRef = $state<EventSource | null>(null);
 
@@ -538,7 +547,8 @@
             totalStreams: 0,
             servicesCompleted: 0,
             totalServices: 0,
-            message: null
+            message: null,
+            funnel: null
         };
     }
 
@@ -858,7 +868,8 @@
                 totalStreams: 0,
                 servicesCompleted: 0,
                 totalServices: 0,
-                message: "Starting scrape..."
+                message: "Starting scrape...",
+                funnel: null
             };
 
             eventSource.onmessage = (event) => {
@@ -896,13 +907,36 @@
                             );
                         }
                     } else if (data.event === "complete") {
+                        const funnelRaw = data.funnel as
+                            | {
+                                  found?: number;
+                                  ranked?: number;
+                                  new?: number;
+                                  rtn_rejected?: number;
+                                  content_filtered?: number;
+                                  rtn_top?: { reason: string; count: number }[];
+                              }
+                            | null
+                            | undefined;
                         streamingProgress = {
                             ...streamingProgress,
                             isStreaming: false,
                             currentService: null,
                             totalStreams: data.total_streams,
                             servicesCompleted: data.services_completed,
-                            message: data.message
+                            message: data.message,
+                            funnel: funnelRaw
+                                ? {
+                                      found: Number(funnelRaw.found ?? 0),
+                                      ranked: Number(funnelRaw.ranked ?? 0),
+                                      new: Number(funnelRaw.new ?? 0),
+                                      rtn_rejected: Number(funnelRaw.rtn_rejected ?? 0),
+                                      content_filtered: Number(funnelRaw.content_filtered ?? 0),
+                                      rtn_top: Array.isArray(funnelRaw.rtn_top)
+                                          ? funnelRaw.rtn_top
+                                          : []
+                                  }
+                                : null
                         };
 
                         // Final update of streams
@@ -1639,6 +1673,27 @@
                                         {streamingProgress.totalStreams} streams found
                                     </Badge>
                                 </div>
+                                {#if streamingProgress.funnel}
+                                    <div
+                                        class="text-muted-foreground mt-2 space-y-1 border-t pt-2 text-[11px]">
+                                        <p>
+                                            Funnel: found={streamingProgress.funnel.found}
+                                            ranked={streamingProgress.funnel.ranked}
+                                            new={streamingProgress.funnel.new}
+                                            rtn_rejected={streamingProgress.funnel.rtn_rejected}
+                                            content_filtered={streamingProgress.funnel
+                                                .content_filtered}
+                                        </p>
+                                        {#if streamingProgress.funnel.rtn_top.length}
+                                            <p class="font-mono">
+                                                rtn_top=
+                                                {streamingProgress.funnel.rtn_top
+                                                    .map((b) => `${b.reason}:${b.count}`)
+                                                    .join(", ")}
+                                            </p>
+                                        {/if}
+                                    </div>
+                                {/if}
                             </div>
                         </div>
                     {/if}
