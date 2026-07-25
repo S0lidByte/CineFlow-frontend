@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.9.0...riven-frontend-v1.9.1) (2026-07-25)
+
+### Bug Fixes
+
+- **ranking:** sync FormData after editor commits and fail closed on pre-validate ([#72](https://github.com/S0lidByte/CineFlow-frontend/issues/72)) ([c56849f](https://github.com/S0lidByte/CineFlow-frontend/commit/c56849fad6fb307955ffa2d45820dc7a2491f3be))
+
 ## [1.9.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.8.0...riven-frontend-v1.9.0) (2026-07-25)
 
 ### Features
