@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.8.0...riven-frontend-v1.9.0) (2026-07-25)
+
+
+### Features
+
+* **settings:** Ranking Studio P0 — languages, patterns, presets ([#70](https://github.com/S0lidByte/CineFlow-frontend/issues/70)) ([cf57a2b](https://github.com/S0lidByte/CineFlow-frontend/commit/cf57a2b90013807d51fec91c2dd534ff1c2fb7db))
+
 ## [1.8.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.7.1...riven-frontend-v1.8.0) (2026-07-24)
 
 ### Features
