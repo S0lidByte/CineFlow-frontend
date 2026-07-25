@@ -2,6 +2,7 @@ import { error, redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import providers from "$lib/providers";
 import { dev } from "$app/environment";
+import { randomBytes } from "node:crypto";
 
 /** GET: Start Trakt OAuth — redirects browser to Trakt authorize URL. */
 export const GET: RequestHandler = async ({ locals, fetch: fetchFn, url, cookies }) => {
@@ -35,5 +36,16 @@ export const GET: RequestHandler = async ({ locals, fetch: fetchFn, url, cookies
         maxAge: 60 * 10
     });
 
-    throw redirect(302, res.data.auth_url);
+    const state = randomBytes(24).toString("hex");
+    cookies.set("trakt_oauth_state", state, {
+        path: "/",
+        httpOnly: true,
+        secure: !dev,
+        sameSite: "lax",
+        maxAge: 60 * 10
+    });
+
+    const authUrl = new URL(res.data.auth_url);
+    authUrl.searchParams.set("state", state);
+    throw redirect(302, authUrl.toString());
 };

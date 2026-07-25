@@ -23,6 +23,7 @@
     let status = $state<Status | null>(null);
     let loading = $state(true);
     let disconnecting = $state(false);
+    let origin = $state("");
 
     async function refreshStatus() {
         loading = true;
@@ -50,30 +51,41 @@
             }
             toast.success("Trakt disconnected");
             await refreshStatus();
+        } catch {
+            toast.error("Failed to disconnect Trakt");
         } finally {
             disconnecting = false;
         }
     }
 
     onMount(() => {
+        origin = window.location.origin;
         const trakt = $page.url.searchParams.get("trakt");
         const message = $page.url.searchParams.get("message");
         if (trakt === "connected") {
             toast.success("Trakt connected");
         } else if (trakt === "error") {
-            toast.error(message ? decodeURIComponent(message) : "Trakt OAuth failed");
+            toast.error(message || "Trakt OAuth failed");
         }
         void refreshStatus();
     });
 
-    const canConnect = $derived(
-        !!status && status.has_client_id && status.has_client_secret && !!status.redirect_uri
+    const expectedRedirect = $derived(
+        origin ? `${origin}/api/trakt/oauth/callback` : "{ORIGIN}/api/trakt/oauth/callback"
     );
 
-    const expectedRedirect = $derived(
-        typeof window !== "undefined"
-            ? `${window.location.origin}/api/trakt/oauth/callback`
-            : "{ORIGIN}/api/trakt/oauth/callback"
+    const redirectMatches = $derived(
+        !!status?.redirect_uri &&
+            !!origin &&
+            status.redirect_uri.trim() === `${origin}/api/trakt/oauth/callback`
+    );
+
+    const canConnect = $derived(
+        !!status &&
+            status.has_client_id &&
+            status.has_client_secret &&
+            redirectMatches &&
+            !status.connected
     );
 </script>
 
@@ -106,7 +118,7 @@
                 Connected
             </span>
         {:else}
-            <span class="text-muted-foreground bg-muted rounded-md px-2 py-1 text-xs font-medium">
+            <span class="bg-muted text-muted-foreground rounded-md px-2 py-1 text-xs font-medium">
                 Not connected
             </span>
         {/if}
@@ -116,6 +128,12 @@
         <p class="text-xs text-amber-700 dark:text-amber-400">
             Set <span class="font-mono">oauth_redirect_uri</span> below to
             <span class="font-mono">{expectedRedirect}</span>, save, then Connect.
+        </p>
+    {:else if status && status.redirect_uri && !redirectMatches}
+        <p class="text-xs text-amber-700 dark:text-amber-400">
+            Redirect URI mismatch. Saved
+            <span class="font-mono">{status.redirect_uri}</span> must equal
+            <span class="font-mono">{expectedRedirect}</span>.
         </p>
     {:else if status && (!status.has_client_id || !status.has_client_secret)}
         <p class="text-xs text-amber-700 dark:text-amber-400">

@@ -293,10 +293,31 @@ export function applyTitleMatchingMode(
     ranking: RankingSettings,
     mode: TitleMatchingMode
 ): RankingSettings {
+    // Tester-only modes must not mutate live ranking.options (prevents saving
+    // remake_diagnose as the scrape threshold).
+    if (mode.diagnose_only) {
+        return ranking;
+    }
     const next = structuredClone(ranking);
     next.options = {
         ...(next.options ?? {}),
         title_similarity: mode.title_similarity
+    };
+    return next;
+}
+
+/** Build a ranking payload for the tester, applying diagnose_only overrides. */
+export function rankingForTester(
+    ranking: RankingSettings,
+    testerMode: TitleMatchingMode | null
+): RankingSettings {
+    if (!testerMode?.diagnose_only) {
+        return ranking;
+    }
+    const next = structuredClone(ranking);
+    next.options = {
+        ...(next.options ?? {}),
+        title_similarity: testerMode.title_similarity
     };
     return next;
 }

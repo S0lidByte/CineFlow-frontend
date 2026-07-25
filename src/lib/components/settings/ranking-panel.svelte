@@ -28,6 +28,7 @@
         TITLE_MATCHING_MODES,
         applyRankingPreset,
         applyTitleMatchingMode,
+        rankingForTester,
         clientValidatePatterns,
         countRejecting,
         denyKeyFor,
@@ -106,6 +107,8 @@
     let baselineJson = $state(JSON.stringify(untrack(() => normalizeRanking(ranking))));
     let isDirty = $derived(JSON.stringify(localRanking) !== baselineJson);
     let isSaving = $state(false);
+    /** Tester-only remake_diagnose threshold — never written into saveable ranking. */
+    let testerMatchingMode = $state<TitleMatchingMode | null>(null);
 
     let langRequired = $state([...ensureLanguages(untrack(() => ranking)).required]);
     let langAllowed = $state([...ensureLanguages(untrack(() => ranking)).allowed]);
@@ -408,12 +411,20 @@
     }
 
     function applyMatchingMode(mode: TitleMatchingMode) {
+        if (mode.diagnose_only) {
+            testerMatchingMode = mode;
+            toast.success(
+                `Tester-only: ${mode.label} (threshold ${mode.title_similarity} applies to Tester only — not saved)`
+            );
+            return;
+        }
+        testerMatchingMode = null;
         localRanking = applyTitleMatchingMode(localRanking, mode);
-        toast.success(
-            mode.diagnose_only
-                ? `Tester-only: ${mode.label} (not scrape-applied — use remake aliases for live remakes)`
-                : `Scrape-applied when saved: ${mode.label}`
-        );
+        toast.success(`Scrape-applied when saved: ${mode.label}`);
+    }
+
+    function rankingPayloadForTest(): RankingSettings {
+        return rankingForTester(localRanking, testerMatchingMode);
     }
 
     function handleFunnelResult(result: {
@@ -982,9 +993,10 @@
                     use:enhance={({ formData }) => {
                         commitPatternEditors();
                         commitLanguageEditors();
+                        const payload = rankingPayloadForTest();
                         formData.set("raw_title", testTitle);
                         formData.set("correct_title", testCorrect);
-                        formData.set("ranking", JSON.stringify(localRanking));
+                        formData.set("ranking", JSON.stringify(payload));
                         isTesting = true;
                         return async ({ result }) => {
                             handleTestResult(
@@ -1002,7 +1014,10 @@
                     class="flex flex-wrap gap-2">
                     <input type="hidden" name="raw_title" value={testTitle} />
                     <input type="hidden" name="correct_title" value={testCorrect} />
-                    <input type="hidden" name="ranking" value={JSON.stringify(localRanking)} />
+                    <input
+                        type="hidden"
+                        name="ranking"
+                        value={JSON.stringify(rankingPayloadForTest())} />
                     <Button type="submit" size="sm" disabled={isTesting || !testTitle.trim()}>
                         {#if isTesting}
                             <Loader2 class="size-3.5 animate-spin" />

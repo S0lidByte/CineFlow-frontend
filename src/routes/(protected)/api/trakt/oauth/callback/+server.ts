@@ -2,6 +2,25 @@ import { error, redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import providers from "$lib/providers";
 
+const FALLBACK = "/settings?tab=content";
+
+function safeSameOriginNext(raw: string | undefined, origin: string): string {
+    if (!raw) return FALLBACK;
+    let decoded: string;
+    try {
+        decoded = decodeURIComponent(raw);
+    } catch {
+        return FALLBACK;
+    }
+    try {
+        const target = new URL(decoded, origin);
+        if (target.origin !== origin) return FALLBACK;
+        return `${target.pathname}${target.search}${target.hash}` || FALLBACK;
+    } catch {
+        return FALLBACK;
+    }
+}
+
 /**
  * GET: Trakt OAuth callback (browser redirect from trakt.tv).
  *
@@ -16,16 +35,25 @@ export const GET: RequestHandler = async ({ locals, fetch: fetchFn, url, cookies
 
     const code = url.searchParams.get("code");
     const oauthError = url.searchParams.get("error");
+    const returnedState = url.searchParams.get("state");
+    const expectedState = cookies.get("trakt_oauth_state");
     const nextCookie = cookies.get("trakt_oauth_next");
     cookies.delete("trakt_oauth_next", { path: "/" });
+    cookies.delete("trakt_oauth_state", { path: "/" });
 
-    const fallback = "/settings?tab=content";
-    const nextBase = nextCookie ? decodeURIComponent(nextCookie) : fallback;
+    const nextBase = safeSameOriginNext(nextCookie, url.origin);
 
     if (oauthError) {
         throw redirect(
             303,
             `/settings?tab=content&trakt=error&message=${encodeURIComponent(oauthError)}`
+        );
+    }
+
+    if (!expectedState || !returnedState || returnedState !== expectedState) {
+        throw redirect(
+            303,
+            `/settings?tab=content&trakt=error&message=${encodeURIComponent("invalid_state")}`
         );
     }
 
