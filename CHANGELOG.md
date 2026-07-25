@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.10.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.9.1...riven-frontend-v1.10.0) (2026-07-25)
+
+### Features
+
+- **settings:** Ranking Studio P1 funnel, matching modes, fail-closed save ([#74](https://github.com/S0lidByte/CineFlow-frontend/issues/74)) ([67248c0](https://github.com/S0lidByte/CineFlow-frontend/commit/67248c02db271b24366a03a56ef2d8852591ab5a))
+
 ## [1.9.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.9.0...riven-frontend-v1.9.1) (2026-07-25)
 
 ### Bug Fixes
