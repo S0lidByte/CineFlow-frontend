@@ -121,15 +121,21 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         howToUse: [
             "Enable content providers (Mdblist, Trakt, etc.) that should feed new requests.",
             "Map watchlist IDs and API keys from each provider’s dashboard.",
+            "For Trakt OAuth: save Client ID/Secret + redirect URI ({ORIGIN}/api/trakt/oauth/callback), then use Connect Trakt.",
             "Tune polling so new items are picked up without exceeding rate limits."
         ],
         tips: [
             "Overseerr can still request directly — content settings add parallel discovery paths.",
+            "Trakt redirect URI must be the frontend BFF callback, not the backend /api/v1 route.",
             "Use Cmd+K to find obscure provider fields quickly."
         ],
         highlights: [
             { title: "Watchlists", detail: "Auto-request media when lists update." },
-            { title: "Discovery", detail: "Supplements manual search in Explore." }
+            { title: "Discovery", detail: "Supplements manual search in Explore." },
+            {
+                title: "Trakt Connect",
+                detail: "OAuth button above the form; tokens stay server-side."
+            }
         ]
     },
     scraping: {
@@ -138,7 +144,8 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Configure indexers (Jackett, Prowlarr URLs, etc.) with correct API keys.",
             "Enable scrapers that match your indexer capabilities and quality preferences.",
             "Set concurrency and timeouts — too aggressive scraping triggers indexer bans.",
-            "Anime soft-opt-ins (extras.dubbed / MULTI audio) live here — Ranking Studio deep-links to them."
+            "Anime soft-opt-ins (extras.dubbed / MULTI audio) live here — Ranking Studio deep-links to them.",
+            "Remake aliases (enable_remake_aliases + remake_alias_groups) are opt-in for live scrape remakes."
         ],
         cautions: ["Indexer misconfiguration is the #1 cause of 'no results' after a request."],
         tips: [
@@ -158,7 +165,8 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Presets (Balanced, WEB-DL, Strict, Anime Dub Friendly, Remux Max, Kids Safe) apply ranking packs only.",
             "Paste a release title in Tester to preview accept/reject without saving.",
             "When Tester shows extras_dubbed or missing_required_language, follow the Scraping soft-opt-in link.",
-            "title_mismatch / remakes: use Title matching modes + enable_aliases — do not leave remake_diagnose on permanently.",
+            "title_mismatch / remakes: matching modes with scrape badge write title_similarity; remake_diagnose is tester-only.",
+            "Live remakes: Scraping → enable_remake_aliases + remake_alias_groups (default off) — not silent acceptance.",
             "Load scrape funnel by item id to see rtn_top deny buckets after a scrape."
         ],
         tips: [

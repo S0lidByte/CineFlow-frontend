@@ -31,6 +31,7 @@
         AlertDialogTitle
     } from "$lib/components/ui/alert-dialog/index.js";
     import SettingsFormContent from "$lib/components/settings/settings-form-content.svelte";
+    import TraktConnectPanel from "$lib/components/settings/trakt-connect-panel.svelte";
     import SettingsTabGuide from "$lib/components/settings/settings-tab-guide.svelte";
     import LibraryProfilesPanel from "$lib/components/settings/library-profiles-panel.svelte";
     import RankingPanel from "$lib/components/settings/ranking-panel.svelte";
@@ -579,6 +580,9 @@
                                     categories: Record<string, string>;
                                 }} />
                         {:else if $page.data.form}
+                            {#if $page.data.activeTabId === "content"}
+                                <TraktConnectPanel />
+                            {/if}
                             <SettingsFormContent
                                 {formStore}
                                 pageData={$page.data as import("./$types").PageData}
