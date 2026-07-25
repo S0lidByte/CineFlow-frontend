@@ -346,8 +346,8 @@ export function clientValidatePatterns(patterns: string[]): string[] {
                 pattern.startsWith("/") && pattern.endsWith("/") && pattern.length > 2
                     ? pattern.slice(1, -1)
                     : pattern;
-            // eslint-disable-next-line no-new -- validate compile only
-            new RegExp(body, pattern.startsWith("/") && pattern.endsWith("/") ? undefined : "i");
+            const flags = pattern.startsWith("/") && pattern.endsWith("/") ? undefined : "i";
+            void new RegExp(body, flags);
         } catch (e) {
             errors.push(`Pattern ${i + 1}: ${e instanceof Error ? e.message : "invalid regex"}`);
         }

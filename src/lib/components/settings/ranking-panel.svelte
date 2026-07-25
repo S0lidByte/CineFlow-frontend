@@ -15,6 +15,7 @@
     import { toast } from "svelte-sonner";
     import { enhance } from "$app/forms";
     import { goto } from "$app/navigation";
+    import { resolve } from "$app/paths";
     import { onDestroy, untrack } from "svelte";
     import Loader2 from "@lucide/svelte/icons/loader-2";
     import Check from "@lucide/svelte/icons/check";
@@ -274,7 +275,7 @@
         pendingPreset = null;
         showPresetConfirm = false;
         const focus = hints[0]?.path ?? "scraping.anime_allow_extras_dubbed";
-        void goto(`/settings?tab=scraping&focus=${encodeURIComponent(focus)}`);
+        void goto(resolve(`/settings?tab=scraping&focus=${encodeURIComponent(focus)}`));
     }
 
     async function copyDenyKey(key: string) {
@@ -287,7 +288,7 @@
     }
 
     function openScrapingFocus(path: string) {
-        void goto(`/settings?tab=scraping&focus=${encodeURIComponent(path)}`);
+        void goto(resolve(`/settings?tab=scraping&focus=${encodeURIComponent(path)}`));
     }
 
     function scrapingLinkForDeny(deny: string | null | undefined) {
@@ -651,7 +652,7 @@
                                 else preferredText = v;
                             }}
                             onblur={() => commitPatternEditors()}
-                            placeholder={"e.g. \\bmatte\\b"} />
+                            placeholder="e.g. \bmatte\b" />
                     </div>
                 {/each}
 
