@@ -2,10 +2,9 @@
 
 ## [1.10.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.10.0...riven-frontend-v1.10.1) (2026-07-25)
 
-
 ### Bug Fixes
 
-* **ranking:** clear funnel UI state and harden item id validation ([#76](https://github.com/S0lidByte/CineFlow-frontend/issues/76)) ([e3f3dff](https://github.com/S0lidByte/CineFlow-frontend/commit/e3f3dff27765b4135cb0fb99152ebef5353e53ec))
+- **ranking:** clear funnel UI state and harden item id validation ([#76](https://github.com/S0lidByte/CineFlow-frontend/issues/76)) ([e3f3dff](https://github.com/S0lidByte/CineFlow-frontend/commit/e3f3dff27765b4135cb0fb99152ebef5353e53ec))
 
 ## [1.10.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.9.1...riven-frontend-v1.10.0) (2026-07-25)
 
