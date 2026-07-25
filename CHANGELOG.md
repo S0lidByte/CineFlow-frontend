@@ -2,10 +2,9 @@
 
 ## [1.11.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.10.1...riven-frontend-v1.11.0) (2026-07-25)
 
-
 ### Features
 
-* **settings:** Trakt Connect UI and remake matching copy ([#78](https://github.com/S0lidByte/CineFlow-frontend/issues/78)) ([91f5fc1](https://github.com/S0lidByte/CineFlow-frontend/commit/91f5fc1e4871356ad0ecc560724f58d353a9fe30))
+- **settings:** Trakt Connect UI and remake matching copy ([#78](https://github.com/S0lidByte/CineFlow-frontend/issues/78)) ([91f5fc1](https://github.com/S0lidByte/CineFlow-frontend/commit/91f5fc1e4871356ad0ecc560724f58d353a9fe30))
 
 ## [1.10.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.10.0...riven-frontend-v1.10.1) (2026-07-25)
 
