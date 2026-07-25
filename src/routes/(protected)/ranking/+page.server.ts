@@ -88,6 +88,15 @@ export const actions = {
                     const msg = validated.errors?.[0]?.message ?? "Invalid ranking regex patterns";
                     return fail(400, { error: msg });
                 }
+            } else {
+                const text = await validateRes.text();
+                logger.error("Ranking pattern pre-validate returned non-OK status", {
+                    status: validateRes.status,
+                    text
+                });
+                return fail(502, {
+                    error: "Could not validate ranking patterns before save. Try again."
+                });
             }
         } catch (e) {
             logger.error("Ranking pattern pre-validate failed", {

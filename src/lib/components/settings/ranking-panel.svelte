@@ -429,7 +429,7 @@
             <form
                 method="POST"
                 action="/ranking?/save"
-                use:enhance={({ cancel }) => {
+                use:enhance={({ cancel, formData }) => {
                     commitPatternEditors();
                     commitLanguageEditors();
                     if (!runClientPatternCheck()) {
@@ -437,6 +437,9 @@
                         cancel();
                         return;
                     }
+                    // Commit updates localRanking sync, but hidden inputs re-render async —
+                    // write committed payload into FormData so the POST is not stale.
+                    formData.set("ranking", JSON.stringify(localRanking));
                     isSaving = true;
                     return async ({ result }) => {
                         handleSaveResult(
@@ -667,13 +670,17 @@
                 <form
                     method="POST"
                     action="/ranking?/validatePatterns"
-                    use:enhance={({ cancel }) => {
+                    use:enhance={({ cancel, formData }) => {
                         commitPatternEditors();
                         if (!runClientPatternCheck()) {
                             toast.error("Fix client-side pattern errors first");
                             cancel();
                             return;
                         }
+                        formData.set("require", JSON.stringify(localRanking.require ?? []));
+                        formData.set("exclude", JSON.stringify(localRanking.exclude ?? []));
+                        formData.set("preferred", JSON.stringify(localRanking.preferred ?? []));
+                        formData.set("preview_title", testTitle);
                         isValidatingPatterns = true;
                         return async ({ result }) => {
                             handleValidateResult(
@@ -857,9 +864,12 @@
                 <form
                     method="POST"
                     action="/ranking?/test"
-                    use:enhance={() => {
+                    use:enhance={({ formData }) => {
                         commitPatternEditors();
                         commitLanguageEditors();
+                        formData.set("raw_title", testTitle);
+                        formData.set("correct_title", testCorrect);
+                        formData.set("ranking", JSON.stringify(localRanking));
                         isTesting = true;
                         return async ({ result }) => {
                             handleTestResult(
