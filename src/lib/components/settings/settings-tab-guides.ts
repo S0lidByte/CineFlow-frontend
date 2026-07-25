@@ -137,12 +137,14 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         howToUse: [
             "Configure indexers (Jackett, Prowlarr URLs, etc.) with correct API keys.",
             "Enable scrapers that match your indexer capabilities and quality preferences.",
-            "Set concurrency and timeouts — too aggressive scraping triggers indexer bans."
+            "Set concurrency and timeouts — too aggressive scraping triggers indexer bans.",
+            "Anime soft-opt-ins (extras.dubbed / MULTI audio) live here — Ranking Studio deep-links to them."
         ],
         cautions: ["Indexer misconfiguration is the #1 cause of 'no results' after a request."],
         tips: [
             "Ranking filters apply after scrape — if everything is rejected, check Ranking tab deny keys.",
-            "Indexer and scraper sections are grouped here; use search to jump to a provider."
+            "Indexer and scraper sections are grouped here; use search to jump to a provider.",
+            "Soft-opt-ins never change Ranking presets automatically — enable intentionally."
         ],
         highlights: [
             { title: "Indexers", detail: "Provide raw torrent search APIs." },
@@ -152,22 +154,29 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
     ranking: {
         headline: "Fetch off → logs show denied by: category_attribute (e.g. audio_ddp).",
         howToUse: [
-            "Pick a category chip, then toggle Fetch / Custom / Rank in the matrix.",
-            "Use presets for Balanced, WEB-DL permissive, Strict, or Anime baselines.",
-            "Paste a release title in Release tester to preview accept/reject without saving.",
-            "Copy deny keys from the matrix or tester result when debugging scrape logs."
+            "Use Filters for the Fetch|Custom|Rank matrix; Languages / Patterns / Options for RTN lists.",
+            "Presets (Balanced, WEB-DL, Strict, Anime Dub Friendly, Remux Max, Kids Safe) apply ranking packs only.",
+            "Paste a release title in Tester to preview accept/reject without saving.",
+            "When Tester shows extras_dubbed or missing_required_language, follow the Scraping soft-opt-in link."
         ],
         tips: [
             "Disney+/Amazon WEB-DL often needs audio_dolby_digital_plus fetch enabled.",
-            "Trash rules remove groups of releases — enable only what you understand."
+            "Wrap regex in /slashes/ for case-sensitive patterns; Validate & preview before save.",
+            "Anime Dub Friendly never silently enables Scraping soft-opt-ins — confirm the dialog."
         ],
         cautions: [
             "Over-aggressive deny rules produce empty scrape results with no obvious UI error."
         ],
         highlights: [
             { title: "Fetch", detail: "When false, matching releases are rejected outright." },
-            { title: "Rank", detail: "Numeric score used when multiple releases survive filters." },
-            { title: "Custom ranks", detail: "Fine-grained per-codec and per-source toggles." }
+            {
+                title: "Patterns",
+                detail: "require / exclude / preferred regex lists with ReDoS guards."
+            },
+            {
+                title: "Soft-opt-ins",
+                detail: "Scraping anime toggles are separate from Ranking presets."
+            }
         ]
     },
     database: {

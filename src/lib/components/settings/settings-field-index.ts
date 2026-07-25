@@ -83,6 +83,30 @@ const RANKING_DENY_KEYWORDS: {
         label: "Minimum rank threshold",
         description: "Log: does not meet the minimum rank requirement",
         keywords: ["remove_ranks_under", "minimum rank"]
+    },
+    {
+        path: "ranking.options.title_similarity",
+        label: "Title similarity",
+        description: "Minimum Levenshtein similarity to accept a release",
+        keywords: ["title_similarity", "lev", "mismatch"]
+    },
+    {
+        path: "ranking.options.remove_adult_content",
+        label: "Remove adult content",
+        description: "Reject adult-flagged releases",
+        keywords: ["remove_adult_content", "kids", "adult"]
+    },
+    {
+        path: "scraping.anime_allow_extras_dubbed",
+        label: "Anime allow extras.dubbed",
+        description: "Soft-opt-in for extras_dubbed rejects on anime items",
+        keywords: ["extras_dubbed", "anime_allow_extras_dubbed", "soft-opt-in", "multi"]
+    },
+    {
+        path: "scraping.anime_allow_multi_audio",
+        label: "Anime allow MULTI/dual-audio",
+        description: "Soft-opt-in retry after missing_required_language for anime",
+        keywords: ["missing_required_language", "anime_allow_multi_audio", "soft-opt-in", "dual"]
     }
 ];
 
@@ -171,7 +195,7 @@ export function buildRankingShortcutEntries(): SettingsSearchEntry[] {
     return RANKING_DENY_KEYWORDS.map((item) => ({
         id: `field:${item.path}`,
         kind: "field" as const,
-        tabId: "ranking",
+        tabId: (item.path.startsWith("scraping.") ? "scraping" : "ranking") as SectionTabId,
         label: item.label,
         description: item.description,
         path: item.path,
