@@ -233,11 +233,7 @@ export type RankingSettings = {
 };
 
 /** Title-matching modes for remake / alias diagnose (mirrors BE contract). */
-export type TitleMatchingModeId =
-    | "strict"
-    | "balanced"
-    | "aliases_friendly"
-    | "remake_diagnose";
+export type TitleMatchingModeId = "strict" | "balanced" | "aliases_friendly" | "remake_diagnose";
 
 export interface TitleMatchingMode {
     id: TitleMatchingModeId;

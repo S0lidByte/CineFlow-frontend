@@ -815,9 +815,9 @@
                 <div class="space-y-1">
                     <h3 class="text-sm font-semibold">Title matching mode</h3>
                     <p class="text-muted-foreground text-xs">
-                        Sets <span class="font-mono">title_similarity</span> for remake /
-                        alias diagnose. Does not silently accept wrong titles — keep
-                        Scraping → enable_aliases on for remakes.
+                        Sets <span class="font-mono">title_similarity</span> for remake / alias diagnose.
+                        Does not silently accept wrong titles — keep Scraping → enable_aliases on for
+                        remakes.
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -1022,7 +1022,9 @@
                                     · rank {testResult.rank}
                                     · lev {testResult.lev_ratio.toFixed(3)}
                                     {#if testResult.title_similarity_threshold != null}
-                                        · threshold {testResult.title_similarity_threshold.toFixed(2)}
+                                        · threshold {testResult.title_similarity_threshold.toFixed(
+                                            2
+                                        )}
                                     {/if}
                                 {/if}
                             </p>
