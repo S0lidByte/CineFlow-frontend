@@ -232,6 +232,71 @@ export type RankingSettings = {
     [key: string]: unknown;
 };
 
+/** Title-matching modes for remake / alias diagnose (mirrors BE contract). */
+export type TitleMatchingModeId =
+    | "strict"
+    | "balanced"
+    | "aliases_friendly"
+    | "remake_diagnose";
+
+export interface TitleMatchingMode {
+    id: TitleMatchingModeId;
+    label: string;
+    title_similarity: number;
+    enable_aliases: boolean;
+    description: string;
+    diagnose_only: boolean;
+}
+
+export const TITLE_MATCHING_MODES: TitleMatchingMode[] = [
+    {
+        id: "strict",
+        label: "Strict",
+        title_similarity: 0.9,
+        enable_aliases: true,
+        description: "Tight Levenshtein match. Best default when titles are stable.",
+        diagnose_only: false
+    },
+    {
+        id: "balanced",
+        label: "Balanced",
+        title_similarity: 0.85,
+        enable_aliases: true,
+        description: "Default RTN threshold with aliases enabled.",
+        diagnose_only: false
+    },
+    {
+        id: "aliases_friendly",
+        label: "Aliases friendly",
+        title_similarity: 0.8,
+        enable_aliases: true,
+        description:
+            "Slightly looser match while relying on Trakt/TMDB aliases. Keep Scraping → enable_aliases on.",
+        diagnose_only: false
+    },
+    {
+        id: "remake_diagnose",
+        label: "Remake diagnose",
+        title_similarity: 0.7,
+        enable_aliases: true,
+        description:
+            "Temporary diagnose for remakes (e.g. Saint Seiya vs Knights of the Zodiac). Do not leave this low permanently.",
+        diagnose_only: true
+    }
+];
+
+export function applyTitleMatchingMode(
+    ranking: RankingSettings,
+    mode: TitleMatchingMode
+): RankingSettings {
+    const next = structuredClone(ranking);
+    next.options = {
+        ...(next.options ?? {}),
+        title_similarity: mode.title_similarity
+    };
+    return next;
+}
+
 /** Deny keys that should deep-link to Scraping soft-opt-ins. */
 export const DENY_TO_SCRAPING: Record<string, { path: string; label: string; hint: string }> = {
     extras_dubbed: {
@@ -243,6 +308,11 @@ export const DENY_TO_SCRAPING: Record<string, { path: string; label: string; hin
         path: "scraping.anime_allow_multi_audio",
         label: "Anime allow MULTI/dual-audio",
         hint: "Scraping soft-opt-in retries MULTI/dual titles after language rejects."
+    },
+    title_mismatch: {
+        path: "scraping.enable_aliases",
+        label: "Enable title aliases",
+        hint: "Use matching modes + aliases to diagnose remakes; do not silently accept wrong titles."
     }
 };
 
@@ -323,7 +393,7 @@ export function patternsToLines(patterns: string[] | undefined): string {
     return (patterns ?? []).join("\n");
 }
 
-/** Client-side quick checks mirroring backend limits (preview UX). */
+/** Client-side length/count checks only — compile/ReDoS belong to BFF validate. */
 export const PATTERN_LIMITS = {
     maxPerList: 32,
     maxLength: 200
@@ -337,19 +407,6 @@ export function clientValidatePatterns(patterns: string[]): string[] {
     for (const [i, pattern] of patterns.entries()) {
         if (pattern.length > PATTERN_LIMITS.maxLength) {
             errors.push(`Pattern ${i + 1} exceeds ${PATTERN_LIMITS.maxLength} chars`);
-        }
-        if (/\([^)]*[+*][^)]*\)[+*]/.test(pattern)) {
-            errors.push(`Pattern ${i + 1} looks like nested-quantifier ReDoS risk`);
-        }
-        try {
-            const body =
-                pattern.startsWith("/") && pattern.endsWith("/") && pattern.length > 2
-                    ? pattern.slice(1, -1)
-                    : pattern;
-            const flags = pattern.startsWith("/") && pattern.endsWith("/") ? undefined : "i";
-            void new RegExp(body, flags);
-        } catch (e) {
-            errors.push(`Pattern ${i + 1}: ${e instanceof Error ? e.message : "invalid regex"}`);
         }
     }
     return errors;

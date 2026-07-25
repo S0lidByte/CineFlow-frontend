@@ -157,7 +157,9 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Use Filters for the Fetch|Custom|Rank matrix; Languages / Patterns / Options for RTN lists.",
             "Presets (Balanced, WEB-DL, Strict, Anime Dub Friendly, Remux Max, Kids Safe) apply ranking packs only.",
             "Paste a release title in Tester to preview accept/reject without saving.",
-            "When Tester shows extras_dubbed or missing_required_language, follow the Scraping soft-opt-in link."
+            "When Tester shows extras_dubbed or missing_required_language, follow the Scraping soft-opt-in link.",
+            "title_mismatch / remakes: use Title matching modes + enable_aliases — do not leave remake_diagnose on permanently.",
+            "Load scrape funnel by item id to see rtn_top deny buckets after a scrape."
         ],
         tips: [
             "Disney+/Amazon WEB-DL often needs audio_dolby_digital_plus fetch enabled.",

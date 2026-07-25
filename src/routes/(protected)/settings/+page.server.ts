@@ -493,21 +493,57 @@ export const load: PageServerLoad = async ({
                     throw new Error("Failed to load ranking settings");
                 }
 
-                let meta = {
-                    deny_keys: {} as Record<string, string>,
-                    attribute_titles: {} as Record<string, string>,
-                    categories: {} as Record<string, string>
+                let meta: {
+                    deny_keys: Record<string, string>;
+                    attribute_titles: Record<string, string>;
+                    categories: Record<string, string>;
+                    soft_opt_in_links?: Record<string, { scraping_path: string; label: string }>;
+                    pattern_limits?: {
+                        max_patterns_per_list?: number;
+                        max_pattern_length?: number;
+                    };
+                    title_matching_modes?: Array<{
+                        id: string;
+                        label: string;
+                        title_similarity: number;
+                        enable_aliases: boolean;
+                        description: string;
+                        diagnose_only: boolean;
+                    }>;
+                } = {
+                    deny_keys: {},
+                    attribute_titles: {},
+                    categories: {}
                 };
                 if (metaRes.ok) {
                     const body = (await metaRes.json()) as {
                         deny_keys?: Record<string, string>;
                         attribute_titles?: Record<string, string>;
                         categories?: Record<string, string>;
+                        soft_opt_in_links?: Record<
+                            string,
+                            { scraping_path: string; label: string }
+                        >;
+                        pattern_limits?: {
+                            max_patterns_per_list?: number;
+                            max_pattern_length?: number;
+                        };
+                        title_matching_modes?: Array<{
+                            id: string;
+                            label: string;
+                            title_similarity: number;
+                            enable_aliases: boolean;
+                            description: string;
+                            diagnose_only: boolean;
+                        }>;
                     };
                     meta = {
                         deny_keys: body.deny_keys ?? {},
                         attribute_titles: body.attribute_titles ?? {},
-                        categories: body.categories ?? {}
+                        categories: body.categories ?? {},
+                        soft_opt_in_links: body.soft_opt_in_links,
+                        pattern_limits: body.pattern_limits,
+                        title_matching_modes: body.title_matching_modes
                     };
                 }
 
