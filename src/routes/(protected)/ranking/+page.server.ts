@@ -256,7 +256,7 @@ export const actions = {
         const formData = await request.formData();
         const itemIdRaw = formData.get("item_id");
         const itemId = typeof itemIdRaw === "string" ? Number(itemIdRaw.trim()) : NaN;
-        if (!Number.isFinite(itemId) || itemId <= 0) {
+        if (!Number.isInteger(itemId) || itemId <= 0) {
             return fail(400, { error: "Valid media item id is required" });
         }
 
@@ -265,7 +265,8 @@ export const actions = {
                 headers: {
                     "x-api-key": locals.apiKey,
                     ...SETTINGS_WRITE_HEADERS
-                }
+                },
+                signal: AbortSignal.timeout(20_000)
             });
 
             if (!res.ok) {

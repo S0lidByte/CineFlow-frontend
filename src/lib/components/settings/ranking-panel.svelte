@@ -1083,6 +1083,7 @@
                     action="/ranking?/funnel"
                     use:enhance={({ formData }) => {
                         formData.set("item_id", funnelItemId.trim());
+                        funnelSummary = null;
                         isLoadingFunnel = true;
                         return async ({ result }) => {
                             handleFunnelResult(
