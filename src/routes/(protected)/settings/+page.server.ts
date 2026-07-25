@@ -509,6 +509,7 @@ export const load: PageServerLoad = async ({
                         enable_aliases: boolean;
                         description: string;
                         diagnose_only: boolean;
+                        scrape_applied?: boolean;
                     }>;
                 } = {
                     deny_keys: {},
@@ -535,6 +536,7 @@ export const load: PageServerLoad = async ({
                             enable_aliases: boolean;
                             description: string;
                             diagnose_only: boolean;
+                            scrape_applied?: boolean;
                         }>;
                     };
                     meta = {

@@ -411,8 +411,8 @@
         localRanking = applyTitleMatchingMode(localRanking, mode);
         toast.success(
             mode.diagnose_only
-                ? `Applied diagnose mode: ${mode.label} (temporary)`
-                : `Applied matching mode: ${mode.label}`
+                ? `Tester-only: ${mode.label} (not scrape-applied — use remake aliases for live remakes)`
+                : `Scrape-applied when saved: ${mode.label}`
         );
     }
 
@@ -815,9 +815,10 @@
                 <div class="space-y-1">
                     <h3 class="text-sm font-semibold">Title matching mode</h3>
                     <p class="text-muted-foreground text-xs">
-                        Sets <span class="font-mono">title_similarity</span> for remake / alias diagnose.
-                        Does not silently accept wrong titles — keep Scraping → enable_aliases on for
-                        remakes.
+                        Non-diagnose modes write <span class="font-mono">title_similarity</span>
+                        (scrape-applied when saved).
+                        <span class="font-medium">Remake diagnose</span> is tester-only — for live remakes
+                        use Scraping → enable_remake_aliases + remake_alias_groups (default off).
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -832,18 +833,34 @@
                             <span class="text-muted-foreground ml-1 font-mono text-[10px]">
                                 {mode.title_similarity}
                             </span>
+                            {#if mode.diagnose_only}
+                                <span class="text-muted-foreground ml-1 text-[10px]">tester</span>
+                            {:else}
+                                <span class="text-muted-foreground ml-1 text-[10px]">scrape</span>
+                            {/if}
                         </Button>
                     {/each}
                 </div>
-                <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    class="h-7 text-xs"
-                    onclick={() => openScrapingFocus("scraping.enable_aliases")}>
-                    <ExternalLink class="size-3.5" />
-                    Open Scraping: enable aliases
-                </Button>
+                <div class="flex flex-wrap gap-2">
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        class="h-7 text-xs"
+                        onclick={() => openScrapingFocus("scraping.enable_aliases")}>
+                        <ExternalLink class="size-3.5" />
+                        Open Scraping: enable aliases
+                    </Button>
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        class="h-7 text-xs"
+                        onclick={() => openScrapingFocus("scraping.enable_remake_aliases")}>
+                        <ExternalLink class="size-3.5" />
+                        Open Scraping: remake aliases
+                    </Button>
+                </div>
             </div>
 
             <div class="border-border/60 bg-card/40 space-y-4 rounded-xl border p-4">

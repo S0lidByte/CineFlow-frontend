@@ -242,6 +242,8 @@ export interface TitleMatchingMode {
     enable_aliases: boolean;
     description: string;
     diagnose_only: boolean;
+    /** When true, saving ranking.options.title_similarity applies to live scrape. */
+    scrape_applied?: boolean;
 }
 
 export const TITLE_MATCHING_MODES: TitleMatchingMode[] = [
@@ -250,16 +252,20 @@ export const TITLE_MATCHING_MODES: TitleMatchingMode[] = [
         label: "Strict",
         title_similarity: 0.9,
         enable_aliases: true,
-        description: "Tight Levenshtein match. Best default when titles are stable.",
-        diagnose_only: false
+        description:
+            "Tight Levenshtein match. Writes ranking.options.title_similarity when saved — applies to live scrape.",
+        diagnose_only: false,
+        scrape_applied: true
     },
     {
         id: "balanced",
         label: "Balanced",
         title_similarity: 0.85,
         enable_aliases: true,
-        description: "Default RTN threshold with aliases enabled.",
-        diagnose_only: false
+        description:
+            "Default RTN threshold. Writes ranking.options.title_similarity when saved — applies to live scrape.",
+        diagnose_only: false,
+        scrape_applied: true
     },
     {
         id: "aliases_friendly",
@@ -267,8 +273,9 @@ export const TITLE_MATCHING_MODES: TitleMatchingMode[] = [
         title_similarity: 0.8,
         enable_aliases: true,
         description:
-            "Slightly looser match while relying on Trakt/TMDB aliases. Keep Scraping → enable_aliases on.",
-        diagnose_only: false
+            "Slightly looser match for Trakt/TMDB aliases (scrape-applied when saved). For remakes also enable Scraping → enable_remake_aliases.",
+        diagnose_only: false,
+        scrape_applied: true
     },
     {
         id: "remake_diagnose",
@@ -276,8 +283,9 @@ export const TITLE_MATCHING_MODES: TitleMatchingMode[] = [
         title_similarity: 0.7,
         enable_aliases: true,
         description:
-            "Temporary diagnose for remakes (e.g. Saint Seiya vs Knights of the Zodiac). Do not leave this low permanently.",
-        diagnose_only: true
+            "Tester-only temporary threshold for remakes (e.g. Saint Seiya vs Knights of the Zodiac). Live scrape remakes: Scraping → enable_remake_aliases + remake_alias_groups.",
+        diagnose_only: true,
+        scrape_applied: false
     }
 ];
 
@@ -306,9 +314,9 @@ export const DENY_TO_SCRAPING: Record<string, { path: string; label: string; hin
         hint: "Scraping soft-opt-in retries MULTI/dual titles after language rejects."
     },
     title_mismatch: {
-        path: "scraping.enable_aliases",
-        label: "Enable title aliases",
-        hint: "Use matching modes + aliases to diagnose remakes; do not silently accept wrong titles."
+        path: "scraping.enable_remake_aliases",
+        label: "Enable remake aliases (scrape opt-in)",
+        hint: "Opt-in remake_alias_groups for live scrape. remake_diagnose is tester-only — do not silently accept wrong titles."
     }
 };
 
