@@ -1,28 +1,39 @@
 <script lang="ts">
     /**
-     * Custom Ranking / RTN settings panel.
-     * Matrix of Fetch|Custom|Rank per attribute, presets, and release tester.
+     * Custom Ranking / RTN settings panel (Ranking Studio).
+     * Tabs: Filters · Languages · Patterns · Options · Tester
      */
     import { Switch } from "$lib/components/ui/switch/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
     import { Badge } from "$lib/components/ui/badge/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
+    import { Textarea } from "$lib/components/ui/textarea/index.js";
+    import { TagsInput } from "$lib/components/ui/extras/tags-input/index.js";
     import * as Tabs from "$lib/components/ui/tabs/index.js";
+    import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
     import { toast } from "svelte-sonner";
     import { enhance } from "$app/forms";
+    import { goto } from "$app/navigation";
     import { onDestroy, untrack } from "svelte";
     import Loader2 from "@lucide/svelte/icons/loader-2";
     import Check from "@lucide/svelte/icons/check";
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
     import Copy from "@lucide/svelte/icons/copy";
     import FlaskConical from "@lucide/svelte/icons/flask-conical";
+    import ExternalLink from "@lucide/svelte/icons/external-link";
     import {
         RANKING_PRESETS,
         applyRankingPreset,
+        clientValidatePatterns,
         countRejecting,
         denyKeyFor,
+        DENY_TO_SCRAPING,
+        ensureLanguages,
         humanizeAttr,
+        linesToPatterns,
+        patternsToLines,
+        type RankingPreset,
         type RankingSettings,
         type CustomRankValue
     } from "./ranking-presets";
@@ -32,6 +43,8 @@
         deny_keys: Record<string, string>;
         attribute_titles: Record<string, string>;
         categories: Record<string, string>;
+        soft_opt_in_links?: Record<string, { scraping_path: string; label: string }>;
+        pattern_limits?: { max_patterns_per_list?: number; max_pattern_length?: number };
     }
 
     interface TestResult {
@@ -41,7 +54,14 @@
         fetch: boolean;
         deny_reason?: string | null;
         deny_help?: string | null;
+        scraping_hint?: string | null;
         message?: string;
+    }
+
+    interface PatternPreview {
+        require_matches: string[];
+        exclude_matches: string[];
+        preferred_matches: string[];
     }
 
     interface Props {
@@ -52,13 +72,63 @@
     let { ranking = {}, meta = { deny_keys: {}, attribute_titles: {}, categories: {} } }: Props =
         $props();
 
-    let localRanking = $state(structuredClone(untrack(() => ranking)) as RankingSettings);
-    let baselineJson = $state(JSON.stringify(untrack(() => ranking)));
+    function normalizeRanking(raw: RankingSettings): RankingSettings {
+        const next = structuredClone(raw) as RankingSettings;
+        next.languages = ensureLanguages(next);
+        next.require = [...(next.require ?? [])];
+        next.exclude = [...(next.exclude ?? [])];
+        next.preferred = [...(next.preferred ?? [])];
+        return next;
+    }
+
+    let localRanking = $state(normalizeRanking(untrack(() => ranking)));
+    let baselineJson = $state(JSON.stringify(untrack(() => normalizeRanking(ranking))));
     let isDirty = $derived(JSON.stringify(localRanking) !== baselineJson);
     let isSaving = $state(false);
 
+    let langRequired = $state([...ensureLanguages(untrack(() => ranking)).required]);
+    let langAllowed = $state([...ensureLanguages(untrack(() => ranking)).allowed]);
+    let langExclude = $state([...ensureLanguages(untrack(() => ranking)).exclude]);
+    let langPreferred = $state([...ensureLanguages(untrack(() => ranking)).preferred]);
+
+    function hydrateLanguageEditors() {
+        const langs = ensureLanguages(localRanking);
+        langRequired = [...langs.required];
+        langAllowed = [...langs.allowed];
+        langExclude = [...langs.exclude];
+        langPreferred = [...langs.preferred];
+    }
+
+    function commitLanguageEditors() {
+        localRanking = {
+            ...localRanking,
+            languages: {
+                required: [...langRequired],
+                allowed: [...langAllowed],
+                exclude: [...langExclude],
+                preferred: [...langPreferred]
+            }
+        };
+    }
+
+    // Keep Ranking payload in sync as tags are added/removed.
+    $effect(() => {
+        const next = {
+            required: langRequired,
+            allowed: langAllowed,
+            exclude: langExclude,
+            preferred: langPreferred
+        };
+        const current = ensureLanguages(localRanking);
+        if (JSON.stringify(next) !== JSON.stringify(current)) {
+            untrack(() => commitLanguageEditors());
+        }
+    });
+
     function discardChanges() {
         localRanking = structuredClone(JSON.parse(baselineJson));
+        syncPatternEditors();
+        hydrateLanguageEditors();
     }
 
     $effect(() => {
@@ -71,12 +141,35 @@
     onDestroy(() => {
         clearCustomDirty();
     });
+
     let isTesting = $state(false);
+    let isValidatingPatterns = $state(false);
     let panelTab = $state("filters");
     let activeCategory = $state("audio");
     let testTitle = $state("The.Movie.2024.2160p.WEB-DL.DDP5.1.Atmos.H.265-GROUP");
     let testCorrect = $state("");
     let testResult = $state<TestResult | null>(null);
+    let patternPreview = $state<PatternPreview | null>(null);
+    let patternErrors = $state<string[]>([]);
+
+    let requireText = $state(patternsToLines(untrack(() => ranking.require)));
+    let excludeText = $state(patternsToLines(untrack(() => ranking.exclude)));
+    let preferredText = $state(patternsToLines(untrack(() => ranking.preferred)));
+
+    function syncPatternEditors() {
+        requireText = patternsToLines(localRanking.require);
+        excludeText = patternsToLines(localRanking.exclude);
+        preferredText = patternsToLines(localRanking.preferred);
+    }
+
+    function commitPatternEditors() {
+        localRanking = {
+            ...localRanking,
+            require: linesToPatterns(requireText),
+            exclude: linesToPatterns(excludeText),
+            preferred: linesToPatterns(preferredText)
+        };
+    }
 
     const categories = $derived(
         Object.keys(localRanking.custom_ranks ?? {}).length
@@ -97,6 +190,15 @@
             CustomRankValue
         ][]
     );
+
+    const PROMINENT_OPTIONS = [
+        "title_similarity",
+        "remove_all_trash",
+        "remove_adult_content"
+    ] as const;
+
+    let pendingPreset = $state<RankingPreset | null>(null);
+    let showPresetConfirm = $state(false);
 
     function setFetch(category: string, attr: string, fetch: boolean) {
         const ranks = localRanking.custom_ranks ?? {};
@@ -140,11 +242,39 @@
         };
     }
 
-    function applyPreset(id: string) {
+    function applyPresetConfirmed(preset: RankingPreset) {
+        commitPatternEditors();
+        commitLanguageEditors();
+        localRanking = applyRankingPreset(localRanking, preset);
+        syncPatternEditors();
+        hydrateLanguageEditors();
+        toast.success(`Applied preset: ${preset.label}`);
+    }
+
+    function requestPreset(id: string) {
         const preset = RANKING_PRESETS.find((p) => p.id === id);
         if (!preset) return;
-        localRanking = applyRankingPreset(localRanking, preset);
-        toast.success(`Applied preset: ${preset.label}`);
+        if (preset.scrapingHints?.length) {
+            pendingPreset = preset;
+            showPresetConfirm = true;
+            return;
+        }
+        applyPresetConfirmed(preset);
+    }
+
+    function confirmPresetRankingOnly() {
+        if (pendingPreset) applyPresetConfirmed(pendingPreset);
+        pendingPreset = null;
+        showPresetConfirm = false;
+    }
+
+    function confirmPresetAndOpenScraping() {
+        const hints = pendingPreset?.scrapingHints ?? [];
+        if (pendingPreset) applyPresetConfirmed(pendingPreset);
+        pendingPreset = null;
+        showPresetConfirm = false;
+        const focus = hints[0]?.path ?? "scraping.anime_allow_extras_dubbed";
+        void goto(`/settings?tab=scraping&focus=${encodeURIComponent(focus)}`);
     }
 
     async function copyDenyKey(key: string) {
@@ -156,14 +286,42 @@
         }
     }
 
+    function openScrapingFocus(path: string) {
+        void goto(`/settings?tab=scraping&focus=${encodeURIComponent(path)}`);
+    }
+
+    function scrapingLinkForDeny(deny: string | null | undefined) {
+        if (!deny) return null;
+        const key = deny.toLowerCase();
+        if (DENY_TO_SCRAPING[key]) return DENY_TO_SCRAPING[key];
+        const fromMeta = meta.soft_opt_in_links?.[key];
+        if (fromMeta) {
+            return {
+                path: fromMeta.scraping_path,
+                label: fromMeta.label,
+                hint: meta.deny_keys[key] ?? ""
+            };
+        }
+        return null;
+    }
+
+    function setOption(key: string, value: unknown) {
+        localRanking = {
+            ...localRanking,
+            options: { ...localRanking.options, [key]: value }
+        };
+    }
+
     function handleSaveResult(result: {
         type: string;
         data?: { success?: boolean; ranking?: RankingSettings; error?: string };
     }) {
         isSaving = false;
         if (result.type === "success" && result.data?.success && result.data.ranking) {
-            localRanking = structuredClone(result.data.ranking);
-            baselineJson = JSON.stringify(result.data.ranking);
+            localRanking = normalizeRanking(result.data.ranking);
+            baselineJson = JSON.stringify(localRanking);
+            syncPatternEditors();
+            hydrateLanguageEditors();
             toast.success("Ranking settings saved");
         } else {
             toast.error(result.data?.error ?? "Failed to save ranking settings");
@@ -185,6 +343,41 @@
         } else {
             toast.error(result.data?.error ?? "Ranking test failed");
         }
+    }
+
+    function handleValidateResult(result: {
+        type: string;
+        data?: {
+            success?: boolean;
+            valid?: boolean;
+            errors?: { message: string }[];
+            preview?: PatternPreview | null;
+            error?: string;
+        };
+    }) {
+        isValidatingPatterns = false;
+        if (result.type === "success" && result.data?.success) {
+            patternPreview = result.data.preview ?? null;
+            patternErrors = (result.data.errors ?? []).map((e) => e.message);
+            if (result.data.valid) {
+                toast.success("Patterns valid");
+            } else {
+                toast.error("Pattern validation failed");
+            }
+        } else {
+            toast.error(result.data?.error ?? "Pattern validation failed");
+        }
+    }
+
+    function runClientPatternCheck(): boolean {
+        commitPatternEditors();
+        const all = [
+            ...clientValidatePatterns(localRanking.require ?? []),
+            ...clientValidatePatterns(localRanking.exclude ?? []),
+            ...clientValidatePatterns(localRanking.preferred ?? [])
+        ];
+        patternErrors = all;
+        return all.length === 0;
     }
 </script>
 
@@ -218,7 +411,7 @@
                 size="sm"
                 class="h-7 text-xs"
                 title={preset.description}
-                onclick={() => applyPreset(preset.id)}>
+                onclick={() => requestPreset(preset.id)}>
                 {preset.label}
             </Button>
         {/each}
@@ -235,7 +428,14 @@
             <form
                 method="POST"
                 action="/ranking?/save"
-                use:enhance={() => {
+                use:enhance={({ cancel }) => {
+                    commitPatternEditors();
+                    commitLanguageEditors();
+                    if (!runClientPatternCheck()) {
+                        toast.error("Fix pattern errors before saving");
+                        cancel();
+                        return;
+                    }
                     isSaving = true;
                     return async ({ result }) => {
                         handleSaveResult(
@@ -269,11 +469,14 @@
     </div>
 
     <Tabs.Root bind:value={panelTab} class="w-full">
-        <Tabs.List class="grid w-full max-w-md grid-cols-2">
-            <Tabs.Trigger value="filters">Filters & ranks</Tabs.Trigger>
+        <Tabs.List class="grid w-full max-w-3xl grid-cols-2 sm:grid-cols-5">
+            <Tabs.Trigger value="filters">Filters</Tabs.Trigger>
+            <Tabs.Trigger value="languages">Languages</Tabs.Trigger>
+            <Tabs.Trigger value="patterns">Patterns</Tabs.Trigger>
+            <Tabs.Trigger value="options">Options</Tabs.Trigger>
             <Tabs.Trigger value="tester">
                 <FlaskConical class="mr-1.5 size-3.5" />
-                Release tester
+                Tester
             </Tabs.Trigger>
         </Tabs.List>
 
@@ -383,16 +586,199 @@
                     </table>
                 </div>
             </div>
+        </Tabs.Content>
+
+        <Tabs.Content value="languages" class="mt-3 space-y-3">
+            <div class="border-border/60 bg-card/40 space-y-4 rounded-xl border p-4">
+                <p class="text-muted-foreground text-xs">
+                    ISO language codes or RTN groups (<code class="font-mono">anime</code>,
+                    <code class="font-mono">common</code>). Required languages reject releases that
+                    lack them (<code class="font-mono">missing_required_language</code>).
+                </p>
+                <div class="space-y-1.5">
+                    <Label>Required</Label>
+                    <TagsInput
+                        bind:value={langRequired}
+                        placeholder="Add required language…"
+                        onchange={() => commitLanguageEditors()}
+                        onblur={() => commitLanguageEditors()} />
+                </div>
+                <div class="space-y-1.5">
+                    <Label>Allowed</Label>
+                    <TagsInput
+                        bind:value={langAllowed}
+                        placeholder="Add allowed language…"
+                        onblur={() => commitLanguageEditors()} />
+                </div>
+                <div class="space-y-1.5">
+                    <Label>Exclude</Label>
+                    <TagsInput
+                        bind:value={langExclude}
+                        placeholder="Add excluded language…"
+                        onblur={() => commitLanguageEditors()} />
+                </div>
+                <div class="space-y-1.5">
+                    <Label>Preferred</Label>
+                    <TagsInput
+                        bind:value={langPreferred}
+                        placeholder="Add preferred language…"
+                        onblur={() => commitLanguageEditors()} />
+                </div>
+                <Button type="button" size="sm" variant="outline" onclick={commitLanguageEditors}>
+                    Apply language edits
+                </Button>
+            </div>
+        </Tabs.Content>
+
+        <Tabs.Content value="patterns" class="mt-3 space-y-3">
+            <div class="border-border/60 bg-card/40 space-y-4 rounded-xl border p-4">
+                <p class="text-muted-foreground text-xs">
+                    One regex per line. Wrap in <code class="font-mono">/slashes/</code> for
+                    case-sensitive. Max {meta.pattern_limits?.max_patterns_per_list ?? 32} per list,
+                    {meta.pattern_limits?.max_pattern_length ?? 200} chars each.
+                </p>
+                {#each [["require", "Require (must match)", requireText], ["exclude", "Exclude (reject if match)", excludeText], ["preferred", "Preferred (+rank boost)", preferredText]] as [key, label, text] (key)}
+                    <div class="space-y-1.5">
+                        <Label for={`pattern-${key}`}>{label}</Label>
+                        <Textarea
+                            id={`pattern-${key}`}
+                            class="min-h-24 font-mono text-xs"
+                            value={text as string}
+                            oninput={(e) => {
+                                const v = (e.currentTarget as HTMLTextAreaElement).value;
+                                if (key === "require") requireText = v;
+                                else if (key === "exclude") excludeText = v;
+                                else preferredText = v;
+                            }}
+                            onblur={() => commitPatternEditors()}
+                            placeholder={"e.g. \\bmatte\\b"} />
+                    </div>
+                {/each}
+
+                {#if patternErrors.length}
+                    <ul class="text-destructive list-inside list-disc text-xs">
+                        {#each patternErrors as err (err)}
+                            <li>{err}</li>
+                        {/each}
+                    </ul>
+                {/if}
+
+                <form
+                    method="POST"
+                    action="/ranking?/validatePatterns"
+                    use:enhance={({ cancel }) => {
+                        commitPatternEditors();
+                        if (!runClientPatternCheck()) {
+                            toast.error("Fix client-side pattern errors first");
+                            cancel();
+                            return;
+                        }
+                        isValidatingPatterns = true;
+                        return async ({ result }) => {
+                            handleValidateResult(
+                                result as {
+                                    type: string;
+                                    data?: {
+                                        success?: boolean;
+                                        valid?: boolean;
+                                        errors?: { message: string }[];
+                                        preview?: PatternPreview | null;
+                                        error?: string;
+                                    };
+                                }
+                            );
+                        };
+                    }}
+                    class="flex flex-wrap gap-2">
+                    <input
+                        type="hidden"
+                        name="require"
+                        value={JSON.stringify(localRanking.require ?? [])} />
+                    <input
+                        type="hidden"
+                        name="exclude"
+                        value={JSON.stringify(localRanking.exclude ?? [])} />
+                    <input
+                        type="hidden"
+                        name="preferred"
+                        value={JSON.stringify(localRanking.preferred ?? [])} />
+                    <input type="hidden" name="preview_title" value={testTitle} />
+                    <Button
+                        type="submit"
+                        size="sm"
+                        variant="outline"
+                        disabled={isValidatingPatterns}>
+                        {#if isValidatingPatterns}
+                            <Loader2 class="size-3.5 animate-spin" />
+                            Validating…
+                        {:else}
+                            Validate & preview
+                        {/if}
+                    </Button>
+                    <span class="text-muted-foreground self-center text-xs">
+                        Preview uses the Tester release title.
+                    </span>
+                </form>
+
+                {#if patternPreview}
+                    <div class="bg-muted/40 space-y-1 rounded-lg p-3 text-xs">
+                        <p>
+                            <span class="font-medium">Require hits:</span>
+                            {patternPreview.require_matches.join(", ") || "—"}
+                        </p>
+                        <p>
+                            <span class="font-medium">Exclude hits:</span>
+                            {patternPreview.exclude_matches.join(", ") || "—"}
+                        </p>
+                        <p>
+                            <span class="font-medium">Preferred hits:</span>
+                            {patternPreview.preferred_matches.join(", ") || "—"}
+                        </p>
+                    </div>
+                {/if}
+            </div>
+        </Tabs.Content>
+
+        <Tabs.Content value="options" class="mt-3 space-y-3">
+            <div class="border-border/60 bg-card/40 space-y-4 rounded-xl border p-4">
+                <h3 class="text-sm font-semibold">Core options</h3>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    {#if localRanking.options && typeof localRanking.options === "object"}
+                        {#each PROMINENT_OPTIONS as key (key)}
+                            {@const val = localRanking.options[key]}
+                            {#if typeof val === "boolean"}
+                                <label class="flex items-center justify-between gap-3 text-sm">
+                                    <span class="capitalize">{key.replace(/_/g, " ")}</span>
+                                    <Switch
+                                        checked={val}
+                                        onCheckedChange={(v) => setOption(key, v)} />
+                                </label>
+                            {:else if typeof val === "number"}
+                                <div class="space-y-1">
+                                    <Label class="capitalize">{key.replace(/_/g, " ")}</Label>
+                                    <Input
+                                        type="number"
+                                        class="h-8"
+                                        step="0.01"
+                                        min="0"
+                                        max="1"
+                                        value={val}
+                                        oninput={(e) =>
+                                            setOption(
+                                                key,
+                                                Number((e.currentTarget as HTMLInputElement).value)
+                                            )} />
+                                </div>
+                            {/if}
+                        {/each}
+                    {/if}
+                </div>
+            </div>
 
             {#if localRanking.resolutions}
-                <details class="border-border/60 group rounded-xl border p-3 md:p-4">
-                    <summary
-                        class="cursor-pointer list-none text-sm font-semibold [&::-webkit-details-marker]:hidden">
-                        Resolutions
-                        <span class="text-muted-foreground ml-2 text-xs font-normal"
-                            >optional filters</span>
-                    </summary>
-                    <div class="mt-3 flex flex-wrap gap-3">
+                <div class="border-border/60 bg-card/40 space-y-3 rounded-xl border p-4">
+                    <h3 class="text-sm font-semibold">Resolutions</h3>
+                    <div class="flex flex-wrap gap-3">
                         {#each Object.entries(localRanking.resolutions) as [key, on] (key)}
                             <label class="flex items-center gap-2 text-sm">
                                 <Switch
@@ -410,55 +796,43 @@
                             </label>
                         {/each}
                     </div>
-                </details>
+                </div>
             {/if}
 
             {#if localRanking.options && typeof localRanking.options === "object"}
-                <details class="border-border/60 rounded-xl border p-3 md:p-4">
-                    <summary
-                        class="cursor-pointer list-none text-sm font-semibold [&::-webkit-details-marker]:hidden">
-                        Options
-                        <span class="text-muted-foreground ml-2 text-xs font-normal"
-                            >RTN extras</span>
-                    </summary>
-                    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                <div class="border-border/60 bg-card/40 space-y-3 rounded-xl border p-4">
+                    <h3 class="text-sm font-semibold">More RTN options</h3>
+                    <div class="grid gap-3 sm:grid-cols-2">
                         {#each Object.entries(localRanking.options) as [key, val] (key)}
-                            {#if typeof val === "boolean"}
-                                <label class="flex items-center justify-between gap-3 text-sm">
-                                    <span class="capitalize">{key.replace(/_/g, " ")}</span>
-                                    <Switch
-                                        checked={val}
-                                        onCheckedChange={(v) => {
-                                            localRanking = {
-                                                ...localRanking,
-                                                options: { ...localRanking.options, [key]: v }
-                                            };
-                                        }} />
-                                </label>
-                            {:else if typeof val === "number"}
-                                <div class="space-y-1">
-                                    <Label class="capitalize">{key.replace(/_/g, " ")}</Label>
-                                    <Input
-                                        type="number"
-                                        class="h-8"
-                                        step="any"
-                                        value={val}
-                                        oninput={(e) => {
-                                            localRanking = {
-                                                ...localRanking,
-                                                options: {
-                                                    ...localRanking.options,
-                                                    [key]: Number(
+                            {#if !(PROMINENT_OPTIONS as readonly string[]).includes(key)}
+                                {#if typeof val === "boolean"}
+                                    <label class="flex items-center justify-between gap-3 text-sm">
+                                        <span class="capitalize">{key.replace(/_/g, " ")}</span>
+                                        <Switch
+                                            checked={val}
+                                            onCheckedChange={(v) => setOption(key, v)} />
+                                    </label>
+                                {:else if typeof val === "number"}
+                                    <div class="space-y-1">
+                                        <Label class="capitalize">{key.replace(/_/g, " ")}</Label>
+                                        <Input
+                                            type="number"
+                                            class="h-8"
+                                            step="any"
+                                            value={val}
+                                            oninput={(e) =>
+                                                setOption(
+                                                    key,
+                                                    Number(
                                                         (e.currentTarget as HTMLInputElement).value
                                                     )
-                                                }
-                                            };
-                                        }} />
-                                </div>
+                                                )} />
+                                    </div>
+                                {/if}
                             {/if}
                         {/each}
                     </div>
-                </details>
+                </div>
             {/if}
         </Tabs.Content>
 
@@ -483,6 +857,8 @@
                     method="POST"
                     action="/ranking?/test"
                     use:enhance={() => {
+                        commitPatternEditors();
+                        commitLanguageEditors();
                         isTesting = true;
                         return async ({ result }) => {
                             handleTestResult(
@@ -517,6 +893,7 @@
             </div>
 
             {#if testResult}
+                {@const scrapeLink = scrapingLinkForDeny(testResult.deny_reason)}
                 <div
                     class={`rounded-xl border p-4 ${
                         testResult.accepted
@@ -552,6 +929,20 @@
                             {#if testResult.deny_help}
                                 <p class="text-muted-foreground text-xs">{testResult.deny_help}</p>
                             {/if}
+                            {#if testResult.scraping_hint}
+                                <p class="text-xs">{testResult.scraping_hint}</p>
+                            {/if}
+                            {#if scrapeLink}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    class="mt-2 h-7 text-xs"
+                                    onclick={() => openScrapingFocus(scrapeLink.path)}>
+                                    <ExternalLink class="size-3.5" />
+                                    Open Scraping: {scrapeLink.label}
+                                </Button>
+                            {/if}
                         </div>
                     </div>
                 </div>
@@ -559,3 +950,32 @@
         </Tabs.Content>
     </Tabs.Root>
 </div>
+
+<AlertDialog.Root bind:open={showPresetConfirm}>
+    <AlertDialog.Content>
+        <AlertDialog.Header>
+            <AlertDialog.Title>Apply {pendingPreset?.label}?</AlertDialog.Title>
+            <AlertDialog.Description>
+                This updates Ranking settings only. Related Scraping soft-opt-ins are
+                <strong class="text-foreground"> not</strong> changed automatically:
+            </AlertDialog.Description>
+        </AlertDialog.Header>
+        <ul class="text-muted-foreground list-inside list-disc text-sm">
+            {#each pendingPreset?.scrapingHints ?? [] as hint (hint.path)}
+                <li>{hint.label}</li>
+            {/each}
+        </ul>
+        <AlertDialog.Footer>
+            <AlertDialog.Cancel
+                onclick={() => {
+                    pendingPreset = null;
+                }}>Cancel</AlertDialog.Cancel>
+            <Button type="button" variant="outline" onclick={confirmPresetRankingOnly}>
+                Apply ranking only
+            </Button>
+            <AlertDialog.Action onclick={confirmPresetAndOpenScraping}>
+                Apply & open Scraping
+            </AlertDialog.Action>
+        </AlertDialog.Footer>
+    </AlertDialog.Content>
+</AlertDialog.Root>
