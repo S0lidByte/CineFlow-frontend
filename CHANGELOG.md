@@ -2,10 +2,9 @@
 
 ## [1.12.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.12.0...riven-frontend-v1.12.1) (2026-07-26)
 
-
 ### Bug Fixes
 
-* **ui:** stop header from blocking Ranking Studio clicks ([#82](https://github.com/S0lidByte/CineFlow-frontend/issues/82)) ([821cfe5](https://github.com/S0lidByte/CineFlow-frontend/commit/821cfe5f0d7d63a45ce19128292410cd6946c804))
+- **ui:** stop header from blocking Ranking Studio clicks ([#82](https://github.com/S0lidByte/CineFlow-frontend/issues/82)) ([821cfe5](https://github.com/S0lidByte/CineFlow-frontend/commit/821cfe5f0d7d63a45ce19128292410cd6946c804))
 
 ## [1.12.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.11.0...riven-frontend-v1.12.0) (2026-07-26)
 
