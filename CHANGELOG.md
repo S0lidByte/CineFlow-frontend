@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.15.2](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.1...riven-frontend-v1.15.2) (2026-07-26)
+
+### Bug Fixes
+
+- **details:** stop using TMDB/TVDB ids as rivenId fallback ([#95](https://github.com/S0lidByte/CineFlow-frontend/issues/95)) ([5dc9ce1](https://github.com/S0lidByte/CineFlow-frontend/commit/5dc9ce1797d0cba1059d95e1edfd9255e35fc397))
+
 ## [1.15.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.0...riven-frontend-v1.15.1) (2026-07-26)
 
 ### Bug Fixes
