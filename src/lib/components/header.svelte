@@ -139,15 +139,16 @@
 
     /**
      * Explore search is useless on Settings (own palette) and overlays Ranking Studio.
-     * #82 limited pointer-events to the search cluster, but that cluster is still
-     * max-w-lg centered — Pack/Preset clicks under it still miss when scrolled.
+     * #82 limited pointer-events to the search cluster; #87 hid this header on Settings.
+     * Layout also skips mounting Header on Settings — keep this guard as defense in depth.
      */
     const hideExploreSearch = $derived(page.url.pathname.startsWith("/settings"));
 </script>
 
 {#if !hideExploreSearch}
     <header
-        class="pointer-events-none absolute top-0 left-0 z-50 hidden h-20 w-full items-center bg-gradient-to-b from-black/50 to-transparent px-4 transition-all duration-500 md:flex md:px-16">
+        class="pointer-events-none absolute top-0 left-0 z-50 hidden h-20 w-full items-center bg-gradient-to-b from-black/50 to-transparent px-4 transition-all duration-500 md:flex md:px-16"
+        aria-hidden="true">
         <!-- pointer-events-auto only on the search control itself — not a full-width band. -->
         <div class="flex w-full items-center justify-between gap-6">
             <div

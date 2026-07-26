@@ -521,9 +521,16 @@
     }
 </script>
 
-<div class="space-y-3">
-    <!-- Sticky so Pack/Presets stay clickable above Filters while scrolling (header is hidden on Settings). -->
-    <div class="bg-background/95 sticky top-0 z-20 -mx-1 space-y-2 px-1 py-1.5 backdrop-blur-sm">
+<div class="relative z-20 isolate space-y-3">
+    <!--
+      Pack/Presets stay outside Filters scroll competition.
+      sticky + isolate + high z so category chips (below) cannot cover these controls.
+      Explore header is not mounted on Settings (layout + header guards).
+    -->
+    <div
+        id="ranking-pack-presets"
+        class="bg-background/95 pointer-events-auto sticky top-0 z-30 -mx-1 space-y-2 px-1 py-1.5 backdrop-blur-sm"
+        data-ranking-controls>
         <!-- Pack switcher: movies/shows vs anime (independent settings keys) -->
         <div
             class="border-border/60 bg-muted/30 flex flex-wrap items-center gap-2 rounded-lg border px-2.5 py-2"
@@ -536,9 +543,13 @@
                     type="button"
                     size="sm"
                     variant={activePack === packOpt.id ? "default" : "outline"}
-                    class="h-7 text-xs"
+                    class="pointer-events-auto relative z-10 h-8 min-w-[7.5rem] text-xs"
                     aria-pressed={activePack === packOpt.id}
-                    onclick={() => switchPack(packOpt.id)}>
+                    aria-label={`Select ${packOpt.label} ranking pack`}
+                    onclick={(e) => {
+                        e.stopPropagation();
+                        switchPack(packOpt.id);
+                    }}>
                     {packOpt.label}
                     {#if packOpt.id !== activePack && (packOpt.id === "ranking" ? JSON.stringify(movieLocal) !== movieBaseline : JSON.stringify(animeLocal) !== animeBaseline)}
                         <span class="ml-1 size-1.5 rounded-full bg-amber-500" aria-hidden="true"
@@ -587,9 +598,13 @@
                     type="button"
                     variant="outline"
                     size="sm"
-                    class="h-7 text-xs"
+                    class="pointer-events-auto relative z-10 h-8 text-xs"
                     title={preset.description}
-                    onclick={() => requestPreset(preset.id)}>
+                    aria-label={`Apply preset ${preset.label}`}
+                    onclick={(e) => {
+                        e.stopPropagation();
+                        requestPreset(preset.id);
+                    }}>
                     {preset.label}
                 </Button>
             {/each}
@@ -681,7 +696,7 @@
 
         <Tabs.Content value="filters" class="mt-3 space-y-3">
             <div
-                class="bg-background/80 sticky top-0 z-10 -mx-1 flex flex-wrap gap-1.5 px-1 py-1.5 backdrop-blur-sm">
+                class="bg-background/80 sticky top-[5.5rem] z-10 -mx-1 flex flex-wrap gap-1.5 px-1 py-1.5 backdrop-blur-sm">
                 {#each categories as cat (cat)}
                     <button
                         type="button"

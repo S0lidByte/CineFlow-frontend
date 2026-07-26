@@ -20,6 +20,7 @@
     import MobileNav from "$lib/components/mobile-nav.svelte";
     import { SearchStore } from "$lib/services/search-store.svelte";
     import { FilterStore } from "$lib/services/filter-store.svelte";
+    import { page } from "$app/state";
 
     let { data, children }: LayoutProps = $props();
 
@@ -27,6 +28,13 @@
 
     const searchStore = new SearchStore();
     const filterStore = new FilterStore();
+
+    /**
+     * Explore media-search header is absolute z-50 over the scrollport.
+     * Settings Ranking Pack/Presets sticky under it cannot raise z-index above a
+     * sibling stacking context — omit the header entirely on Settings.
+     */
+    const showExploreHeader = $derived(!page.url.pathname.startsWith("/settings"));
 
     NProgress.configure({
         showSpinner: false
@@ -66,7 +74,9 @@
             bind:this={mainContent}
             class="size-full overflow-x-hidden overflow-y-scroll"
             style="scrollbar-gutter: stable;">
-            <Header />
+            {#if showExploreHeader}
+                <Header />
+            {/if}
             {@render children?.()}
         </div>
     </main>
