@@ -1149,6 +1149,39 @@ export interface components {
              */
             password: string;
         };
+        /** StremThruConfig */
+        StremThruConfig: {
+            /**
+             * Enabled
+             * @description Enable StremThru Torznab scraper
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Url
+             * @description StremThru instance URL (self-hosted or public)
+             * @default https://stremthru.13377001.xyz
+             */
+            url: string;
+            /**
+             * Timeout
+             * @description Request timeout in seconds
+             * @default 30
+             */
+            timeout: number;
+            /**
+             * Retries
+             * @description Number of retries for failed requests
+             * @default 1
+             */
+            retries: number;
+            /**
+             * Ratelimit
+             * @description Enable rate limiting
+             * @default true
+             */
+            ratelimit: boolean;
+        };
         /** AddMediaItemPayload */
         AddMediaItemPayload: {
             /**
@@ -2823,6 +2856,8 @@ export interface components {
             rarbg?: components["schemas"]["RarbgConfig"];
             /** @description AIOStreams configuration */
             aiostreams?: components["schemas"]["AIOStreamsConfig"];
+            /** @description StremThru Torznab scraper configuration */
+            stremthru?: components["schemas"]["StremThruConfig"];
         };
         /** SelectFilesResponse */
         SelectFilesResponse: {
@@ -3070,10 +3105,27 @@ export interface components {
             /** @description Allow fallback to anonymous login when username/password are empty. */
             allow_anonymous?: boolean;
         };
+        /** SubDLProviderConfig */
+        SubDLProviderConfig: {
+            /**
+             * Enabled
+             * @description Enable SubDL provider
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Api Key
+             * @description SubDL API key (required when enabled)
+             * @default
+             */
+            api_key: string;
+        };
         /** SubtitleProvidersDict */
         SubtitleProvidersDict: {
             /** @description OpenSubtitles provider configuration */
             opensubtitles?: components["schemas"]["OpenSubtitlesProviderConfig"];
+            /** @description SubDL provider configuration */
+            subdl?: components["schemas"]["SubDLProviderConfig"];
         };
         /**
          * TorrentContainer
