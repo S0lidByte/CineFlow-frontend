@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.11.0...riven-frontend-v1.12.0) (2026-07-26)
+
+
+### Features
+
+* **ranking:** add Movies vs Anime pack switcher ([#80](https://github.com/S0lidByte/CineFlow-frontend/issues/80)) ([7919c84](https://github.com/S0lidByte/CineFlow-frontend/commit/7919c84436e6ae863858f83b80902af3ad0047d8))
+
 ## [1.11.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.10.1...riven-frontend-v1.11.0) (2026-07-25)
 
 ### Features
