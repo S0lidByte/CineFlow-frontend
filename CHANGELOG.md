@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.13.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.12.1...riven-frontend-v1.13.0) (2026-07-26)
+
+### Features
+
+- **dashboard:** library health attention queue and settings deep-links ([#84](https://github.com/S0lidByte/CineFlow-frontend/issues/84)) ([e341ea6](https://github.com/S0lidByte/CineFlow-frontend/commit/e341ea60cb7cd5e25ebbd53519f8ef6f55dbec0d))
+
 ## [1.12.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.12.0...riven-frontend-v1.12.1) (2026-07-26)
 
 ### Bug Fixes
