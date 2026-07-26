@@ -232,7 +232,9 @@
         };
     });
 
-    let rivenId = $derived(data.riven?.id ?? data.mediaDetails?.details?.id);
+    // Never fall back to TMDB/TVDB external IDs — those are not Riven item PKs.
+    // Actions (reset/retry/stream) must use data.riven.id only.
+    let rivenId = $derived(data.riven?.id ?? undefined);
     let playbackItemId = $derived.by(() => {
         if (rivenId === null || rivenId === undefined) return undefined;
 
