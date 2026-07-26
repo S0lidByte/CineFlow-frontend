@@ -50,7 +50,7 @@
     // ─── State ───────────────────────────────────────────────────────────────
     let { profiles = {} }: { profiles?: Record<string, LibraryProfile> } = $props();
     let localProfiles = $state<Record<string, LibraryProfile>>(
-        structuredClone(untrack(() => profiles))
+        JSON.parse(JSON.stringify(untrack(() => profiles))) as Record<string, LibraryProfile>
     );
     /** Baseline used for dirty detection; updated after a successful save. */
     let baselineJson = $state(JSON.stringify(untrack(() => profiles)));
@@ -69,7 +69,8 @@
     const isDirty = $derived(JSON.stringify(localProfiles) !== baselineJson);
 
     function discardChanges() {
-        localProfiles = structuredClone(JSON.parse(baselineJson));
+        // JSON clone — structuredClone throws on Svelte 5 $state proxies.
+        localProfiles = JSON.parse(baselineJson) as Record<string, LibraryProfile>;
     }
 
     $effect(() => {
@@ -183,7 +184,10 @@
         };
         if (result.type === "success" || (result.type === "failure" && payload.success)) {
             if (payload.profiles && typeof payload.profiles === "object") {
-                localProfiles = structuredClone(payload.profiles);
+                localProfiles = JSON.parse(JSON.stringify(payload.profiles)) as Record<
+                    string,
+                    LibraryProfile
+                >;
                 baselineJson = JSON.stringify(payload.profiles);
             } else {
                 baselineJson = JSON.stringify(localProfiles);
