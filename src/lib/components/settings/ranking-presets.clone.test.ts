@@ -5,7 +5,7 @@
  *
  * Run: pnpm exec tsx src/lib/components/settings/ranking-presets.clone.test.ts
  */
-import { applyRankingPreset, cloneRankingSettings, RANKING_PRESETS } from "./ranking-presets.ts";
+import { applyRankingPreset, cloneRankingSettings, RANKING_PRESETS } from "./ranking-presets";
 
 function assert(cond: unknown, msg: string): asserts cond {
     if (!cond) throw new Error(msg);
