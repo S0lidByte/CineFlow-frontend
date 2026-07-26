@@ -548,11 +548,11 @@
             {/each}
             <p class="text-muted-foreground w-full text-[11px] sm:ml-auto sm:w-auto">
                 {#if activePack === "ranking_anime"}
-                    Edits <code class="text-[10px]">ranking_anime</code> — used when the item is
-                    anime (or a library profile sets this pack).
+                    Edits <code class="text-[10px]">ranking_anime</code> — used when the item is anime
+                    (or a library profile sets this pack).
                 {:else}
-                    Edits <code class="text-[10px]">ranking</code> — movies and non-anime shows
-                    (library profiles can override via Ranking pack).
+                    Edits <code class="text-[10px]">ranking</code> — movies and non-anime shows (library
+                    profiles can override via Ranking pack).
                 {/if}
             </p>
         </div>

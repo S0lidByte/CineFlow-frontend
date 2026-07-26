@@ -398,8 +398,8 @@
                                     </select>
                                     <span class="text-muted-foreground text-[11px]">
                                         When this profile matches during scrape, use this Ranking
-                                        Studio pack. Auto falls back to the item’s anime flag.
-                                        First matching profile with a pack set wins.
+                                        Studio pack. Auto falls back to the item’s anime flag. First
+                                        matching profile with a pack set wins.
                                     </span>
                                 </div>
 
