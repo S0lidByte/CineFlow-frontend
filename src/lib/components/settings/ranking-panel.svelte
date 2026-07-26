@@ -521,7 +521,7 @@
     }
 </script>
 
-<div class="relative z-20 isolate space-y-3">
+<div class="relative isolate z-20 space-y-3">
     <!--
       Pack/Presets stay outside Filters scroll competition.
       sticky + isolate + high z so category chips (below) cannot cover these controls.
