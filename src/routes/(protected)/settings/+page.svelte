@@ -32,6 +32,8 @@
     } from "$lib/components/ui/alert-dialog/index.js";
     import SettingsFormContent from "$lib/components/settings/settings-form-content.svelte";
     import TraktConnectPanel from "$lib/components/settings/trakt-connect-panel.svelte";
+    import ConnectionTestPanel from "$lib/components/settings/connection-test-panel.svelte";
+    import type { ConnectionService } from "$lib/components/settings/connection-test-panel.svelte";
     import SettingsTabGuide from "$lib/components/settings/settings-tab-guide.svelte";
     import LibraryProfilesPanel from "$lib/components/settings/library-profiles-panel.svelte";
     import RankingPanel from "$lib/components/settings/ranking-panel.svelte";
@@ -64,6 +66,50 @@
 
     /** Maps the icon name stored in {@link SectionTab.icon} to a Svelte component. */
     // Imported ICON_MAP from $lib/components/settings/icon-map
+
+    const CONNECTION_TESTS_BY_TAB: Record<
+        string,
+        { id: ConnectionService; label: string; hint: string }[]
+    > = {
+        downloaders: [
+            {
+                id: "real_debrid",
+                label: "Real-Debrid",
+                hint: "Checks the saved API key against the Real-Debrid /user endpoint."
+            }
+        ],
+        updaters: [
+            {
+                id: "plex",
+                label: "Plex",
+                hint: "Checks the saved server URL and token via /identity."
+            }
+        ],
+        scraping: [
+            {
+                id: "jackett",
+                label: "Jackett",
+                hint: "Checks the saved Jackett URL and API key."
+            },
+            {
+                id: "prowlarr",
+                label: "Prowlarr",
+                hint: "Checks the saved Prowlarr URL and API key."
+            }
+        ],
+        ops: [
+            {
+                id: "opensubtitles",
+                label: "OpenSubtitles",
+                hint: "Logs in with saved credentials (or anonymous if enabled)."
+            },
+            {
+                id: "subdl",
+                label: "SubDL",
+                hint: "Checks the saved SubDL API key with a minimal search."
+            }
+        ]
+    };
 
     /**
      * Shared store for the active form state.
@@ -584,6 +630,10 @@
                         {:else if $page.data.form}
                             {#if $page.data.activeTabId === "content"}
                                 <TraktConnectPanel />
+                            {/if}
+                            {#if CONNECTION_TESTS_BY_TAB[$page.data.activeTabId]}
+                                <ConnectionTestPanel
+                                    services={CONNECTION_TESTS_BY_TAB[$page.data.activeTabId]} />
                             {/if}
                             <SettingsFormContent
                                 {formStore}
