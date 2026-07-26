@@ -228,6 +228,13 @@ const LIBRARY_PROFILES_SHORTCUTS: {
         keywords: ["enabled", "toggle"]
     },
     {
+        path: "library_profiles.ranking_pack",
+        label: "Ranking pack",
+        description:
+            "Optional Movies & Shows or Anime ranking pack for scrape when this profile matches",
+        keywords: ["ranking", "ranking_pack", "anime", "pack"]
+    },
+    {
         path: "library_profiles.filter_rules.content_types",
         label: "Content types",
         description: "Restrict profile to movie and/or show",
