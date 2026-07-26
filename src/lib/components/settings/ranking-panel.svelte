@@ -522,132 +522,150 @@
 </script>
 
 <div class="space-y-3">
-    <!-- Pack switcher: movies/shows vs anime (independent settings keys) -->
-    <div
-        class="border-border/60 bg-muted/30 flex flex-wrap items-center gap-2 rounded-lg border px-2.5 py-2"
-        role="group"
-        aria-label="Ranking pack">
-        <span class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
-            >Pack</span>
-        {#each [{ id: "ranking" as const, label: PACK_LABELS.ranking }, { id: "ranking_anime" as const, label: PACK_LABELS.ranking_anime }] as packOpt (packOpt.id)}
-            <Button
-                type="button"
-                size="sm"
-                variant={activePack === packOpt.id ? "default" : "outline"}
-                class="h-7 text-xs"
-                aria-pressed={activePack === packOpt.id}
-                onclick={() => switchPack(packOpt.id)}>
-                {packOpt.label}
-                {#if packOpt.id !== activePack && (packOpt.id === "ranking" ? JSON.stringify(movieLocal) !== movieBaseline : JSON.stringify(animeLocal) !== animeBaseline)}
-                    <span class="ml-1 size-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
-                {/if}
-            </Button>
-        {/each}
-        <p class="text-muted-foreground w-full text-[11px] sm:ml-auto sm:w-auto">
-            {#if activePack === "ranking_anime"}
-                Edits <code class="text-[10px]">ranking_anime</code> — used when the item is anime.
-            {:else}
-                Edits <code class="text-[10px]">ranking</code> — movies and non-anime shows.
-            {/if}
-        </p>
-    </div>
-
-    <!-- Compact toolbar: status + presets + save -->
-    <div class="flex flex-wrap items-center gap-2">
-        <Badge variant="outline" class="text-xs">
-            {rejectingCount} rejecting
-        </Badge>
-        {#if activeDirty}
-            <Badge
-                class="border-amber-500/30 bg-amber-500/15 text-xs text-amber-600 dark:text-amber-400">
-                Unsaved · {PACK_LABELS[activePack]}
-            </Badge>
-        {:else if otherDirty}
-            <Badge
-                class="border-amber-500/30 bg-amber-500/15 text-xs text-amber-600 dark:text-amber-400">
-                Other pack unsaved
-            </Badge>
-        {:else}
-            <Badge
-                class="border-emerald-500/30 bg-emerald-500/10 text-xs text-emerald-600 dark:text-emerald-400">
-                <Check class="mr-1 size-3" />
-                Saved
-            </Badge>
-        {/if}
-
-        <div class="bg-border/60 mx-1 hidden h-4 w-px sm:block" aria-hidden="true"></div>
-
-        <span class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
-            >Presets</span>
-        {#each RANKING_PRESETS as preset (preset.id)}
-            <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                class="h-7 text-xs"
-                title={preset.description}
-                onclick={() => requestPreset(preset.id)}>
-                {preset.label}
-            </Button>
-        {/each}
-
-        <div class="ml-auto flex flex-wrap gap-2">
-            <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={!activeDirty || isSaving}
-                onclick={discardChanges}>
-                Discard
-            </Button>
-            <form
-                method="POST"
-                action="/ranking?/save"
-                use:enhance={({ cancel, formData }) => {
-                    commitPatternEditors();
-                    commitLanguageEditors();
-                    if (!runClientPatternCheck()) {
-                        toast.error("Fix pattern errors before saving");
-                        cancel();
-                        return;
-                    }
-                    // Commit updates localRanking sync, but hidden inputs re-render async —
-                    // write committed payload into FormData so the POST is not stale.
-                    formData.set("pack", activePack);
-                    formData.set("ranking", JSON.stringify(localRanking));
-                    isSaving = true;
-                    return async ({ result }) => {
-                        handleSaveResult(
-                            result as {
-                                type: string;
-                                data?: {
-                                    success?: boolean;
-                                    pack?: RankingPackId;
-                                    ranking?: RankingSettings;
-                                    error?: string;
-                                };
-                            }
-                        );
-                    };
-                }}
-                class="contents">
-                <input type="hidden" name="pack" value={activePack} />
-                <input type="hidden" name="ranking" value={JSON.stringify(localRanking)} />
+    <!-- Sticky so Pack/Presets stay clickable above Filters while scrolling (header is hidden on Settings). -->
+    <div class="bg-background/95 sticky top-0 z-20 -mx-1 space-y-2 px-1 py-1.5 backdrop-blur-sm">
+        <!-- Pack switcher: movies/shows vs anime (independent settings keys) -->
+        <div
+            class="border-border/60 bg-muted/30 flex flex-wrap items-center gap-2 rounded-lg border px-2.5 py-2"
+            role="group"
+            aria-label="Ranking pack">
+            <span class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
+                >Pack</span>
+            {#each [{ id: "ranking" as const, label: PACK_LABELS.ranking }, { id: "ranking_anime" as const, label: PACK_LABELS.ranking_anime }] as packOpt (packOpt.id)}
                 <Button
-                    id="ranking-save-submit"
-                    type="submit"
+                    type="button"
                     size="sm"
-                    disabled={!activeDirty || isSaving}>
-                    {#if isSaving}
-                        <Loader2 class="size-3.5 animate-spin" />
-                        Saving…
-                    {:else}
-                        Save {PACK_LABELS[activePack]}
+                    variant={activePack === packOpt.id ? "default" : "outline"}
+                    class="h-7 text-xs"
+                    aria-pressed={activePack === packOpt.id}
+                    onclick={() => switchPack(packOpt.id)}>
+                    {packOpt.label}
+                    {#if packOpt.id !== activePack && (packOpt.id === "ranking" ? JSON.stringify(movieLocal) !== movieBaseline : JSON.stringify(animeLocal) !== animeBaseline)}
+                        <span class="ml-1 size-1.5 rounded-full bg-amber-500" aria-hidden="true"
+                        ></span>
                     {/if}
                 </Button>
-            </form>
+            {/each}
+            <p class="text-muted-foreground w-full text-[11px] sm:ml-auto sm:w-auto">
+                {#if activePack === "ranking_anime"}
+                    Edits <code class="text-[10px]">ranking_anime</code> — used when the item is anime.
+                {:else}
+                    Edits <code class="text-[10px]">ranking</code> — movies and non-anime shows.
+                {/if}
+            </p>
+        </div>
+
+        <!-- Compact toolbar: status + presets + save -->
+        <div class="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" class="text-xs">
+                {rejectingCount} rejecting
+            </Badge>
+            {#if activeDirty}
+                <Badge
+                    class="border-amber-500/30 bg-amber-500/15 text-xs text-amber-600 dark:text-amber-400">
+                    Unsaved · {PACK_LABELS[activePack]}
+                </Badge>
+            {:else if otherDirty}
+                <Badge
+                    class="border-amber-500/30 bg-amber-500/15 text-xs text-amber-600 dark:text-amber-400">
+                    Other pack unsaved
+                </Badge>
+            {:else}
+                <Badge
+                    class="border-emerald-500/30 bg-emerald-500/10 text-xs text-emerald-600 dark:text-emerald-400">
+                    <Check class="mr-1 size-3" />
+                    Saved
+                </Badge>
+            {/if}
+
+            <div class="bg-border/60 mx-1 hidden h-4 w-px sm:block" aria-hidden="true"></div>
+
+            <span class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
+                >Presets</span>
+            {#each RANKING_PRESETS as preset (preset.id)}
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    class="h-7 text-xs"
+                    title={preset.description}
+                    onclick={() => requestPreset(preset.id)}>
+                    {preset.label}
+                </Button>
+            {/each}
+
+            <div class="ml-auto flex flex-wrap gap-2">
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={!activeDirty || isSaving}
+                    onclick={discardChanges}>
+                    Discard
+                </Button>
+                <form
+                    method="POST"
+                    action="/ranking?/save"
+                    use:enhance={({ cancel, formData }) => {
+                        commitPatternEditors();
+                        commitLanguageEditors();
+                        if (!runClientPatternCheck()) {
+                            toast.error("Fix pattern errors before saving");
+                            cancel();
+                            return;
+                        }
+                        // Commit updates localRanking sync, but hidden inputs re-render async —
+                        // write committed payload into FormData so the POST is not stale.
+                        formData.set("pack", activePack);
+                        formData.set("ranking", JSON.stringify(localRanking));
+                        isSaving = true;
+                        return async ({ result }) => {
+                            handleSaveResult(
+                                result as {
+                                    type: string;
+                                    data?: {
+                                        success?: boolean;
+                                        pack?: RankingPackId;
+                                        ranking?: RankingSettings;
+                                        error?: string;
+                                    };
+                                }
+                            );
+                        };
+                    }}
+                    class="contents">
+                    <input type="hidden" name="pack" value={activePack} />
+                    <input type="hidden" name="ranking" value={JSON.stringify(localRanking)} />
+                    <Button
+                        id="ranking-save-submit"
+                        type="submit"
+                        size="sm"
+                        disabled={!activeDirty || isSaving}>
+                        {#if isSaving}
+                            <Loader2 class="size-3.5 animate-spin" />
+                            Saving…
+                        {:else}
+                            Save {PACK_LABELS[activePack]}
+                        {/if}
+                    </Button>
+                </form>
+            </div>
         </div>
     </div>
+
+    {#if !(localRanking.custom_ranks && Object.keys(localRanking.custom_ranks).length)}
+        <div
+            class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200"
+            role="status">
+            {PACK_LABELS[activePack]} has no quality filters yet
+            {#if activePack === "ranking_anime"}
+                (backend may be older than ranking_anime, or the pack was never initialized).
+            {:else}
+                .
+            {/if}
+            Apply a Preset above to populate Filters, then Save.
+        </div>
+    {/if}
 
     <Tabs.Root bind:value={panelTab} class="w-full">
         <Tabs.List class="grid w-full max-w-3xl grid-cols-2 sm:grid-cols-5">
