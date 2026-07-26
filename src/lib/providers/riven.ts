@@ -2936,7 +2936,7 @@ export interface components {
          * @enum {string}
          */
         StatesFilter: "All";
-            /** StatsResponse */
+        /** StatsResponse */
         StatsResponse: {
             /** Total Items */
             total_items: number;

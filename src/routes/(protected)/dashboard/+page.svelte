@@ -20,9 +20,7 @@
 
     const failedCount = $derived((data.statistics?.states?.Failed ?? 0).toLocaleString());
 
-    const incompleteCount = $derived(
-        (data.statistics?.incomplete_items ?? 0).toLocaleString()
-    );
+    const incompleteCount = $derived((data.statistics?.incomplete_items ?? 0).toLocaleString());
 
     const needsAttention = $derived(data.statistics?.needs_attention ?? []);
 
@@ -39,11 +37,7 @@
 
     function serviceSettingsHref(serviceName: string): string {
         const key = serviceName.toLowerCase();
-        if (
-            key.includes("debrid") ||
-            key.includes("torbox") ||
-            key.includes("downloader")
-        ) {
+        if (key.includes("debrid") || key.includes("torbox") || key.includes("downloader")) {
             return "/settings?tab=downloaders";
         }
         if (
@@ -268,7 +262,9 @@
                         {#each needsAttention as item (item.id)}
                             <li class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
                                 <a
-                                    href={resolve(`/library?search=${encodeURIComponent(item.title)}`)}
+                                    href={resolve(
+                                        `/library?search=${encodeURIComponent(item.title)}`
+                                    )}
                                     class="min-w-0 flex-1 truncate text-sm font-medium text-neutral-100 hover:underline">
                                     {item.title}
                                 </a>
@@ -278,9 +274,7 @@
                                     {item.state}
                                 </Badge>
                                 <span class="shrink-0 font-mono text-xs text-neutral-400">
-                                    {item.scraped_times} scrape{item.scraped_times === 1
-                                        ? ""
-                                        : "s"}
+                                    {item.scraped_times} scrape{item.scraped_times === 1 ? "" : "s"}
                                 </span>
                             </li>
                         {/each}
