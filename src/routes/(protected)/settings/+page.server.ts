@@ -481,7 +481,7 @@ export const load: PageServerLoad = async ({
                         baseUrl: locals.backendUrl,
                         headers: { "x-api-key": locals.apiKey },
                         fetch,
-                        params: { path: { paths: "ranking" } }
+                        params: { path: { paths: "ranking,ranking_anime" } }
                     }),
                     fetch(`${locals.backendUrl}/api/v1/ranking/meta`, {
                         headers: { "x-api-key": locals.apiKey }
@@ -489,8 +489,19 @@ export const load: PageServerLoad = async ({
                     getFullSettingsSchema(locals.backendUrl, locals.apiKey, fetch)
                 ]);
 
-                if (rankingRes.error) {
-                    throw new Error("Failed to load ranking settings");
+                let rankingPayload = rankingRes.data as Record<string, unknown> | undefined;
+                if (rankingRes.error || !rankingPayload) {
+                    // Older backends without ranking_anime: fall back to movies pack only.
+                    const fallback = await providers.riven.GET("/api/v1/settings/get/{paths}", {
+                        baseUrl: locals.backendUrl,
+                        headers: { "x-api-key": locals.apiKey },
+                        fetch,
+                        params: { path: { paths: "ranking" } }
+                    });
+                    if (fallback.error || !fallback.data) {
+                        throw new Error("Failed to load ranking settings");
+                    }
+                    rankingPayload = fallback.data as Record<string, unknown>;
                 }
 
                 let meta: {
@@ -549,19 +560,19 @@ export const load: PageServerLoad = async ({
                     };
                 }
 
-                const ranking = (rankingRes.data as Record<string, unknown>)["ranking"] as Record<
-                    string,
-                    unknown
-                >;
+                const ranking = (rankingPayload["ranking"] as Record<string, unknown>) ?? {};
+                const rankingAnime =
+                    (rankingPayload["ranking_anime"] as Record<string, unknown>) ?? {};
 
                 return {
                     tabs: SETTINGS_TABS,
                     activeTabId: tab.id,
-                    paths: "ranking",
+                    paths: "ranking,ranking_anime",
                     searchIndex: buildSearchIndex(fullSchema),
                     focusPath: url.searchParams.get("focus") ?? null,
                     customData: {
                         ranking,
+                        rankingAnime,
                         rankingMeta: meta
                     }
                 };

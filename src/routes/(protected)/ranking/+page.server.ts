@@ -4,40 +4,55 @@ import providers from "$lib/providers";
 import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("ranking-page-server");
-const PATHS = "ranking";
 const SETTINGS_WRITE_HEADERS = {
     "x-actor-roles": "platform:admin,settings:write,playback:operator"
 };
 
-async function fetchRanking(
+/** Settings keys for independent Ranking Studio packs. */
+export type RankingPackKey = "ranking" | "ranking_anime";
+
+function isRankingPackKey(value: unknown): value is RankingPackKey {
+    return value === "ranking" || value === "ranking_anime";
+}
+
+function parsePack(formData: FormData): RankingPackKey {
+    const raw = formData.get("pack");
+    if (isRankingPackKey(raw)) return raw;
+    return "ranking";
+}
+
+async function fetchRankingPack(
     baseUrl: string,
     apiKey: string,
+    pack: RankingPackKey,
     fetchFn: typeof globalThis.fetch
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
         headers: { "x-api-key": apiKey },
         fetch: fetchFn,
-        params: { path: { paths: PATHS } }
+        params: { path: { paths: pack } }
     });
-    if (res.error) throw new Error("Failed to load ranking settings");
-    return (res.data as Record<string, unknown>)["ranking"] as Record<string, unknown>;
+    if (res.error) throw new Error(`Failed to load ${pack} settings`);
+    const data = res.data as Record<string, unknown>;
+    return (data[pack] as Record<string, unknown>) ?? {};
 }
 
-async function saveRanking(
+async function saveRankingPack(
     baseUrl: string,
     apiKey: string,
+    pack: RankingPackKey,
     ranking: Record<string, unknown>,
     fetchFn: typeof globalThis.fetch
 ): Promise<void> {
     const res = await providers.riven.POST("/api/v1/settings/set/{paths}", {
-        body: { ranking },
+        body: { [pack]: ranking } as never,
         baseUrl,
         headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
         fetch: fetchFn,
-        params: { path: { paths: PATHS } }
+        params: { path: { paths: pack } }
     });
-    if (res.error) throw new Error("Failed to save ranking settings");
+    if (res.error) throw new Error(`Failed to save ${pack} settings`);
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -50,6 +65,7 @@ export const actions = {
         if (locals.user?.role !== "admin") error(403, "Forbidden");
 
         const formData = await request.formData();
+        const pack = parsePack(formData);
         const rankingJson = formData.get("ranking");
         if (!rankingJson || typeof rankingJson !== "string") {
             return fail(400, { error: "Missing ranking data" });
@@ -108,15 +124,21 @@ export const actions = {
         }
 
         try {
-            await saveRanking(locals.backendUrl, locals.apiKey, ranking, fetch);
-            const saved = await fetchRanking(locals.backendUrl, locals.apiKey, fetch);
-            logger.info("Ranking settings saved");
-            return { success: true, ranking: saved };
+            await saveRankingPack(locals.backendUrl, locals.apiKey, pack, ranking, fetch);
+            const saved = await fetchRankingPack(locals.backendUrl, locals.apiKey, pack, fetch);
+            logger.info("Ranking settings saved", { pack });
+            return { success: true, pack, ranking: saved };
         } catch (e) {
             logger.error("Ranking save failed", {
+                pack,
                 error: e instanceof Error ? e.message : String(e)
             });
-            return fail(500, { error: "Failed to save ranking settings" });
+            return fail(500, {
+                error:
+                    pack === "ranking_anime"
+                        ? "Failed to save anime ranking. Ensure the backend supports ranking_anime."
+                        : "Failed to save ranking settings"
+            });
         }
     },
 

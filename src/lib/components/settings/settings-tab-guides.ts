@@ -159,10 +159,11 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         ]
     },
     ranking: {
-        headline: "Fetch off → logs show denied by: category_attribute (e.g. audio_ddp).",
+        headline: "Two packs: Movies & Shows vs Anime — edit quality independently.",
         howToUse: [
+            "Switch pack (Movies & Shows / Anime) before editing Filters — each saves to its own settings key.",
             "Use Filters for the Fetch|Custom|Rank matrix; Languages / Patterns / Options for RTN lists.",
-            "Presets (Balanced, WEB-DL, Strict, Anime Dub Friendly, Remux Max, Kids Safe) apply ranking packs only.",
+            "Presets (Balanced, WEB-DL, Strict, Anime Dub Friendly, Remux Max, Kids Safe) apply to the active pack only.",
             "Paste a release title in Tester to preview accept/reject without saving.",
             "When Tester shows extras_dubbed or missing_required_language, follow the Scraping soft-opt-in link.",
             "title_mismatch / remakes: matching modes with scrape badge write title_similarity; remake_diagnose is tester-only.",
@@ -170,14 +171,17 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Load scrape funnel by item id to see rtn_top deny buckets after a scrape."
         ],
         tips: [
-            "Disney+/Amazon WEB-DL often needs audio_dolby_digital_plus fetch enabled.",
+            "Anime scrapes use ranking_anime; movies/shows use ranking — changing one never overwrites the other.",
+            "Disney+/Amazon WEB-DL often needs audio_dolby_digital_plus fetch enabled on the Movies pack.",
             "Wrap regex in /slashes/ for case-sensitive patterns; Validate & preview before save.",
             "Anime Dub Friendly never silently enables Scraping soft-opt-ins — confirm the dialog."
         ],
         cautions: [
-            "Over-aggressive deny rules produce empty scrape results with no obvious UI error."
+            "Over-aggressive deny rules produce empty scrape results with no obvious UI error.",
+            "Save each pack separately if both have unsaved edits."
         ],
         highlights: [
+            { title: "Packs", detail: "Movies & Shows → ranking; Anime → ranking_anime." },
             { title: "Fetch", detail: "When false, matching releases are rejected outright." },
             {
                 title: "Patterns",
