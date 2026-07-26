@@ -2970,6 +2970,16 @@ export interface components {
             media_year_releases: {
                 [key: string]: number | null;
             }[];
+            /**
+             * Needs Attention
+             * @description Top incomplete/failed items by scrape attempts (capped; for Dashboard ops queue)
+             */
+            needs_attention?: {
+                id: number;
+                title: string;
+                state: string;
+                scraped_times: number;
+            }[];
         };
         /** StreamModel */
         StreamModel: {
