@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.15.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.14.0...riven-frontend-v1.15.0) (2026-07-26)
+
+
+### Features
+
+* **settings:** add per-library ranking pack selector ([#90](https://github.com/S0lidByte/CineFlow-frontend/issues/90)) ([84ae76f](https://github.com/S0lidByte/CineFlow-frontend/commit/84ae76f2648be4aeaf6a23ae461faa0d7dc208d5))
+
+
+### Bug Fixes
+
+* **ui:** harden Ranking Pack/Presets clicks beyond header hide ([#91](https://github.com/S0lidByte/CineFlow-frontend/issues/91)) ([576fa3c](https://github.com/S0lidByte/CineFlow-frontend/commit/576fa3c3aa91e9f93db7e35f740a5c9d52d96a17))
+
 ## [1.14.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.13.0...riven-frontend-v1.14.0) (2026-07-26)
 
 ### Features
