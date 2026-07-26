@@ -138,8 +138,10 @@
 
 <header
     class="pointer-events-none absolute top-0 left-0 z-50 hidden h-20 w-full items-center bg-gradient-to-b from-black/50 to-transparent px-4 transition-all duration-500 md:flex md:px-16">
-    <div class="pointer-events-auto flex w-full items-center justify-between gap-6">
-        <div class="mx-auto w-full max-w-lg transition-all duration-300 focus-within:max-w-xl">
+    <!-- pointer-events-auto only on interactive clusters — full-width band would steal clicks from content under the gradient (e.g. Ranking Studio Pack/Presets). -->
+    <div class="flex w-full items-center justify-between gap-6">
+        <div
+            class="pointer-events-auto mx-auto w-full max-w-lg transition-all duration-300 focus-within:max-w-xl">
             <InputGroup.Root
                 class="h-11 w-full rounded-full border border-white/5 bg-white/5 shadow-lg backdrop-blur-xl transition-all duration-300 focus-within:border-white/10 focus-within:bg-black/40 focus-within:ring-1 focus-within:ring-white/20 hover:bg-white/10">
                 <InputGroup.Addon align="inline-start" class="pl-4">
@@ -170,7 +172,7 @@
             </InputGroup.Root>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="pointer-events-auto flex items-center gap-2">
             <div class="md:hidden">
                 <NotificationCenter class="bg-background/60 rounded-xl backdrop-blur-md" />
             </div>
