@@ -131,8 +131,9 @@ export const SETTINGS_TABS: SectionTab[] = [
         label: "Ranking",
         icon: "list-ordered",
         group: "tuning",
-        description: "RTN quality filters, presets, and a release tester for deny-key debugging.",
-        keys: ["ranking"],
+        description:
+            "RTN quality filters for movies/shows and anime (independent packs), presets, and a release tester.",
+        keys: ["ranking", "ranking_anime"],
         custom: true
     },
     {

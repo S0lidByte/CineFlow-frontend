@@ -88,11 +88,22 @@
 
     interface Props {
         ranking?: RankingSettings;
+        rankingAnime?: RankingSettings;
         meta?: RankingMeta;
     }
 
-    let { ranking = {}, meta = { deny_keys: {}, attribute_titles: {}, categories: {} } }: Props =
-        $props();
+    type RankingPackId = "ranking" | "ranking_anime";
+
+    const PACK_LABELS: Record<RankingPackId, string> = {
+        ranking: "Movies & Shows",
+        ranking_anime: "Anime"
+    };
+
+    let {
+        ranking = {},
+        rankingAnime = {},
+        meta = { deny_keys: {}, attribute_titles: {}, categories: {} }
+    }: Props = $props();
 
     function normalizeRanking(raw: RankingSettings): RankingSettings {
         const next = structuredClone(raw) as RankingSettings;
@@ -103,9 +114,21 @@
         return next;
     }
 
+    let activePack = $state<RankingPackId>("ranking");
+    let movieLocal = $state(normalizeRanking(untrack(() => ranking)));
+    let movieBaseline = $state(JSON.stringify(untrack(() => normalizeRanking(ranking))));
+    let animeLocal = $state(normalizeRanking(untrack(() => rankingAnime)));
+    let animeBaseline = $state(JSON.stringify(untrack(() => normalizeRanking(rankingAnime))));
+
     let localRanking = $state(normalizeRanking(untrack(() => ranking)));
     let baselineJson = $state(JSON.stringify(untrack(() => normalizeRanking(ranking))));
-    let isDirty = $derived(JSON.stringify(localRanking) !== baselineJson);
+    let activeDirty = $derived(JSON.stringify(localRanking) !== baselineJson);
+    let otherDirty = $derived(
+        activePack === "ranking"
+            ? JSON.stringify(animeLocal) !== animeBaseline
+            : JSON.stringify(movieLocal) !== movieBaseline
+    );
+    let isDirty = $derived(activeDirty || otherDirty);
     let isSaving = $state(false);
     /** Tester-only remake_diagnose threshold — never written into saveable ranking. */
     let testerMatchingMode = $state<TitleMatchingMode | null>(null);
@@ -149,8 +172,36 @@
         }
     });
 
+    function persistActiveDraft() {
+        commitPatternEditors();
+        commitLanguageEditors();
+        if (activePack === "ranking") {
+            movieLocal = structuredClone(localRanking);
+        } else {
+            animeLocal = structuredClone(localRanking);
+        }
+    }
+
+    function switchPack(next: RankingPackId) {
+        if (next === activePack) return;
+        persistActiveDraft();
+        activePack = next;
+        localRanking =
+            next === "ranking" ? structuredClone(movieLocal) : structuredClone(animeLocal);
+        baselineJson = next === "ranking" ? movieBaseline : animeBaseline;
+        testerMatchingMode = null;
+        testResult = null;
+        syncPatternEditors();
+        hydrateLanguageEditors();
+    }
+
     function discardChanges() {
         localRanking = structuredClone(JSON.parse(baselineJson));
+        if (activePack === "ranking") {
+            movieLocal = structuredClone(localRanking);
+        } else {
+            animeLocal = structuredClone(localRanking);
+        }
         syncPatternEditors();
         hydrateLanguageEditors();
     }
@@ -344,15 +395,29 @@
 
     function handleSaveResult(result: {
         type: string;
-        data?: { success?: boolean; ranking?: RankingSettings; error?: string };
+        data?: {
+            success?: boolean;
+            pack?: RankingPackId;
+            ranking?: RankingSettings;
+            error?: string;
+        };
     }) {
         isSaving = false;
         if (result.type === "success" && result.data?.success && result.data.ranking) {
-            localRanking = normalizeRanking(result.data.ranking);
-            baselineJson = JSON.stringify(localRanking);
+            const saved = normalizeRanking(result.data.ranking);
+            const pack = result.data.pack ?? activePack;
+            localRanking = saved;
+            baselineJson = JSON.stringify(saved);
+            if (pack === "ranking") {
+                movieLocal = structuredClone(saved);
+                movieBaseline = baselineJson;
+            } else {
+                animeLocal = structuredClone(saved);
+                animeBaseline = baselineJson;
+            }
             syncPatternEditors();
             hydrateLanguageEditors();
-            toast.success("Ranking settings saved");
+            toast.success(`${PACK_LABELS[pack]} ranking saved`);
         } else {
             toast.error(result.data?.error ?? "Failed to save ranking settings");
         }
@@ -457,15 +522,50 @@
 </script>
 
 <div class="space-y-3">
+    <!-- Pack switcher: movies/shows vs anime (independent settings keys) -->
+    <div
+        class="border-border/60 bg-muted/30 flex flex-wrap items-center gap-2 rounded-lg border px-2.5 py-2"
+        role="group"
+        aria-label="Ranking pack">
+        <span class="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
+            >Pack</span>
+        {#each [{ id: "ranking" as const, label: PACK_LABELS.ranking }, { id: "ranking_anime" as const, label: PACK_LABELS.ranking_anime }] as packOpt (packOpt.id)}
+            <Button
+                type="button"
+                size="sm"
+                variant={activePack === packOpt.id ? "default" : "outline"}
+                class="h-7 text-xs"
+                aria-pressed={activePack === packOpt.id}
+                onclick={() => switchPack(packOpt.id)}>
+                {packOpt.label}
+                {#if packOpt.id !== activePack && (packOpt.id === "ranking" ? JSON.stringify(movieLocal) !== movieBaseline : JSON.stringify(animeLocal) !== animeBaseline)}
+                    <span class="ml-1 size-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
+                {/if}
+            </Button>
+        {/each}
+        <p class="text-muted-foreground w-full text-[11px] sm:ml-auto sm:w-auto">
+            {#if activePack === "ranking_anime"}
+                Edits <code class="text-[10px]">ranking_anime</code> — used when the item is anime.
+            {:else}
+                Edits <code class="text-[10px]">ranking</code> — movies and non-anime shows.
+            {/if}
+        </p>
+    </div>
+
     <!-- Compact toolbar: status + presets + save -->
     <div class="flex flex-wrap items-center gap-2">
         <Badge variant="outline" class="text-xs">
             {rejectingCount} rejecting
         </Badge>
-        {#if isDirty}
+        {#if activeDirty}
             <Badge
                 class="border-amber-500/30 bg-amber-500/15 text-xs text-amber-600 dark:text-amber-400">
-                Unsaved
+                Unsaved · {PACK_LABELS[activePack]}
+            </Badge>
+        {:else if otherDirty}
+            <Badge
+                class="border-amber-500/30 bg-amber-500/15 text-xs text-amber-600 dark:text-amber-400">
+                Other pack unsaved
             </Badge>
         {:else}
             <Badge
@@ -496,7 +596,7 @@
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={!isDirty || isSaving}
+                disabled={!activeDirty || isSaving}
                 onclick={discardChanges}>
                 Discard
             </Button>
@@ -513,6 +613,7 @@
                     }
                     // Commit updates localRanking sync, but hidden inputs re-render async —
                     // write committed payload into FormData so the POST is not stale.
+                    formData.set("pack", activePack);
                     formData.set("ranking", JSON.stringify(localRanking));
                     isSaving = true;
                     return async ({ result }) => {
@@ -521,6 +622,7 @@
                                 type: string;
                                 data?: {
                                     success?: boolean;
+                                    pack?: RankingPackId;
                                     ranking?: RankingSettings;
                                     error?: string;
                                 };
@@ -529,17 +631,18 @@
                     };
                 }}
                 class="contents">
+                <input type="hidden" name="pack" value={activePack} />
                 <input type="hidden" name="ranking" value={JSON.stringify(localRanking)} />
                 <Button
                     id="ranking-save-submit"
                     type="submit"
                     size="sm"
-                    disabled={!isDirty || isSaving}>
+                    disabled={!activeDirty || isSaving}>
                     {#if isSaving}
                         <Loader2 class="size-3.5 animate-spin" />
                         Saving…
                     {:else}
-                        Save ranking
+                        Save {PACK_LABELS[activePack]}
                     {/if}
                 </Button>
             </form>

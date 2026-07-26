@@ -570,6 +570,8 @@
                             <RankingPanel
                                 ranking={($page.data.customData?.ranking ??
                                     {}) as import("$lib/components/settings/ranking-presets").RankingSettings}
+                                rankingAnime={($page.data.customData?.rankingAnime ??
+                                    {}) as import("$lib/components/settings/ranking-presets").RankingSettings}
                                 meta={($page.data.customData?.rankingMeta ?? {
                                     deny_keys: {},
                                     attribute_titles: {},
