@@ -2,10 +2,9 @@
 
 ## [1.15.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.0...riven-frontend-v1.15.1) (2026-07-26)
 
-
 ### Bug Fixes
 
-* **settings:** Ranking Pack/Presets broken by structuredClone on $state proxies ([#93](https://github.com/S0lidByte/CineFlow-frontend/issues/93)) ([1454a60](https://github.com/S0lidByte/CineFlow-frontend/commit/1454a60e03c06d79ddbb01f3c94e3e204d95ed3a))
+- **settings:** Ranking Pack/Presets broken by structuredClone on $state proxies ([#93](https://github.com/S0lidByte/CineFlow-frontend/issues/93)) ([1454a60](https://github.com/S0lidByte/CineFlow-frontend/commit/1454a60e03c06d79ddbb01f3c94e3e204d95ed3a))
 
 ## [1.15.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.14.0...riven-frontend-v1.15.0) (2026-07-26)
 
