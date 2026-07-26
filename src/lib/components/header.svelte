@@ -131,59 +131,70 @@
     function onKeydown(e: KeyboardEvent) {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
             e.preventDefault();
+            // Settings has its own Cmd/Ctrl+K palette — don't steal focus to media search.
+            if (page.url.pathname.startsWith("/settings")) return;
             inputRef?.focus();
         }
     }
+
+    /**
+     * Explore search is useless on Settings (own palette) and overlays Ranking Studio.
+     * #82 limited pointer-events to the search cluster, but that cluster is still
+     * max-w-lg centered — Pack/Preset clicks under it still miss when scrolled.
+     */
+    const hideExploreSearch = $derived(page.url.pathname.startsWith("/settings"));
 </script>
 
-<header
-    class="pointer-events-none absolute top-0 left-0 z-50 hidden h-20 w-full items-center bg-gradient-to-b from-black/50 to-transparent px-4 transition-all duration-500 md:flex md:px-16">
-    <!-- pointer-events-auto only on interactive clusters — full-width band would steal clicks from content under the gradient (e.g. Ranking Studio Pack/Presets). -->
-    <div class="flex w-full items-center justify-between gap-6">
-        <div
-            class="pointer-events-auto mx-auto w-full max-w-lg transition-all duration-300 focus-within:max-w-xl">
-            <InputGroup.Root
-                class="h-11 w-full rounded-full border border-white/5 bg-white/5 shadow-lg backdrop-blur-xl transition-all duration-300 focus-within:border-white/10 focus-within:bg-black/40 focus-within:ring-1 focus-within:ring-white/20 hover:bg-white/10">
-                <InputGroup.Addon align="inline-start" class="pl-4">
-                    <Search class="size-4 text-white/50" />
-                </InputGroup.Addon>
-                <InputGroup.Input
-                    bind:ref={inputRef}
-                    name="query"
-                    placeholder="Search movies, shows, people..."
-                    aria-label="Search"
-                    bind:value={inputValue}
-                    class="text-sm font-medium placeholder:text-white/40"
-                    oninput={handleInput}
-                    onkeydown={(e) => {
-                        if (e.key === "Enter") {
-                            e.preventDefault();
-                            void navigateToSearch(true);
-                        }
-                    }}
-                    autocomplete="off" />
-                {#if modifierKey}
-                    <InputGroup.Addon align="inline-end" class="pr-4">
-                        <Kbd.Root
-                            class="h-5 min-h-0 border-white/10 bg-white/5 px-1.5 text-[10px] text-white/50"
-                            >{modifierKey}K</Kbd.Root>
+{#if !hideExploreSearch}
+    <header
+        class="pointer-events-none absolute top-0 left-0 z-50 hidden h-20 w-full items-center bg-gradient-to-b from-black/50 to-transparent px-4 transition-all duration-500 md:flex md:px-16">
+        <!-- pointer-events-auto only on the search control itself — not a full-width band. -->
+        <div class="flex w-full items-center justify-between gap-6">
+            <div
+                class="pointer-events-auto mx-auto w-full max-w-lg transition-all duration-300 focus-within:max-w-xl">
+                <InputGroup.Root
+                    class="h-11 w-full rounded-full border border-white/5 bg-white/5 shadow-lg backdrop-blur-xl transition-all duration-300 focus-within:border-white/10 focus-within:bg-black/40 focus-within:ring-1 focus-within:ring-white/20 hover:bg-white/10">
+                    <InputGroup.Addon align="inline-start" class="pl-4">
+                        <Search class="size-4 text-white/50" />
                     </InputGroup.Addon>
-                {/if}
-            </InputGroup.Root>
-        </div>
-
-        <div class="pointer-events-auto flex items-center gap-2">
-            <div class="md:hidden">
-                <NotificationCenter class="bg-background/60 rounded-xl backdrop-blur-md" />
+                    <InputGroup.Input
+                        bind:ref={inputRef}
+                        name="query"
+                        placeholder="Search movies, shows, people..."
+                        aria-label="Search"
+                        bind:value={inputValue}
+                        class="text-sm font-medium placeholder:text-white/40"
+                        oninput={handleInput}
+                        onkeydown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                void navigateToSearch(true);
+                            }
+                        }}
+                        autocomplete="off" />
+                    {#if modifierKey}
+                        <InputGroup.Addon align="inline-end" class="pr-4">
+                            <Kbd.Root
+                                class="h-5 min-h-0 border-white/10 bg-white/5 px-1.5 text-[10px] text-white/50"
+                                >{modifierKey}K</Kbd.Root>
+                        </InputGroup.Addon>
+                    {/if}
+                </InputGroup.Root>
             </div>
 
-            <Button
-                variant="ghost"
-                class="bg-background/60 size-10 rounded-xl backdrop-blur-md md:hidden"
-                onclick={() => SidebarStore.toggle()}>
-                <Menu class="size-5" />
-            </Button>
+            <div class="pointer-events-auto flex items-center gap-2">
+                <div class="md:hidden">
+                    <NotificationCenter class="bg-background/60 rounded-xl backdrop-blur-md" />
+                </div>
+
+                <Button
+                    variant="ghost"
+                    class="bg-background/60 size-10 rounded-xl backdrop-blur-md md:hidden"
+                    onclick={() => SidebarStore.toggle()}>
+                    <Menu class="size-5" />
+                </Button>
+            </div>
         </div>
-    </div>
-</header>
+    </header>
+{/if}
 <svelte:document onkeydown={onKeydown} />

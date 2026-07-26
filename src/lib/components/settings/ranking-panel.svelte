@@ -522,6 +522,9 @@
 </script>
 
 <div class="space-y-3">
+    <!-- Sticky so Pack/Presets stay clickable above Filters while scrolling (header is hidden on Settings). -->
+    <div
+        class="bg-background/95 sticky top-0 z-20 -mx-1 space-y-2 px-1 py-1.5 backdrop-blur-sm">
     <!-- Pack switcher: movies/shows vs anime (independent settings keys) -->
     <div
         class="border-border/60 bg-muted/30 flex flex-wrap items-center gap-2 rounded-lg border px-2.5 py-2"
@@ -648,6 +651,21 @@
             </form>
         </div>
     </div>
+    </div>
+
+    {#if !(localRanking.custom_ranks && Object.keys(localRanking.custom_ranks).length)}
+        <div
+            class="border-amber-500/30 bg-amber-500/10 rounded-lg border px-3 py-2 text-xs text-amber-800 dark:text-amber-200"
+            role="status">
+            {PACK_LABELS[activePack]} has no quality filters yet
+            {#if activePack === "ranking_anime"}
+                (backend may be older than ranking_anime, or the pack was never initialized).
+            {:else}
+                .
+            {/if}
+            Apply a Preset above to populate Filters, then Save.
+        </div>
+    {/if}
 
     <Tabs.Root bind:value={panelTab} class="w-full">
         <Tabs.List class="grid w-full max-w-3xl grid-cols-2 sm:grid-cols-5">
