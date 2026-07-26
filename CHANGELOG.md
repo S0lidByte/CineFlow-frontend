@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.14.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.13.0...riven-frontend-v1.14.0) (2026-07-26)
+
+### Features
+
+- **settings:** add connection test buttons and status badges ([#86](https://github.com/S0lidByte/CineFlow-frontend/issues/86)) ([f4f68d3](https://github.com/S0lidByte/CineFlow-frontend/commit/f4f68d3197ed5eb3946c3f80980022881bd597f9))
+
+### Bug Fixes
+
+- **ui:** hide explore header so Ranking Anime pack is clickable ([#87](https://github.com/S0lidByte/CineFlow-frontend/issues/87)) ([17a746c](https://github.com/S0lidByte/CineFlow-frontend/commit/17a746c3a199881366854e7c1bc945ed09f13454))
+
 ## [1.13.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.12.1...riven-frontend-v1.13.0) (2026-07-26)
 
 ### Features
