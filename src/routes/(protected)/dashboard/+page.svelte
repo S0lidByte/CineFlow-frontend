@@ -20,6 +20,63 @@
 
     const failedCount = $derived((data.statistics?.states?.Failed ?? 0).toLocaleString());
 
+    const incompleteCount = $derived(
+        (data.statistics?.incomplete_items ?? 0).toLocaleString()
+    );
+
+    const needsAttention = $derived(data.statistics?.needs_attention ?? []);
+
+    const debridExpiringSoon = $derived.by(() => {
+        const services = data.downloaderInfo?.services ?? [];
+        return services.filter(
+            (s) =>
+                s.premium_status === "premium" &&
+                typeof s.premium_days_left === "number" &&
+                s.premium_days_left >= 0 &&
+                s.premium_days_left < 7
+        );
+    });
+
+    function serviceSettingsHref(serviceName: string): string {
+        const key = serviceName.toLowerCase();
+        if (
+            key.includes("debrid") ||
+            key.includes("torbox") ||
+            key.includes("downloader")
+        ) {
+            return "/settings?tab=downloaders";
+        }
+        if (
+            key.includes("scrape") ||
+            key.includes("jackett") ||
+            key.includes("prowlarr") ||
+            key.includes("torrentio") ||
+            key.includes("comet") ||
+            key.includes("zilean") ||
+            key.includes("orion") ||
+            key.includes("rarbg") ||
+            key.includes("mediafusion") ||
+            key.includes("aiostream")
+        ) {
+            return "/settings?tab=scraping";
+        }
+        if (
+            key.includes("plex") ||
+            key.includes("jellyfin") ||
+            key.includes("emby") ||
+            key.includes("updater")
+        ) {
+            return "/settings?tab=updaters";
+        }
+        if (key.includes("trakt") || key.includes("overseerr") || key.includes("mdblist")) {
+            return "/settings?tab=content";
+        }
+        if (key.includes("subtitle") || key.includes("opensubtitles") || key.includes("subdl")) {
+            return "/settings?tab=ops";
+        }
+        return "/settings";
+    }
+
     function transformStatesToArray(states: Record<string, number> | undefined) {
         if (!states) return [];
         return Object.entries(states).reduce<{ state: string; value: number }[]>(
@@ -126,7 +183,39 @@
 {/snippet}
 
 <PageShell>
-    <h1 class="mb-8 text-3xl font-bold tracking-tight">Media Library Statistics</h1>
+    <h1 class="mb-8 text-3xl font-bold tracking-tight">Library Health</h1>
+
+    {#if (data.statistics?.states?.Failed ?? 0) > 0 || (data.statistics?.incomplete_items ?? 0) > 0 || debridExpiringSoon.length > 0}
+        <section class="mb-6 rounded-xl border border-amber-600/30 bg-amber-950/20 px-4 py-3">
+            <h2 class="mb-2 text-sm font-semibold tracking-wide text-amber-200 uppercase">
+                Needs attention
+            </h2>
+            <div class="flex flex-wrap gap-3 text-sm text-neutral-200">
+                {#if (data.statistics?.states?.Failed ?? 0) > 0}
+                    <a
+                        href={resolve("/library?states=Failed")}
+                        class="rounded-lg bg-red-600/20 px-3 py-1.5 text-red-200 transition-colors hover:bg-red-600/30">
+                        {failedCount} Failed → Library
+                    </a>
+                {/if}
+                {#if (data.statistics?.incomplete_items ?? 0) > 0}
+                    <a
+                        href={resolve("/library")}
+                        class="rounded-lg bg-amber-600/20 px-3 py-1.5 text-amber-100 transition-colors hover:bg-amber-600/30">
+                        {incompleteCount} Incomplete → Library
+                    </a>
+                {/if}
+                {#each debridExpiringSoon as svc (svc.service)}
+                    <a
+                        href={resolve("/settings?tab=downloaders")}
+                        class="rounded-lg bg-amber-600/20 px-3 py-1.5 text-amber-100 transition-colors hover:bg-amber-600/30">
+                        {getServiceDisplayName(svc.service)} premium
+                        {svc.premium_days_left}d left
+                    </a>
+                {/each}
+            </div>
+        </section>
+    {/if}
 
     <section class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {@render KPICard({
@@ -141,7 +230,7 @@
         })}
         {@render KPICard({
             title: "Incomplete",
-            value: (data.statistics?.incomplete_items ?? 0).toLocaleString(),
+            value: incompleteCount,
             sub: "Pending processing — open library",
             tone: "warning",
             href: "/library"
@@ -156,7 +245,8 @@
         {@render KPICard({
             title: "Unreleased",
             value: unreleasedCount,
-            sub: "Not released yet"
+            sub: "Not released yet",
+            href: "/library?states=Unreleased"
         })}
         {@render KPICard({
             title: "Completion Rate",
@@ -164,6 +254,41 @@
             sub: "Completed / Total"
         })}
     </section>
+
+    {#if needsAttention.length > 0}
+        <section class="mb-8">
+            <Card.Root>
+                <Card.Header class="pb-2">
+                    <Card.Title class="text-sm font-medium text-neutral-300">
+                        Stuck / high-retry items
+                    </Card.Title>
+                </Card.Header>
+                <Card.Content>
+                    <ul class="divide-y divide-white/5">
+                        {#each needsAttention as item (item.id)}
+                            <li class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                                <a
+                                    href={resolve(`/library?search=${encodeURIComponent(item.title)}`)}
+                                    class="min-w-0 flex-1 truncate text-sm font-medium text-neutral-100 hover:underline">
+                                    {item.title}
+                                </a>
+                                <Badge
+                                    variant={item.state === "Failed" ? "destructive" : "secondary"}
+                                    class="shrink-0 rounded-lg text-xs">
+                                    {item.state}
+                                </Badge>
+                                <span class="shrink-0 font-mono text-xs text-neutral-400">
+                                    {item.scraped_times} scrape{item.scraped_times === 1
+                                        ? ""
+                                        : "s"}
+                                </span>
+                            </li>
+                        {/each}
+                    </ul>
+                </Card.Content>
+            </Card.Root>
+        </section>
+    {/if}
 
     <section class="mb-8 grid grid-cols-1 gap-4">
         <Card.Root>
@@ -312,25 +437,29 @@
                 <div class="flex flex-wrap gap-4">
                     {#if data.services && Object.keys(data.services).length > 0}
                         {#each Object.entries(data.services) as [serviceName, status] (serviceName)}
-                            {#if status === true}
-                                <Badge
-                                    variant="default"
-                                    class="rounded-xl bg-green-600/20 px-2 py-1 text-xs font-medium text-green-400">
-                                    {getServiceDisplayName(serviceName)}
-                                </Badge>
-                            {:else if status === false}
-                                <Badge
-                                    variant="destructive"
-                                    class="rounded-xl px-2 py-1 text-xs font-medium">
-                                    {getServiceDisplayName(serviceName)}
-                                </Badge>
-                            {:else}
-                                <Badge
-                                    variant="secondary"
-                                    class="rounded-xl px-2 py-1 text-xs font-medium">
-                                    {getServiceDisplayName(serviceName)}
-                                </Badge>
-                            {/if}
+                            <a
+                                href={resolve(serviceSettingsHref(serviceName) as "/")}
+                                class="focus-visible:ring-primary/50 rounded-xl focus-visible:ring-2 focus-visible:outline-none">
+                                {#if status === true}
+                                    <Badge
+                                        variant="default"
+                                        class="rounded-xl bg-green-600/20 px-2 py-1 text-xs font-medium text-green-400 hover:bg-green-600/30">
+                                        {getServiceDisplayName(serviceName)}
+                                    </Badge>
+                                {:else if status === false}
+                                    <Badge
+                                        variant="destructive"
+                                        class="rounded-xl px-2 py-1 text-xs font-medium hover:opacity-90">
+                                        {getServiceDisplayName(serviceName)}
+                                    </Badge>
+                                {:else}
+                                    <Badge
+                                        variant="secondary"
+                                        class="rounded-xl px-2 py-1 text-xs font-medium hover:opacity-90">
+                                        {getServiceDisplayName(serviceName)}
+                                    </Badge>
+                                {/if}
+                            </a>
                         {/each}
                     {:else}
                         <p class="text-sm text-neutral-400">No service data available.</p>

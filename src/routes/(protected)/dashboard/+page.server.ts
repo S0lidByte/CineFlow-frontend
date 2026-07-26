@@ -38,7 +38,7 @@ export const load = (async ({ fetch, locals }) => {
 
     if (svc.error) {
         logger.error("Services fetch error:", svc.error);
-        error(500, "Unable to fetch services data");
+        // Soft-fail: keep KPIs and debrid cards usable
     }
 
     if (downloaderInfo.error) {
@@ -48,7 +48,7 @@ export const load = (async ({ fetch, locals }) => {
 
     return {
         statistics: statistics.data,
-        services: svc.data || {},
+        services: svc.error ? {} : svc.data || {},
         downloaderInfo: downloaderInfo.error ? { services: [] } : downloaderInfo.data
     };
 }) satisfies PageServerLoad;
