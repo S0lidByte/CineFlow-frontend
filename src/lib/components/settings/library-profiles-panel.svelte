@@ -42,6 +42,8 @@
         name: string;
         library_path: string;
         enabled: boolean;
+        /** Optional scrape ranking pack override; null/omit = item.is_anime fallback */
+        ranking_pack?: "ranking" | "ranking_anime" | null;
         filter_rules: FilterRules;
     }
 
@@ -193,6 +195,19 @@
     }
 
     const CONTENT_TYPES = ["movie", "show"];
+
+    const RANKING_PACK_OPTIONS: {
+        value: "" | "ranking" | "ranking_anime";
+        label: string;
+    }[] = [
+        { value: "", label: "Auto (item anime flag)" },
+        { value: "ranking", label: "Movies & Shows" },
+        { value: "ranking_anime", label: "Anime" }
+    ];
+
+    function rankingPackValue(profile: LibraryProfile): "" | "ranking" | "ranking_anime" {
+        return profile.ranking_pack ?? "";
+    }
 
     /** Expand profiles when Cmd+K jumps to a library_profiles focus path. */
     $effect(() => {
@@ -361,6 +376,31 @@
                                             >/anime</code
                                         >,
                                         <code class="bg-muted rounded px-1">/kids</code>)</span>
+                                </div>
+
+                                <div
+                                    class="flex flex-col gap-1.5 md:col-span-2"
+                                    data-settings-search-path="library_profiles.ranking_pack">
+                                    <Label class="text-sm font-semibold">Ranking pack</Label>
+                                    <select
+                                        class="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:outline-none"
+                                        value={rankingPackValue(profile)}
+                                        onchange={(e) => {
+                                            const v = e.currentTarget.value as
+                                                | ""
+                                                | "ranking"
+                                                | "ranking_anime";
+                                            setField(key, "ranking_pack", v === "" ? null : v);
+                                        }}>
+                                        {#each RANKING_PACK_OPTIONS as opt (opt.value)}
+                                            <option value={opt.value}>{opt.label}</option>
+                                        {/each}
+                                    </select>
+                                    <span class="text-muted-foreground text-[11px]">
+                                        When this profile matches during scrape, use this Ranking
+                                        Studio pack. Auto falls back to the item’s anime flag. First
+                                        matching profile with a pack set wins.
+                                    </span>
                                 </div>
 
                                 <div

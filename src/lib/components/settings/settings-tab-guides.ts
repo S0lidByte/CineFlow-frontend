@@ -90,11 +90,16 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         ],
         tips: [
             "This panel saves independently from the schema-driven tabs.",
+            "Optional Ranking pack binds Movies & Shows or Anime scrape ranking when the profile matches.",
             "Test with one title before rolling out complex rule chains."
         ],
         highlights: [
             { title: "Profiles", detail: "Each profile maps to a subdirectory under your mount." },
-            { title: "Rules", detail: "Combine AND/OR groups for precise library splits." }
+            { title: "Rules", detail: "Combine AND/OR groups for precise library splits." },
+            {
+                title: "Ranking pack",
+                detail: "Override Ranking Studio pack per library; first match with a pack wins."
+            }
         ]
     },
     downloaders: {
