@@ -3,7 +3,9 @@ name: Docker Build and Push frontend
 on:
     push:
         tags:
+            # Release Please uses riven-frontend-vX.Y.Z; also accept plain vX.Y.Z
             - "v[0-9]+.[0-9]+.[0-9]+*"
+            - "riven-frontend-v[0-9]+.[0-9]+.[0-9]+*"
     workflow_dispatch:
 
 jobs:
@@ -51,9 +53,10 @@ jobs:
                       latest=auto
                   tags: |
                       type=ref,event=tag
+                      type=match,pattern=riven-frontend-v(.*),group=1
+                      type=match,pattern=^v(.*),group=1
                       type=sha,commit=${{ github.sha }}
-                      type=semver,pattern={{version}}
-                      type=raw,value=latest,enable={{is_default_branch}}
+                      type=raw,value=latest
 
             - name: Push Service Image to repo
               uses: docker/build-push-action@v5

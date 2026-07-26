@@ -594,10 +594,10 @@
                         <SettingsTabGuide tab={activeTab} />
                     {/if}
 
-                    <!-- Loading overlay shown while navigating to a new tab -->
+                    <!-- Loading overlay — below custom panels (z-20) so Ranking Pack/Presets stay clickable -->
                     {#if $navigating}
                         <div
-                            class="bg-background/60 absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-[1px]"
+                            class="bg-background/60 pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-[1px]"
                             aria-live="polite">
                             <span
                                 class="text-muted-foreground flex items-center gap-2 text-sm font-medium">
