@@ -298,7 +298,7 @@ export function applyTitleMatchingMode(
     if (mode.diagnose_only) {
         return ranking;
     }
-    const next = structuredClone(ranking);
+    const next = cloneRankingSettings(ranking);
     next.options = {
         ...(next.options ?? {}),
         title_similarity: mode.title_similarity
@@ -314,7 +314,7 @@ export function rankingForTester(
     if (!testerMode?.diagnose_only) {
         return ranking;
     }
-    const next = structuredClone(ranking);
+    const next = cloneRankingSettings(ranking);
     next.options = {
         ...(next.options ?? {}),
         title_similarity: testerMode.title_similarity
@@ -341,12 +341,21 @@ export const DENY_TO_SCRAPING: Record<string, { path: string; label: string; hin
     }
 };
 
+/**
+ * Deep-clone ranking JSON for edits.
+ * Do not use structuredClone — Svelte 5 `$state` proxies throw DataCloneError
+ * ("#<Object> could not be cloned"), which silently breaks Pack switch + presets.
+ */
+export function cloneRankingSettings<T>(value: T): T {
+    return JSON.parse(JSON.stringify(value)) as T;
+}
+
 /** Apply preset onto a deep-cloned ranking settings object (ranking only). */
 export function applyRankingPreset(
     ranking: RankingSettings,
     preset: RankingPreset
 ): RankingSettings {
-    const next = structuredClone(ranking);
+    const next = cloneRankingSettings(ranking);
     const ranks = next.custom_ranks ?? {};
     for (const [category, attrs] of Object.entries(ranks)) {
         const enabled = new Set(preset.enableFetch[category] ?? []);

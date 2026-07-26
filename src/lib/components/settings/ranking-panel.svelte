@@ -28,6 +28,7 @@
         TITLE_MATCHING_MODES,
         applyRankingPreset,
         applyTitleMatchingMode,
+        cloneRankingSettings,
         rankingForTester,
         clientValidatePatterns,
         countRejecting,
@@ -106,7 +107,7 @@
     }: Props = $props();
 
     function normalizeRanking(raw: RankingSettings): RankingSettings {
-        const next = structuredClone(raw) as RankingSettings;
+        const next = cloneRankingSettings(raw);
         next.languages = ensureLanguages(next);
         next.require = [...(next.require ?? [])];
         next.exclude = [...(next.exclude ?? [])];
@@ -176,9 +177,9 @@
         commitPatternEditors();
         commitLanguageEditors();
         if (activePack === "ranking") {
-            movieLocal = structuredClone(localRanking);
+            movieLocal = cloneRankingSettings(localRanking);
         } else {
-            animeLocal = structuredClone(localRanking);
+            animeLocal = cloneRankingSettings(localRanking);
         }
     }
 
@@ -187,7 +188,9 @@
         persistActiveDraft();
         activePack = next;
         localRanking =
-            next === "ranking" ? structuredClone(movieLocal) : structuredClone(animeLocal);
+            next === "ranking"
+                ? cloneRankingSettings(movieLocal)
+                : cloneRankingSettings(animeLocal);
         baselineJson = next === "ranking" ? movieBaseline : animeBaseline;
         testerMatchingMode = null;
         testResult = null;
@@ -196,11 +199,11 @@
     }
 
     function discardChanges() {
-        localRanking = structuredClone(JSON.parse(baselineJson));
+        localRanking = cloneRankingSettings(JSON.parse(baselineJson) as RankingSettings);
         if (activePack === "ranking") {
-            movieLocal = structuredClone(localRanking);
+            movieLocal = cloneRankingSettings(localRanking);
         } else {
-            animeLocal = structuredClone(localRanking);
+            animeLocal = cloneRankingSettings(localRanking);
         }
         syncPatternEditors();
         hydrateLanguageEditors();
@@ -409,10 +412,10 @@
             localRanking = saved;
             baselineJson = JSON.stringify(saved);
             if (pack === "ranking") {
-                movieLocal = structuredClone(saved);
+                movieLocal = cloneRankingSettings(saved);
                 movieBaseline = baselineJson;
             } else {
-                animeLocal = structuredClone(saved);
+                animeLocal = cloneRankingSettings(saved);
                 animeBaseline = baselineJson;
             }
             syncPatternEditors();
