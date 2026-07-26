@@ -1963,6 +1963,11 @@ export interface components {
              * @default true
              */
             enabled: boolean;
+            /**
+             * Ranking Pack
+             * @description Optional ranking pack for scrape ranking when this profile matches. 'ranking' = Movies & Shows; 'ranking_anime' = Anime. None = fall back to item.is_anime routing. When multiple profiles match, the first enabled profile (settings order) with ranking_pack set wins.
+             */
+            ranking_pack?: ("ranking" | "ranking_anime") | null;
             /** @description Metadata filter rules for matching items */
             filter_rules?: components["schemas"]["LibraryProfileFilterRules"];
         };
