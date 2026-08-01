@@ -99,7 +99,6 @@ async function handleExternalImageRequest(request: Request): Promise<Response> {
 
         throw err;
     }
-
 }
 
 async function maintainCacheSize(cache: Cache): Promise<void> {

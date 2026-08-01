@@ -243,7 +243,6 @@ export function createCustomFetch(
         };
 
         return executeWithRateLimit();
-
     };
 }
 
