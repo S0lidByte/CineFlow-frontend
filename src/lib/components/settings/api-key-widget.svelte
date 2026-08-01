@@ -89,7 +89,9 @@
         class="border-input ring-offset-background focus-within:ring-ring flex min-w-0 items-center gap-1 rounded-md border shadow-xs focus-within:ring-2 focus-within:ring-offset-2">
         <input
             bind:value
-            onblur={() => { if (typeof value === 'string') value = value.trim(); }}
+            onblur={() => {
+                if (typeof value === "string") value = value.trim();
+            }}
             {...inputAttrs}
             class="placeholder:text-muted-foreground min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50" />
         <div class="flex shrink-0 items-center gap-0.5 pr-1">

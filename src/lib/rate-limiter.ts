@@ -45,7 +45,10 @@ class RateLimiter {
             // Store onAbort alongside the request so processQueue can clean it up
             // upon successful dequeue, preventing accumulation on long-lived signals.
             let onAbort: (() => void) | undefined;
-            const request: QueuedRequest & { _signal?: AbortSignal; _onAbort?: () => void } = { resolve, reject };
+            const request: QueuedRequest & { _signal?: AbortSignal; _onAbort?: () => void } = {
+                resolve,
+                reject
+            };
 
             if (signal) {
                 onAbort = () => {
@@ -116,7 +119,9 @@ class RateLimiter {
                 }
 
                 // Proceed
-                const request = this.queue.shift() as (QueuedRequest & { _signal?: AbortSignal; _onAbort?: () => void }) | undefined;
+                const request = this.queue.shift() as
+                    | (QueuedRequest & { _signal?: AbortSignal; _onAbort?: () => void })
+                    | undefined;
                 if (request) {
                     // Clean up the abort listener to prevent memory leaks on long-lived signals
                     if (request._signal && request._onAbort) {
