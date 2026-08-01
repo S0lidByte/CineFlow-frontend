@@ -11,6 +11,8 @@ import { createCustomFetch } from "$lib/custom-fetch";
 import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("hooks");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let tvdbTokenPromise: Promise<any> | null = null;
 
 export const init: ServerInit = async () => {
     if (!env.BACKEND_URL) {
@@ -94,17 +96,28 @@ const handleTVDBCookie: Handle = async ({ event, resolve }) => {
         return resolve(event);
     }
 
-    // Slow path: fetch a fresh token from TVDB (runs at most once per 29 days)
-    const customFetch = createCustomFetch(event.fetch);
-    const tvdbLogin = await providers.tvdb.POST("/login", {
-        body: {
-            apikey: "6be85335-5c4f-4d8d-b945-d3ed0eb8cdce"
-        },
-        fetch: customFetch
-    });
+    // Slow path: fetch a fresh token from TVDB (coalesced via shared promise)
+    if (!tvdbTokenPromise) {
+        const customFetch = createCustomFetch(event.fetch);
+        tvdbTokenPromise = (async () => {
+            try {
+                const res = await providers.tvdb.POST("/login", {
+                    body: {
+                        apikey: "6be85335-5c4f-4d8d-b945-d3ed0eb8cdce"
+                    },
+                    fetch: customFetch
+                });
+                return res;
+            } finally {
+                tvdbTokenPromise = null;
+            }
+        })();
+    }
 
-    if (tvdbLogin.error) {
-        logger.error("Failed to login to TVDB", { error: tvdbLogin.error });
+    const tvdbLogin = await tvdbTokenPromise;
+
+    if (!tvdbLogin || tvdbLogin.error) {
+        logger.error("Failed to login to TVDB", { error: tvdbLogin?.error });
         // FIX-25: Debounce retries for 5 minutes on failure to avoid hammering a
         // downed TVDB API with every incoming server-side request.
         tvdbTokenExpiresAt = Date.now() + 5 * 60 * 1000;

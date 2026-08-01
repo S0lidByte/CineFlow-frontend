@@ -129,13 +129,17 @@ export function createCustomFetch(
         const executeWithRateLimit = async (): Promise<Response> => {
             if (!retryConfig) {
                 // No retry config: single attempt inside rate limiter
-                return withRateLimit(url, async () => {
-                    const timeoutSignal = AbortSignal.timeout(30000);
-                    const combinedSignal = init?.signal
-                        ? AbortSignal.any([init.signal, timeoutSignal])
-                        : timeoutSignal;
-                    return fetchFn(input, { ...init, signal: combinedSignal });
-                });
+                return withRateLimit(
+                    url,
+                    async () => {
+                        const timeoutSignal = AbortSignal.timeout(30000);
+                        const combinedSignal = init?.signal
+                            ? AbortSignal.any([init.signal, timeoutSignal])
+                            : timeoutSignal;
+                        return fetchFn(input, { ...init, signal: combinedSignal });
+                    },
+                    init?.signal
+                );
             }
 
             // FIX-14: Retry loop is OUTSIDE withRateLimit so sleep() does not hold the
@@ -149,13 +153,17 @@ export function createCustomFetch(
                 let slotDelay: number | null = null;
 
                 try {
-                    const response = await withRateLimit(url, async () => {
-                        const timeoutSignal = AbortSignal.timeout(30000); // FIX-15
-                        const combinedSignal = init?.signal
-                            ? AbortSignal.any([init.signal, timeoutSignal])
-                            : timeoutSignal;
-                        return fetchFn(input, { ...init, signal: combinedSignal });
-                    });
+                    const response = await withRateLimit(
+                        url,
+                        async () => {
+                            const timeoutSignal = AbortSignal.timeout(30000); // FIX-15
+                            const combinedSignal = init?.signal
+                                ? AbortSignal.any([init.signal, timeoutSignal])
+                                : timeoutSignal;
+                            return fetchFn(input, { ...init, signal: combinedSignal });
+                        },
+                        init?.signal
+                    );
 
                     if (response.ok || !retryConfig.retryOnStatus.includes(response.status)) {
                         return response;

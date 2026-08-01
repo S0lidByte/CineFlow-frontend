@@ -57,17 +57,19 @@ async function handleExternalImageRequest(request: Request): Promise<Response> {
         return reqUrl.href === targetUrl.href;
     });
 
+    let fallbackResponse: Response | undefined;
+
     if (matchingRequest) {
         const reqUrl = new URL(matchingRequest.url);
         const cacheDate = reqUrl.searchParams.get("_sw_cached_at");
+        fallbackResponse = await imageCache.match(matchingRequest);
+
         if (cacheDate) {
             const age = Date.now() - parseInt(cacheDate, 10);
-            if (age < CACHE_CONFIG.maxAge) {
-                const response = await imageCache.match(matchingRequest);
-                if (response) return response;
+            if (age < CACHE_CONFIG.maxAge && fallbackResponse) {
+                return fallbackResponse;
             }
         }
-        await imageCache.delete(matchingRequest);
     }
 
     try {
@@ -78,6 +80,9 @@ async function handleExternalImageRequest(request: Request): Promise<Response> {
         }
 
         if (response.type === "opaque" || response.status === 200) {
+            if (matchingRequest) {
+                await imageCache.delete(matchingRequest);
+            }
             // FIX-32: Store timestamp in the cache key request URL parameter so both
             // normal and opaque responses support maxAge expiration.
             const cacheKeyUrl = new URL(request.url);
@@ -92,9 +97,8 @@ async function handleExternalImageRequest(request: Request): Promise<Response> {
     } catch (err) {
         console.error(`Failed to fetch external image from ${request.url}:`, err);
 
-        if (matchingRequest) {
-            const fallback = await imageCache.match(matchingRequest);
-            if (fallback) return fallback;
+        if (fallbackResponse) {
+            return fallbackResponse;
         }
 
         throw err;
