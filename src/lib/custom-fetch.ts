@@ -122,127 +122,128 @@ export function createCustomFetch(
             typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
         const retryConfig = getRetryConfigForUrl(url, options);
 
-        // Wrap the actual fetch execution with rate limiting
-        const executeWithRateLimit = () => {
-            const timeoutSignal = AbortSignal.timeout(30000);
-            const combinedSignal = init?.signal
-                ? AbortSignal.any([init.signal, timeoutSignal])
-                : timeoutSignal;
+        // Wrap the actual fetch execution with rate limiting.
+        // FIX-15: timeoutSignal is created INSIDE the withRateLimit callback so the 30-second
+        // countdown only starts when the request is actually dispatched (not while waiting in the
+        // rate limiter queue — a backed-up queue could abort requests before they even start).
+        const executeWithRateLimit = async (): Promise<Response> => {
+            if (!retryConfig) {
+                // No retry config: single attempt inside rate limiter
+                return withRateLimit(url, async () => {
+                    const timeoutSignal = AbortSignal.timeout(30000);
+                    const combinedSignal = init?.signal
+                        ? AbortSignal.any([init.signal, timeoutSignal])
+                        : timeoutSignal;
+                    return fetchFn(input, { ...init, signal: combinedSignal });
+                });
+            }
 
-            return withRateLimit(
-                url,
-                async () => {
-                    if (!retryConfig) {
+            // FIX-14: Retry loop is OUTSIDE withRateLimit so sleep() does not hold the
+            // concurrency slot during the delay period. A slot is re-acquired for each attempt.
+            // Previously, sleeping inside withRateLimit caused all slots to deadlock when multiple
+            // requests hit 429 simultaneously.
+            let lastError: Error | null = null;
+            let lastResponse: Response | null = null;
+
+            for (let attempt = 1; attempt <= retryConfig.maxAttempts; attempt++) {
+                let slotDelay: number | null = null;
+
+                try {
+                    const response = await withRateLimit(url, async () => {
+                        const timeoutSignal = AbortSignal.timeout(30000); // FIX-15
+                        const combinedSignal = init?.signal
+                            ? AbortSignal.any([init.signal, timeoutSignal])
+                            : timeoutSignal;
                         return fetchFn(input, { ...init, signal: combinedSignal });
+                    });
+
+                    if (response.ok || !retryConfig.retryOnStatus.includes(response.status)) {
+                        return response;
                     }
 
-                    let lastError: Error | null = null;
-                    let lastResponse: Response | null = null;
+                    lastResponse = response;
 
-                    for (let attempt = 1; attempt <= retryConfig.maxAttempts; attempt++) {
-                        try {
-                            const response = await fetchFn(input, {
-                                ...init,
-                                signal: combinedSignal
-                            });
+                    const retryAfter = response.headers.get("Retry-After");
+                    let delay = calculateDelayWithJitter(retryConfig.baseDelay, attempt - 1);
 
-                            if (
-                                response.ok ||
-                                !retryConfig.retryOnStatus.includes(response.status)
-                            ) {
-                                return response;
-                            }
-
-                            lastResponse = response;
-
-                            const retryAfter = response.headers.get("Retry-After");
-                            let delay = calculateDelayWithJitter(
-                                retryConfig.baseDelay,
-                                attempt - 1
-                            );
-
-                            if (retryAfter) {
-                                // Retry-After can be seconds or HTTP date per RFC 7231
-                                const retryAfterSeconds = parseInt(retryAfter, 10);
-                                if (!isNaN(retryAfterSeconds)) {
-                                    delay = retryAfterSeconds * 1000 * (0.9 + Math.random() * 0.2);
-                                } else {
-                                    const retryDate = new Date(retryAfter);
-                                    if (!isNaN(retryDate.getTime())) {
-                                        const rawDelay = Math.max(
-                                            0,
-                                            retryDate.getTime() - Date.now()
-                                        );
-                                        delay = rawDelay * (0.9 + Math.random() * 0.2);
-                                    }
-                                }
-                            }
-
-                            if (attempt < retryConfig.maxAttempts) {
-                                logger.warn(
-                                    `Request to ${url} failed with status ${response.status}. ` +
-                                        `Retrying in ${Math.round(delay)}ms (attempt ${attempt}/${retryConfig.maxAttempts})`
-                                );
-                                if (response.status === 429) {
-                                    const limiter = getRateLimiterForUrl(url);
-                                    if (limiter) {
-                                        // Make sure we pause GLOBAL execution for this domain
-                                        // delay is already calculated from Retry-After or backoff
-                                        limiter.pauseUntil(Date.now() + delay);
-                                    }
-                                }
-
-                                await sleep(delay);
-                            }
-                        } catch (error) {
-                            lastError = error instanceof Error ? error : new Error(String(error));
-
-                            // AbortError signals remain aborted — retrying is pointless and causes
-                            // a tight failure loop. Rethrow immediately to break the retry cycle.
-                            if (lastError.name === "AbortError") {
-                                throw lastError;
-                            }
-
-                            if (attempt < retryConfig.maxAttempts) {
-                                const delay = calculateDelayWithJitter(
-                                    retryConfig.baseDelay,
-                                    attempt - 1
-                                );
-                                logger.warn(
-                                    `Request to ${url} failed with error: ${lastError.message}. ` +
-                                        `Retrying in ${Math.round(delay)}ms (attempt ${attempt}/${retryConfig.maxAttempts})`
-                                );
-                                await sleep(delay);
+                    if (retryAfter) {
+                        // Retry-After can be seconds or HTTP date per RFC 7231
+                        const retryAfterSeconds = parseInt(retryAfter, 10);
+                        if (!isNaN(retryAfterSeconds)) {
+                            delay = retryAfterSeconds * 1000 * (0.9 + Math.random() * 0.2);
+                        } else {
+                            const retryDate = new Date(retryAfter);
+                            if (!isNaN(retryDate.getTime())) {
+                                const rawDelay = Math.max(0, retryDate.getTime() - Date.now());
+                                delay = rawDelay * (0.9 + Math.random() * 0.2);
                             }
                         }
                     }
 
-                    if (lastResponse) {
-                        logger.error(
-                            `Request to ${url} failed after ${retryConfig.maxAttempts} attempts ` +
-                                `with status ${lastResponse.status}`
+                    if (attempt < retryConfig.maxAttempts) {
+                        logger.warn(
+                            `Request to ${url} failed with status ${response.status}. ` +
+                                `Retrying in ${Math.round(delay)}ms (attempt ${attempt}/${retryConfig.maxAttempts})`
                         );
-                        return lastResponse;
+                        if (response.status === 429) {
+                            const limiter = getRateLimiterForUrl(url);
+                            if (limiter) {
+                                // Pause GLOBAL execution for this domain
+                                limiter.pauseUntil(Date.now() + delay);
+                            }
+                        }
+                        slotDelay = delay;
                     }
+                } catch (error) {
+                    lastError = error instanceof Error ? error : new Error(String(error));
 
-                    if (lastError) {
-                        logger.error(
-                            `Request to ${url} failed after ${retryConfig.maxAttempts} attempts ` +
-                                `with error: ${lastError.message}`
-                        );
+                    // AbortError signals remain aborted — retrying is pointless and causes
+                    // a tight failure loop. Rethrow immediately to break the retry cycle.
+                    if (lastError.name === "AbortError") {
                         throw lastError;
                     }
 
-                    // TypeScript requires this unreachable throw
-                    throw new Error(
-                        `[custom-fetch] Request to ${url} failed after ${retryConfig.maxAttempts} attempts for unknown reasons`
-                    );
-                },
-                combinedSignal
+                    if (attempt < retryConfig.maxAttempts) {
+                        const delay = calculateDelayWithJitter(retryConfig.baseDelay, attempt - 1);
+                        logger.warn(
+                            `Request to ${url} failed with error: ${lastError.message}. ` +
+                                `Retrying in ${Math.round(delay)}ms (attempt ${attempt}/${retryConfig.maxAttempts})`
+                        );
+                        slotDelay = delay;
+                    }
+                }
+
+                // FIX-14: Sleep OUTSIDE the rate-limit slot so we don't block other requests
+                // for the entire retry delay duration.
+                if (slotDelay !== null) {
+                    await sleep(slotDelay);
+                }
+            }
+
+            if (lastResponse) {
+                logger.error(
+                    `Request to ${url} failed after ${retryConfig.maxAttempts} attempts ` +
+                        `with status ${lastResponse.status}`
+                );
+                return lastResponse;
+            }
+
+            if (lastError) {
+                logger.error(
+                    `Request to ${url} failed after ${retryConfig.maxAttempts} attempts ` +
+                        `with error: ${lastError.message}`
+                );
+                throw lastError;
+            }
+
+            // TypeScript requires this unreachable throw
+            throw new Error(
+                `[custom-fetch] Request to ${url} failed after ${retryConfig.maxAttempts} attempts for unknown reasons`
             );
         };
 
         return executeWithRateLimit();
+
     };
 }
 

@@ -40,23 +40,34 @@ function isImageRequest(request: Request, url: URL): boolean {
 }
 
 function isExternalImageDomain(url: URL): boolean {
-    return IMAGE_DOMAINS.some((domain) => url.hostname.includes(domain));
+    return IMAGE_DOMAINS.some(
+        (domain) => url.hostname === domain || url.hostname.endsWith("." + domain)
+    );
 }
 
 async function handleExternalImageRequest(request: Request): Promise<Response> {
     const imageCache = await caches.open(EXTERNAL_IMAGES_CACHE);
-    const cachedResponse = await imageCache.match(request);
+    const cachedRequests = await imageCache.keys();
 
-    if (cachedResponse) {
-        const cacheDate = cachedResponse.headers.get("sw-cache-date");
+    // FIX-32: Match cached request ignoring the _sw_cached_at timestamp parameter
+    const targetUrl = new URL(request.url);
+    const matchingRequest = cachedRequests.find((req) => {
+        const reqUrl = new URL(req.url);
+        reqUrl.searchParams.delete("_sw_cached_at");
+        return reqUrl.href === targetUrl.href;
+    });
+
+    if (matchingRequest) {
+        const reqUrl = new URL(matchingRequest.url);
+        const cacheDate = reqUrl.searchParams.get("_sw_cached_at");
         if (cacheDate) {
             const age = Date.now() - parseInt(cacheDate, 10);
             if (age < CACHE_CONFIG.maxAge) {
-                return cachedResponse;
+                const response = await imageCache.match(matchingRequest);
+                if (response) return response;
             }
-        } else {
-            return cachedResponse;
         }
+        await imageCache.delete(matchingRequest);
     }
 
     try {
@@ -67,22 +78,13 @@ async function handleExternalImageRequest(request: Request): Promise<Response> {
         }
 
         if (response.type === "opaque" || response.status === 200) {
-            if (response.type === "opaque") {
-                await imageCache.put(request, response.clone());
-            } else {
-                const responseToCache = response.clone();
-                const headers = new Headers(responseToCache.headers);
-                headers.set("sw-cache-date", Date.now().toString());
+            // FIX-32: Store timestamp in the cache key request URL parameter so both
+            // normal and opaque responses support maxAge expiration.
+            const cacheKeyUrl = new URL(request.url);
+            cacheKeyUrl.searchParams.set("_sw_cached_at", Date.now().toString());
+            const cacheKeyRequest = new Request(cacheKeyUrl.href, request);
 
-                const cachedResponse = new Response(responseToCache.body, {
-                    status: responseToCache.status,
-                    statusText: responseToCache.statusText,
-                    headers
-                });
-
-                await imageCache.put(request, cachedResponse);
-            }
-
+            await imageCache.put(cacheKeyRequest, response.clone());
             await maintainCacheSize(imageCache);
         }
 
@@ -90,12 +92,14 @@ async function handleExternalImageRequest(request: Request): Promise<Response> {
     } catch (err) {
         console.error(`Failed to fetch external image from ${request.url}:`, err);
 
-        if (cachedResponse) {
-            return cachedResponse;
+        if (matchingRequest) {
+            const fallback = await imageCache.match(matchingRequest);
+            if (fallback) return fallback;
         }
 
         throw err;
     }
+
 }
 
 async function maintainCacheSize(cache: Cache): Promise<void> {
