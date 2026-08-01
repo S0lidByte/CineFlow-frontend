@@ -42,17 +42,21 @@ class RateLimiter {
         }
 
         return new Promise((resolve, reject) => {
-            const request: QueuedRequest = { resolve, reject };
-
-            const onAbort = () => {
-                const index = this.queue.indexOf(request);
-                if (index !== -1) {
-                    this.queue.splice(index, 1);
-                    reject(signal?.reason || new Error("Aborted"));
-                }
-            };
+            // Store onAbort alongside the request so processQueue can clean it up
+            // upon successful dequeue, preventing accumulation on long-lived signals.
+            let onAbort: (() => void) | undefined;
+            const request: QueuedRequest & { _signal?: AbortSignal; _onAbort?: () => void } = { resolve, reject };
 
             if (signal) {
+                onAbort = () => {
+                    const index = this.queue.indexOf(request);
+                    if (index !== -1) {
+                        this.queue.splice(index, 1);
+                        reject(signal.reason || new Error("Aborted"));
+                    }
+                };
+                request._signal = signal;
+                request._onAbort = onAbort;
                 signal.addEventListener("abort", onAbort, { once: true });
             }
 
@@ -112,8 +116,12 @@ class RateLimiter {
                 }
 
                 // Proceed
-                const request = this.queue.shift();
+                const request = this.queue.shift() as (QueuedRequest & { _signal?: AbortSignal; _onAbort?: () => void }) | undefined;
                 if (request) {
+                    // Clean up the abort listener to prevent memory leaks on long-lived signals
+                    if (request._signal && request._onAbort) {
+                        request._signal.removeEventListener("abort", request._onAbort);
+                    }
                     this.activeRequests++;
                     this.lastRequestTime = Date.now();
                     request.resolve();

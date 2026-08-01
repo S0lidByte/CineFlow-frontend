@@ -36,6 +36,8 @@
 
     let states = $state<Record<string, ProbeState>>({});
     let results = $state<Record<string, ProbeResult | null>>({});
+    // Generation counter guards against stale responses from concurrent test invocations.
+    let generations: Record<string, number> = {};
 
     function badgeVariant(state: ProbeState): "secondary" | "default" | "destructive" {
         if (state === "ok") return "default";
@@ -56,12 +58,16 @@
     }
 
     async function testOne(id: ConnectionService) {
+        // Bump the generation so any previously in-flight request discards its result.
+        const gen = (generations[id] = (generations[id] ?? 0) + 1);
         states[id] = "loading";
         results[id] = null;
         try {
             const res = await fetch(`/api/settings/test-connection/${id}`, {
                 method: "POST"
             });
+            // Discard result if a newer test was triggered while this was in-flight.
+            if (generations[id] !== gen) return;
             const data = (await res.json().catch(() => null)) as ProbeResult | null;
             if (!data || typeof data.ok !== "boolean") {
                 states[id] = "fail";
@@ -81,6 +87,7 @@
                 toast.error(data.message || "Connection failed");
             }
         } catch {
+            if (generations[id] !== gen) return;
             states[id] = "fail";
             results[id] = { ok: false, latency_ms: 0, message: "Probe failed" };
             toast.error("Connection test failed");

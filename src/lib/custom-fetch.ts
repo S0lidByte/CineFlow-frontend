@@ -197,6 +197,12 @@ export function createCustomFetch(
                         } catch (error) {
                             lastError = error instanceof Error ? error : new Error(String(error));
 
+                            // AbortError signals remain aborted — retrying is pointless and causes
+                            // a tight failure loop. Rethrow immediately to break the retry cycle.
+                            if (lastError.name === "AbortError") {
+                                throw lastError;
+                            }
+
                             if (attempt < retryConfig.maxAttempts) {
                                 const delay = calculateDelayWithJitter(
                                     retryConfig.baseDelay,
