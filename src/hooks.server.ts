@@ -105,6 +105,9 @@ const handleTVDBCookie: Handle = async ({ event, resolve }) => {
 
     if (tvdbLogin.error) {
         logger.error("Failed to login to TVDB", { error: tvdbLogin.error });
+        // FIX-25: Debounce retries for 5 minutes on failure to avoid hammering a
+        // downed TVDB API with every incoming server-side request.
+        tvdbTokenExpiresAt = Date.now() + 5 * 60 * 1000;
         // Don't block the whole request if TVDB is down
         return resolve(event);
     }

@@ -10,6 +10,16 @@ const logger = createScopedLogger("hooks-client");
  * Without this, a single uncaught exception during a navigation transition
  * can permanently freeze the app (URL updates but the DOM never swaps).
  */
+if (typeof window !== "undefined") {
+    window.addEventListener("unhandledrejection", (event) => {
+        logger.error("[client] Unhandled promise rejection:", event.reason);
+    });
+
+    window.addEventListener("error", (event) => {
+        logger.error("[client] Uncaught window error:", event.error || event.message);
+    });
+}
+
 export function handleError({
     error,
     status,
@@ -19,10 +29,11 @@ export function handleError({
     status: number;
     message: string;
 }) {
-    logger.error(`[client] Unhandled error (${status}):`, message, error);
+    logger.error(`[client] Unhandled router error (${status}):`, message, error);
 
     return {
         message: "An unexpected error occurred",
         status
     };
 }
+
