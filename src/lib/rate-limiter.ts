@@ -36,7 +36,7 @@ class RateLimiter {
      * Returns a promise that resolves when it's safe to proceed.
      * Call release() when the request completes.
      */
-    async acquire(signal?: AbortSignal): Promise<void> {
+    async acquire(signal?: AbortSignal | null): Promise<void> {
         if (signal?.aborted) {
             throw signal.reason || new Error("Aborted");
         }
@@ -205,7 +205,7 @@ export function getRateLimiterForUrl(url: string): RateLimiter | null {
 export async function withRateLimit<T>(
     url: string,
     fn: () => Promise<T>,
-    signal?: AbortSignal
+    signal?: AbortSignal | null
 ): Promise<T> {
     const limiter = getRateLimiterForUrl(url);
     if (!limiter) return fn();

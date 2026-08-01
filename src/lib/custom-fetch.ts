@@ -138,7 +138,7 @@ export function createCustomFetch(
                             : timeoutSignal;
                         return fetchFn(input, { ...init, signal: combinedSignal });
                     },
-                    init?.signal
+                    init?.signal ?? undefined
                 );
             }
 
@@ -162,7 +162,7 @@ export function createCustomFetch(
                                 : timeoutSignal;
                             return fetchFn(input, { ...init, signal: combinedSignal });
                         },
-                        init?.signal
+                        init?.signal ?? undefined
                     );
 
                     if (response.ok || !retryConfig.retryOnStatus.includes(response.status)) {
