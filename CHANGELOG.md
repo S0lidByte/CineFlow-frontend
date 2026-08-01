@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.15.3](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.2...riven-frontend-v1.15.3) (2026-08-01)
+
+### Bug Fixes
+
+- **fetch:** allow null/undefined signal in withRateLimit and custom-fetch ([ac7c686](https://github.com/S0lidByte/CineFlow-frontend/commit/ac7c6861a72b93e513925e46f39bd7ceacaf33dc))
+- **frontend:** abort retry loop, rate-limiter memory leak, API key trim, connection test race condition ([2f90633](https://github.com/S0lidByte/CineFlow-frontend/commit/2f906339554ca387e86ecc839e8e561dfa8cc4f1))
+- **lint:** apply prettier formatting to api-key-widget.svelte and rate-limiter.ts ([c819256](https://github.com/S0lidByte/CineFlow-frontend/commit/c819256959a6e2ac1f2adc5a852e11b8cab723fc))
+- resolve frontend rate limiter deadlock, auth bypass, and SW cache bugs ([5d16a9d](https://github.com/S0lidByte/CineFlow-frontend/commit/5d16a9d30023432d7862ecc15bac8f83d18b6f26))
+- resolve frontend rate limiter deadlock, auth bypass, and SW cache bugs ([e2232dc](https://github.com/S0lidByte/CineFlow-frontend/commit/e2232dcba47a9875656a728bd8a2c332bddca21f))
+- resolve TVDB thundering herd, custom-fetch abort signal queueing, and SW offline image cache fallback ([0a77c44](https://github.com/S0lidByte/CineFlow-frontend/commit/0a77c44f2c15adb8d4afccdbefad36e058671144))
+
 ## [1.15.2](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.1...riven-frontend-v1.15.2) (2026-07-26)
 
 ### Bug Fixes
