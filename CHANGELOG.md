@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.15.4](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.3...riven-frontend-v1.15.4) (2026-08-02)
+
+### Bug Fixes
+
+- **settings:** explain streaming cache safety limits ([b17dee5](https://github.com/S0lidByte/CineFlow-frontend/commit/b17dee52ba5dae57107333907ed13b9bae692361))
+
 ## [1.15.3](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.2...riven-frontend-v1.15.3) (2026-08-01)
 
 ### Bug Fixes
