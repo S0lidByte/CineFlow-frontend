@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.5](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.4...riven-frontend-v1.15.5) (2026-08-02)
+
+
+### Bug Fixes
+
+* **settings:** clarify live stream configuration ([97585a2](https://github.com/S0lidByte/CineFlow-frontend/commit/97585a22044f3ff5e6bf10904d5319c1d41e2fb7))
+
 ## [1.15.4](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.3...riven-frontend-v1.15.4) (2026-08-02)
 
 ### Bug Fixes
