@@ -21,6 +21,7 @@ import {
     mergeSearchEntries,
     type SettingsSearchEntry
 } from "$lib/components/settings/settings-field-index";
+import { labelNullablePathOptions } from "$lib/components/settings/settings-safety";
 import { perfCount, startPerfMark, endPerfMark } from "$lib/perf";
 import { createScopedLogger } from "$lib/logger";
 
@@ -635,6 +636,7 @@ export const load: PageServerLoad = async ({
     pruneLibraryProfilesFromSchema(workingSchema);
     pruneLibraryProfilesFromValue(initialValue);
     sanitizeSettingsSchemaTitles(workingSchema);
+    labelNullablePathOptions(workingSchema);
 
     const props = (workingSchema.properties ?? {}) as Record<string, unknown>;
     const uiSchema = buildSettingsUiSchema(props, tab.keys) as unknown as UiSchemaRoot;
@@ -713,6 +715,7 @@ export const actions = {
             schema = structuredClone(rawSchema);
             pruneLibraryProfilesFromSchema(schema);
             sanitizeSettingsSchemaTitles(schema);
+            labelNullablePathOptions(schema);
             setCachedSettingsSchema(schemaCacheKey, schema);
             perfCount("settings.schema.cache.set", 1, { tab: tab.id });
         }

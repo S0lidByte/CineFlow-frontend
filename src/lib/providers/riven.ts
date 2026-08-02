@@ -1717,16 +1717,29 @@ export interface components {
             /**
              * Cache Dir
              * Format: path
-             * @description Directory for caching downloaded chunks
+             * @description Warm (or sole) directory for caching downloaded chunks. Default /dev/shm/riven-cache is RAM-backed (tmpfs): large budgets can OOM-kill the process (bare 'Killed'). Prefer a disk path under your data volume for large warm caches. On tmpfs, effective size is limited by tmpfs_cache_max_mb (default 1 GiB) and half of free shm.
              * @default /dev/shm/riven-cache
              */
             cache_dir: string;
             /**
+             * Cache Hot Dir
+             * Format: path
+             * @description Optional hot-tier directory (typically tmpfs). When set, new chunks are written here first; LRU overflow is demoted to cache_dir (warm). Leave empty for a single-tier cache. Bare /dev/shm or /run/shm paths are automatically scoped to a riven-cache subdirectory so unrelated shared-memory files are never treated as cache data.
+             * @default null
+             */
+            cache_hot_dir: string | null;
+            /**
              * Cache Max Size Mb
-             * @description Maximum cache size in MB (10 GiB default)
+             * @description Maximum warm (or sole) cache size in MB (10 GiB default on disk). When cache_dir is on tmpfs (/dev/shm), effective size is also limited by tmpfs_cache_max_mb and half of free shm.
              * @default 10240
              */
             cache_max_size_mb: number;
+            /**
+             * Tmpfs Cache Max Mb
+             * @description Hard ceiling in MB when cache_dir or cache_hot_dir is on tmpfs/ramfs (default 1024 = 1 GiB). Raise to e.g. 10240 for a ~10 GiB RAM hot cache, and size Docker shm_size / mem_limit so mem_limit >= this budget + 2–4 GiB headroom. Still clamped to half of reported free space on that mount.
+             * @default 1024
+             */
+            tmpfs_cache_max_mb: number;
             /**
              * Cache Ttl Seconds
              * @description Cache time-to-live in seconds (2 hours default)
@@ -1742,7 +1755,7 @@ export interface components {
             cache_eviction: "LRU" | "TTL";
             /**
              * Cache Metrics
-             * @description Enable cache metrics logging
+             * @description Enable cache metrics logging and Prometheus mirrors (GET /api/v1/metrics when authenticated)
              * @default true
              */
             cache_metrics: boolean;
@@ -3025,10 +3038,16 @@ export interface components {
         StreamModel: {
             /**
              * Chunk Size Mb
-             * @description Chunk size in MB for streaming downloads (1 MB default). Note: Smaller chunks are generally more efficient, as the entire chunk must be downloaded before it can be read.
+             * @description Chunk size in MB for streaming downloads (1 MB default). Prefer 6–8 MB for 4K / remux single-title, or 4–8 MB for multi-title with a disk cache: the entire chunk must finish downloading before it can be read. Very large values (e.g. 50–80 MB) hurt concurrent cold starts and amplify cache/FUSE stalls — use prefetch_chunks instead.
              * @default 1
              */
             chunk_size_mb: number;
+            /**
+             * Prefetch Chunks
+             * @description On sequential body playback, fetch this many uncached chunks ahead of the playhead (default 12; 0 disables). Total read-ahead work is prefetch_chunks × chunk_size_mb per stream (12 MB at the 1 MB × 12 defaults). For higher-throughput playback, tune toward 96–128 MB. Values above 256 MB are aggressive during resume/seek.
+             * @default 12
+             */
+            prefetch_chunks: number;
             /**
              * Connect Timeout Seconds
              * @description Timeout in seconds for establishing a connection to the streaming service (10 seconds default)
@@ -3037,7 +3056,7 @@ export interface components {
             connect_timeout_seconds: number;
             /**
              * Chunk Wait Timeout Seconds
-             * @description Timeout in seconds for reading a chunk during streaming (10 seconds default)
+             * @description Timeout in seconds for reading a chunk during streaming (10 seconds default). Prefer 30+ for 4K remux when the CDN is slow so playhead wait does not raise ChunksTooSlowException during cold start.
              * @default 10
              */
             chunk_wait_timeout_seconds: number;
@@ -3047,6 +3066,18 @@ export interface components {
              * @default 60
              */
             activity_timeout_seconds: number;
+            /**
+             * Sequential Read Tolerance Blocks
+             * @description Advanced: tolerance in kernel blocks for interleaved sequential reads (default 10 × 128 KiB). Leave at default unless tuning scan vs playback detection.
+             * @default 10
+             */
+            sequential_read_tolerance_blocks: number;
+            /**
+             * Scan Tolerance Blocks
+             * @description Advanced: jump size in kernel blocks that classifies a read as a library scan (default 25 × 128 KiB). Leave at default unless tuning scan vs playback detection.
+             * @default 25
+             */
+            scan_tolerance_blocks: number;
         };
         /** StreamsResponse */
         StreamsResponse: {

@@ -27,6 +27,7 @@
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
     import Check from "@lucide/svelte/icons/check";
     import { getTabById } from "./sections";
+    import { getBareTmpfsCacheRoots, getStreamReadAhead } from "./settings-safety";
     import { tick } from "svelte";
 
     interface Props {
@@ -85,6 +86,9 @@
 
     /** Whether the form has unsaved changes (mirrors `form.isChanged`). */
     const isDirty = $derived(form?.isChanged ?? false);
+    const settingsSnapshot = $derived.by(() => getValueSnapshot(form));
+    const streamReadAhead = $derived(getStreamReadAhead(settingsSnapshot));
+    const bareTmpfsCacheRoots = $derived(getBareTmpfsCacheRoots(settingsSnapshot));
 
     // Reset saveStatus to idle on any new edit; also auto-dismiss success after 4 s
     // so the banner doesn't linger after the user starts working again.
@@ -386,6 +390,34 @@
         <span class="font-medium text-emerald-600 dark:text-emerald-400"
             >Settings saved successfully.</span>
     </div>
+{/if}
+
+{#if activeTabId === "stream" && streamReadAhead?.isAggressive}
+    <Alert
+        class="mb-4 border-amber-500/40 bg-amber-500/10 text-amber-950 dark:text-amber-100"
+        role="alert">
+        <AlertCircle class="size-4 text-amber-500" />
+        <AlertTitle>Read-ahead budget: {streamReadAhead.totalMb} MB per stream</AlertTitle>
+        <AlertDescription class="text-amber-900/80 dark:text-amber-100/80">
+            {streamReadAhead.chunkSizeMb} MB chunks × {streamReadAhead.prefetchChunks} prefetched chunks
+            is aggressive during resume and seek. Start with 12–16 prefetch chunks ({streamReadAhead.chunkSizeMb *
+                12}–{streamReadAhead.chunkSizeMb * 16}
+            MB) and increase only if playback still starves.
+        </AlertDescription>
+    </Alert>
+{/if}
+
+{#if activeTabId === "filesystem" && bareTmpfsCacheRoots.length > 0}
+    <Alert
+        class="mb-4 border-amber-500/40 bg-amber-500/10 text-amber-950 dark:text-amber-100"
+        role="alert">
+        <AlertCircle class="size-4 text-amber-500" />
+        <AlertTitle>Shared-memory root will be scoped automatically</AlertTitle>
+        <AlertDescription class="text-amber-900/80 dark:text-amber-100/80">
+            {bareTmpfsCacheRoots.join(", ")} will be saved under a dedicated
+            <code>riven-cache</code> subdirectory so unrelated shared-memory files remain untouched.
+        </AlertDescription>
+    </Alert>
 {/if}
 
 <div class="settings-form-host" bind:this={formHost}>
