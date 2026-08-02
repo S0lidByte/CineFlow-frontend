@@ -392,7 +392,7 @@
     </div>
 {/if}
 
-{#if activeTabId === "stream" && streamReadAhead?.isAggressive}
+{#if activeTabId === "ops" && streamReadAhead?.isAggressive}
     <Alert
         class="mb-4 border-amber-500/40 bg-amber-500/10 text-amber-950 dark:text-amber-100"
         role="alert">

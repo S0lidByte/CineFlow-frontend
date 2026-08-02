@@ -247,7 +247,7 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Stream: tune chunk sizes, CDN validation, and timeout values for Plex playback."
         ],
         cautions: [
-            "Stream and logging changes require a backend restart.",
+            "Stream changes apply to newly opened playback sessions; reopen an active video to use the new values.",
             "Aggressive stream timeouts may cause Plex buffering on large 4K remux files."
         ],
         tips: [
