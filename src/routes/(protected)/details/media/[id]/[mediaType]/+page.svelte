@@ -27,6 +27,7 @@
     import PortraitCard from "$lib/components/media/portrait-card.svelte";
     import type { RivenEpisode } from "$lib/types/riven";
     import type { SeasonInfo } from "$lib/components/media/riven/season-selector.svelte";
+    import { getRequestAvailability } from "$lib/components/media/riven/availability";
     import ItemRequest from "$lib/components/media/riven/item-request.svelte";
     import ItemDelete from "$lib/components/media/riven/item-delete.svelte";
     import ItemPause from "$lib/components/media/riven/item-pause.svelte";
@@ -284,13 +285,6 @@
         return () => controller.abort();
     });
 
-    const availableStates = new Set(["Completed", "Downloaded", "Symlinked"]);
-
-    function getAvailableStatus(state: string | null | undefined) {
-        if (state === "Unreleased") return "Unreleased";
-        return state && availableStates.has(state) ? "Available" : undefined;
-    }
-
     function getRivenEpisodeNumber(episode: RivenEpisode): number | null {
         const candidate = episode.episode_number ?? episode.number;
         if (candidate === null || candidate === undefined) return null;
@@ -319,12 +313,12 @@
                             id: episode.id,
                             episode_number: episode.number ?? 0,
                             title: episode.name || `Episode ${episode.number}`,
-                            status: getAvailableStatus(rivenEpisode?.state)
+                            status: getRequestAvailability(rivenEpisode?.state)
                         };
                     }) ?? [];
 
             const hasRequestableEpisodes = episodes.some(
-                (episode) => episode.status !== "Available" && episode.status !== "Unreleased"
+                (episode) => episode.status !== "VfsAvailable" && episode.status !== "Unreleased"
             );
 
             return {
@@ -332,7 +326,9 @@
                 season_number: seasonNumber,
                 episode_count: episodes.length,
                 name: `Season ${seasonNumber}`,
-                status: hasRequestableEpisodes ? undefined : getAvailableStatus(rivenSeason?.state),
+                status: hasRequestableEpisodes
+                    ? undefined
+                    : getRequestAvailability(rivenSeason?.state),
                 episodes
             };
         });
@@ -342,11 +338,12 @@
         seasonData.some((season) => {
             if (season.episodes?.length) {
                 return season.episodes.some(
-                    (episode) => episode.status !== "Available" && episode.status !== "Unreleased"
+                    (episode) =>
+                        episode.status !== "VfsAvailable" && episode.status !== "Unreleased"
                 );
             }
 
-            return season.status !== "Available" && season.status !== "Unreleased";
+            return season.status !== "VfsAvailable" && season.status !== "Unreleased";
         })
     );
 

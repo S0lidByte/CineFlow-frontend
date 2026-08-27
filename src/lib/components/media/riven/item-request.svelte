@@ -5,6 +5,7 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import Loader2 from "@lucide/svelte/icons/loader-2";
     import SeasonSelector, { type SeasonInfo } from "./season-selector.svelte";
+    import { isRequestAvailabilityLocked } from "./availability";
     import { createScopedLogger } from "$lib/logger";
     import { type Snippet } from "svelte";
     import { SvelteSet } from "svelte/reactivity";
@@ -96,13 +97,12 @@
             if (season.episodes?.length) {
                 if (episodeSelection) {
                     count += season.episodes.filter(
-                        (episode) =>
-                            episode.status !== "Available" && episode.status !== "Unreleased"
+                        (episode) => !isRequestAvailabilityLocked(episode.status)
                     ).length;
-                } else if (season.status !== "Available" && season.status !== "Unreleased") {
+                } else if (!isRequestAvailabilityLocked(season.status)) {
                     count += 1;
                 }
-            } else if (season.status !== "Available" && season.status !== "Unreleased") {
+            } else if (!isRequestAvailabilityLocked(season.status)) {
                 count += 1;
             }
         }
