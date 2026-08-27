@@ -3,6 +3,7 @@ FROM node:24-alpine AS frontend
 WORKDIR /app
 COPY . .
 RUN apk add --no-cache python3 make g++
+# Use the pnpm version pinned by package.json and verify the committed lockfile.
 RUN corepack enable && corepack pnpm install --frozen-lockfile
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN corepack pnpm run build && corepack pnpm prune --prod
