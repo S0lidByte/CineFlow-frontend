@@ -1,11 +1,12 @@
 <script lang="ts">
     import { SvelteSet } from "svelte/reactivity";
+    import { isRequestAvailabilityLocked, type RequestAvailability } from "./availability";
 
     export interface EpisodeInfo {
         id: number;
         episode_number: number;
         title: string;
-        status?: string;
+        status?: RequestAvailability;
     }
 
     export interface SeasonInfo {
@@ -13,7 +14,7 @@
         season_number: number;
         episode_count: number;
         name: string;
-        status?: string;
+        status?: RequestAvailability;
         episodes?: EpisodeInfo[];
     }
 
@@ -42,11 +43,11 @@
     }
 
     function isSeasonLocked(season: SeasonInfo): boolean {
-        return season.status === "Available" || season.status === "Unreleased";
+        return isRequestAvailabilityLocked(season.status);
     }
 
     function isEpisodeLocked(episode: EpisodeInfo): boolean {
-        return episode.status === "Available" || episode.status === "Unreleased";
+        return isRequestAvailabilityLocked(episode.status);
     }
 
     function hasEpisodeChoices(season: SeasonInfo): boolean {
@@ -106,7 +107,7 @@
             return;
         }
 
-        // Don't allow toggling locked (Available) seasons
+        // Don't allow toggling seasons that are already available through the VFS.
         if (isSeasonLocked(season)) return;
 
         if (selectedSeasons.has(season.season_number)) {
@@ -150,7 +151,7 @@
 
             {#if locked}
                 <span class="text-xs font-normal opacity-70"
-                    >{season.status === "Unreleased" ? "Unreleased" : "Installed"}</span>
+                    >{season.status === "Unreleased" ? "Unreleased" : "VFS available"}</span>
             {:else if episodeMode}
                 <span class="text-muted-foreground text-xs font-normal opacity-70"
                     >{selectedEpisodeTotal}/{requestableEpisodeCount} missing</span>
@@ -177,8 +178,8 @@
                         title={episode.title}>
                         <span class="truncate">E{episode.episode_number} {episode.title}</span>
                         <span class="text-muted-foreground text-[11px]">
-                            {#if episode.status === "Available"}
-                                Installed
+                            {#if episode.status === "VfsAvailable"}
+                                VFS available
                             {:else if episode.status === "Unreleased"}
                                 Unreleased
                             {:else}

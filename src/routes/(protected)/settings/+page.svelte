@@ -35,6 +35,7 @@
     import ConnectionTestPanel from "$lib/components/settings/connection-test-panel.svelte";
     import type { ConnectionService } from "$lib/components/settings/connection-test-panel.svelte";
     import SettingsTabGuide from "$lib/components/settings/settings-tab-guide.svelte";
+    import VfsStatisticsPanel from "$lib/components/settings/vfs-statistics-panel.svelte";
     import LibraryProfilesPanel from "$lib/components/settings/library-profiles-panel.svelte";
     import RankingPanel from "$lib/components/settings/ranking-panel.svelte";
     import { cn } from "$lib/utils";
@@ -640,6 +641,9 @@
                                 pageData={$page.data as import("./$types").PageData}
                                 actionData={$page.form ?? undefined}
                                 activeTabId={$page.data.activeTabId} />
+                            {#if $page.data.activeTabId === "filesystem"}
+                                <VfsStatisticsPanel />
+                            {/if}
                         {:else}
                             <!-- Render nothing while SvelteKit finishes transitioning to /settings -->
                             <div class="h-full w-full opacity-0"></div>

@@ -3,9 +3,9 @@ FROM node:24-alpine AS frontend
 WORKDIR /app
 COPY . .
 RUN apk add --no-cache python3 make g++
-RUN npm install -g pnpm && pnpm install
+RUN corepack enable && corepack pnpm install --frozen-lockfile
 ENV NODE_OPTIONS=--max-old-space-size=4096
-RUN pnpm run build && pnpm prune --prod
+RUN corepack pnpm run build && corepack pnpm prune --prod
 
 # Final Image
 FROM node:24-alpine
