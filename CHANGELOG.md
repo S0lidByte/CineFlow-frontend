@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.5...riven-frontend-v1.16.0) (2026-08-27)
+
+
+### Features
+
+* add VFS statistics panel and clarify filesystem terminology ([260ae66](https://github.com/S0lidByte/CineFlow-frontend/commit/260ae664a9140630e989d990f7b480476d43c7af))
+
 ## [1.15.5](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.4...riven-frontend-v1.15.5) (2026-08-02)
 
 ### Bug Fixes
