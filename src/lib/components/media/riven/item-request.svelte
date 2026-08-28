@@ -171,13 +171,16 @@
                     }
                 });
 
-                if (response.data) {
+                const message = response.data?.message;
+                const addedCount = message?.match(/Added (\d+) new item\(s\)/i)?.[1];
+
+                if (message && addedCount !== "0") {
                     toast.success("Media item requested successfully!");
                     await invalidateAll();
                     open = false;
                 } else {
-                    logger.error("Error response:", response.error);
-                    toast.error("Failed to request media item.");
+                    logger.error("Request was not queued:", response.error ?? message);
+                    toast.error(message ?? "Failed to request media item.");
                 }
             }
         } catch (e) {
