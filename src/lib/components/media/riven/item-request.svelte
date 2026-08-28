@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { invalidateAll } from "$app/navigation";
     import providers from "$lib/providers";
     import { toast } from "svelte-sonner";
     import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
@@ -152,6 +153,7 @@
 
                 if (response.data?.message) {
                     toast.success("Media item requested successfully!");
+                    await invalidateAll();
                     open = false;
                 } else {
                     logger.error("Error response:", response.error);
@@ -169,12 +171,16 @@
                     }
                 });
 
-                if (response.data) {
+                const message = response.data?.message;
+                const addedCount = message?.match(/Added (\d+) new item\(s\)/i)?.[1];
+
+                if (message && addedCount !== "0") {
                     toast.success("Media item requested successfully!");
+                    await invalidateAll();
                     open = false;
                 } else {
-                    logger.error("Error response:", response.error);
-                    toast.error("Failed to request media item.");
+                    logger.error("Request was not queued:", response.error ?? message);
+                    toast.error(message ?? "Failed to request media item.");
                 }
             }
         } catch (e) {

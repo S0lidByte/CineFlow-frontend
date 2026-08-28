@@ -77,6 +77,16 @@
                 id: "real_debrid",
                 label: "Real-Debrid",
                 hint: "Checks the saved API key against the Real-Debrid /user endpoint."
+            },
+            {
+                id: "all_debrid",
+                label: "AllDebrid",
+                hint: "Checks the saved API key against the AllDebrid /v4/user endpoint."
+            },
+            {
+                id: "debrid_link",
+                label: "Debrid-Link",
+                hint: "Checks the saved API key against the Debrid-Link account endpoint."
             }
         ],
         updaters: [
