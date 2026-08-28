@@ -3,6 +3,8 @@ import type { RequestHandler } from "./$types";
 
 export type ConnectionService =
     | "real_debrid"
+    | "all_debrid"
+    | "debrid_link"
     | "plex"
     | "jackett"
     | "prowlarr"
@@ -17,6 +19,8 @@ export type ConnectionTestResult = {
 
 const SUPPORTED = new Set<ConnectionService>([
     "real_debrid",
+    "all_debrid",
+    "debrid_link",
     "plex",
     "jackett",
     "prowlarr",

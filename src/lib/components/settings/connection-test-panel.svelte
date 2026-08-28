@@ -12,6 +12,8 @@
 
     export type ConnectionService =
         | "real_debrid"
+        | "all_debrid"
+        | "debrid_link"
         | "plex"
         | "jackett"
         | "prowlarr"

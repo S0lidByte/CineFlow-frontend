@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { invalidateAll } from "$app/navigation";
     import providers from "$lib/providers";
     import { toast } from "svelte-sonner";
     import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
@@ -152,6 +153,7 @@
 
                 if (response.data?.message) {
                     toast.success("Media item requested successfully!");
+                    await invalidateAll();
                     open = false;
                 } else {
                     logger.error("Error response:", response.error);
@@ -171,6 +173,7 @@
 
                 if (response.data) {
                     toast.success("Media item requested successfully!");
+                    await invalidateAll();
                     open = false;
                 } else {
                     logger.error("Error response:", response.error);
