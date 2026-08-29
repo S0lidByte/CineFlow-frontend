@@ -118,7 +118,9 @@
                                 {#if ratingsData?.scores?.length}
                                     {#each ratingsData.scores as score (score.name)}
                                         <a
-                                            href={resolve(score.url as unknown as "/")}
+                                            href={score.url.startsWith("http")
+                                                ? score.url
+                                                : resolve(score.url as "/")}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             onclick={(e) => e.stopPropagation()}
