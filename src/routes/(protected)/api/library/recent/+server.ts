@@ -1,5 +1,6 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 interface BackendItem {
     id: string | number;
@@ -24,12 +25,15 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     backendUrl.searchParams.append("type", "movie");
     backendUrl.searchParams.append("type", "show");
 
+    const actorHeaders = getActorHeadersForUser(locals.user);
+
     try {
         const response = await fetch(backendUrl.toString(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "x-api-key": locals.apiKey
+                "x-api-key": locals.apiKey,
+                ...actorHeaders
             }
         });
 

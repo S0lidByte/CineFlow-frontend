@@ -40,5 +40,5 @@ function ensureSqliteDirectory(databaseUrl: string | undefined): string | undefi
 
 const databaseUrl = env.DATABASE_URL ?? (building ? ":memory:" : undefined);
 
-const sqlite = new Database(ensureSqliteDirectory(databaseUrl));
+export const sqlite = new Database(ensureSqliteDirectory(databaseUrl));
 export const db = drizzle(sqlite, { schema, logger: env.DATABASE_LOGGING === "true" });

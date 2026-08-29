@@ -2,15 +2,18 @@ import type { PageServerLoad } from "./$types";
 import providers from "$lib/providers";
 import { error } from "@sveltejs/kit";
 import { createScopedLogger } from "$lib/logger";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const logger = createScopedLogger("dashboard");
 
 export const load = (async ({ fetch, locals }) => {
+    const actorHeaders = getActorHeadersForUser(locals.user);
     const [statistics, svc, downloaderInfo] = await Promise.all([
         providers.riven.GET("/api/v1/stats", {
             baseUrl: locals.backendUrl,
             headers: {
-                "x-api-key": locals.apiKey
+                "x-api-key": locals.apiKey,
+                ...actorHeaders
             },
             fetch: fetch
         }),
@@ -18,14 +21,16 @@ export const load = (async ({ fetch, locals }) => {
         providers.riven.GET("/api/v1/services", {
             baseUrl: locals.backendUrl,
             headers: {
-                "x-api-key": locals.apiKey
+                "x-api-key": locals.apiKey,
+                ...actorHeaders
             },
             fetch: fetch
         }),
         providers.riven.GET("/api/v1/downloader_user_info", {
             baseUrl: locals.backendUrl,
             headers: {
-                "x-api-key": locals.apiKey
+                "x-api-key": locals.apiKey,
+                ...actorHeaders
             },
             fetch: fetch
         })

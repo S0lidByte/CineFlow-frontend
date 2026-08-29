@@ -5,17 +5,16 @@ import type { Actions, PageServerLoad } from "./$types";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { auth } from "$lib/server/auth";
 import { APIError } from "better-auth/api";
-import { getUsersCount } from "$lib/server/functions";
+import { getUsersCount, isPublicRegistrationAllowed } from "$lib/server/functions";
 import { getAuthProviders } from "$lib/server/auth";
 import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("auth");
 
-function getAuthInfo() {
+async function getAuthInfo() {
     const authProviders = getAuthProviders();
-    const isSignupEnabled = !!(
-        authProviders.credential?.enabled && !authProviders.credential?.disableSignup
-    );
+    const allowPublicReg = await isPublicRegistrationAllowed();
+    const isSignupEnabled = !!(authProviders.credential?.enabled && allowPublicReg);
     const isCredentialEnabled = !!authProviders.credential?.enabled;
     return { authProviders, isSignupEnabled, isCredentialEnabled };
 }
@@ -25,7 +24,7 @@ export const load: PageServerLoad = async (event) => {
         return redirect(302, "/auth");
     }
 
-    const { authProviders, isSignupEnabled } = getAuthInfo();
+    const { authProviders, isSignupEnabled } = await getAuthInfo();
     const isFirstUser = await noUserExists();
     const canRegister = isSignupEnabled || isFirstUser;
 
@@ -45,7 +44,7 @@ async function noUserExists() {
 
 export const actions: Actions = {
     login: async (event) => {
-        const { isCredentialEnabled } = getAuthInfo();
+        const { isCredentialEnabled } = await getAuthInfo();
         if (!isCredentialEnabled) {
             return fail(403, { message: "Email/password login is disabled" });
         }
@@ -77,12 +76,14 @@ export const actions: Actions = {
         return redirect(303, "/");
     },
     register: async (event) => {
-        const { isSignupEnabled } = getAuthInfo();
+        const { isSignupEnabled } = await getAuthInfo();
         const isFirstUser = await noUserExists();
 
         // Allow registration if signup is enabled OR if this is the first user (admin setup)
         if (!isSignupEnabled && !isFirstUser) {
-            return fail(403, { message: "Registration is disabled" });
+            return fail(403, {
+                message: "Public registration is currently disabled by the administrator"
+            });
         }
 
         const registerForm = await superValidate(event.request, zod4(registerSchema));

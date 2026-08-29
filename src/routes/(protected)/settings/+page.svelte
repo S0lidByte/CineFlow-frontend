@@ -38,6 +38,7 @@
     import VfsStatisticsPanel from "$lib/components/settings/vfs-statistics-panel.svelte";
     import LibraryProfilesPanel from "$lib/components/settings/library-profiles-panel.svelte";
     import RankingPanel from "$lib/components/settings/ranking-panel.svelte";
+    import UsersPanel from "$lib/components/settings/users-panel.svelte";
     import { cn } from "$lib/utils";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
@@ -49,6 +50,7 @@
         getTabsByGroup,
         LIBRARY_PROFILES_TAB_ID,
         RANKING_TAB_ID,
+        USERS_TAB_ID,
         type SectionGroup
     } from "$lib/components/settings/sections";
     import SettingsSearch from "$lib/components/settings/settings-search.svelte";
@@ -620,7 +622,9 @@
 
                     <!-- Keyed so components fully remount on tab change -->
                     {#key $page.data.activeTabId}
-                        {#if activeTab?.custom && $page.data.activeTabId === LIBRARY_PROFILES_TAB_ID}
+                        {#if activeTab?.custom && $page.data.activeTabId === USERS_TAB_ID}
+                            <UsersPanel />
+                        {:else if activeTab?.custom && $page.data.activeTabId === LIBRARY_PROFILES_TAB_ID}
                             <LibraryProfilesPanel
                                 profiles={$page.data.customData?.profiles ?? {}} />
                         {:else if activeTab?.custom && $page.data.activeTabId === RANKING_TAB_ID}

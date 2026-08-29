@@ -1,5 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 export const GET: RequestHandler = async ({ params, locals, fetch, url }) => {
     const { itemId, file } = params;
@@ -15,8 +16,10 @@ export const GET: RequestHandler = async ({ params, locals, fetch, url }) => {
     // Target:   {backend}/stream/hls/123/segment/0.ts
     const backendUrl = `${locals.backendUrl}/api/v1/stream/hls/${itemId}/${file}${url.search}`;
 
-    const headers: HeadersInit = {
-        "x-api-key": locals.apiKey
+    const actorHeaders = getActorHeadersForUser(locals.user);
+    const headers: Record<string, string> = {
+        "x-api-key": locals.apiKey,
+        ...actorHeaders
     };
 
     try {

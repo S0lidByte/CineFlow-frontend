@@ -2,11 +2,9 @@ import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import providers from "$lib/providers";
 import { createScopedLogger } from "$lib/logger";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const logger = createScopedLogger("ranking-page-server");
-const SETTINGS_WRITE_HEADERS = {
-    "x-actor-roles": "platform:admin,settings:write,playback:operator"
-};
 
 /** Settings keys for independent Ranking Studio packs. */
 export type RankingPackKey = "ranking" | "ranking_anime";
@@ -24,12 +22,13 @@ function parsePack(formData: FormData): RankingPackKey {
 async function fetchRankingPack(
     baseUrl: string,
     apiKey: string,
+    actorHeaders: Record<string, string>,
     pack: RankingPackKey,
     fetchFn: typeof globalThis.fetch
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...actorHeaders },
         fetch: fetchFn,
         params: { path: { paths: pack } }
     });
@@ -41,6 +40,7 @@ async function fetchRankingPack(
 async function saveRankingPack(
     baseUrl: string,
     apiKey: string,
+    actorHeaders: Record<string, string>,
     pack: RankingPackKey,
     ranking: Record<string, unknown>,
     fetchFn: typeof globalThis.fetch
@@ -48,7 +48,7 @@ async function saveRankingPack(
     const res = await providers.riven.POST("/api/v1/settings/set/{paths}", {
         body: { [pack]: ranking } as never,
         baseUrl,
-        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
+        headers: { "x-api-key": apiKey, ...actorHeaders },
         fetch: fetchFn,
         params: { path: { paths: pack } }
     });
@@ -64,6 +64,7 @@ export const actions = {
     save: async ({ request, fetch, locals }) => {
         if (locals.user?.role !== "admin") error(403, "Forbidden");
 
+        const actorHeaders = getActorHeadersForUser(locals.user);
         const formData = await request.formData();
         const pack = parsePack(formData);
         const rankingJson = formData.get("ranking");
@@ -86,7 +87,7 @@ export const actions = {
                     headers: {
                         "content-type": "application/json",
                         "x-api-key": locals.apiKey,
-                        ...SETTINGS_WRITE_HEADERS
+                        ...actorHeaders
                     },
                     body: JSON.stringify({
                         require: Array.isArray(ranking.require) ? ranking.require : [],
@@ -124,8 +125,21 @@ export const actions = {
         }
 
         try {
-            await saveRankingPack(locals.backendUrl, locals.apiKey, pack, ranking, fetch);
-            const saved = await fetchRankingPack(locals.backendUrl, locals.apiKey, pack, fetch);
+            await saveRankingPack(
+                locals.backendUrl,
+                locals.apiKey,
+                actorHeaders,
+                pack,
+                ranking,
+                fetch
+            );
+            const saved = await fetchRankingPack(
+                locals.backendUrl,
+                locals.apiKey,
+                actorHeaders,
+                pack,
+                fetch
+            );
             logger.info("Ranking settings saved", { pack });
             return { success: true, pack, ranking: saved };
         } catch (e) {
@@ -169,7 +183,7 @@ export const actions = {
                 headers: {
                     "content-type": "application/json",
                     "x-api-key": locals.apiKey,
-                    ...SETTINGS_WRITE_HEADERS
+                    ...getActorHeadersForUser(locals.user)
                 },
                 body: JSON.stringify({
                     raw_title: rawTitle.trim(),
@@ -238,7 +252,7 @@ export const actions = {
                 headers: {
                     "content-type": "application/json",
                     "x-api-key": locals.apiKey,
-                    ...SETTINGS_WRITE_HEADERS
+                    ...getActorHeadersForUser(locals.user)
                 },
                 body: JSON.stringify({
                     require: parseList("require"),
@@ -286,7 +300,7 @@ export const actions = {
             const res = await fetch(`${locals.backendUrl}/api/v1/ranking/funnel/${itemId}`, {
                 headers: {
                     "x-api-key": locals.apiKey,
-                    ...SETTINGS_WRITE_HEADERS
+                    ...getActorHeadersForUser(locals.user)
                 },
                 signal: AbortSignal.timeout(20_000)
             });

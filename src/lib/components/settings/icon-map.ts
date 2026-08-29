@@ -21,10 +21,12 @@ import Bell from "@lucide/svelte/icons/bell";
 import Activity from "@lucide/svelte/icons/activity";
 import Layers from "@lucide/svelte/icons/layers";
 import SlidersHorizontal from "@lucide/svelte/icons/sliders-horizontal";
+import Users from "@lucide/svelte/icons/users";
 
 export const ICON_MAP: Record<string, Component> = {
     // Tab icons
     settings: Settings,
+    users: Users,
     "folder-tree": FolderTree,
     library: Library,
     download: Download,

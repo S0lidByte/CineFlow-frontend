@@ -11,6 +11,7 @@ import {
     getTabById,
     LIBRARY_PROFILES_TAB_ID,
     RANKING_TAB_ID,
+    USERS_TAB_ID,
     SETTINGS_TABS
 } from "$lib/components/settings/sections";
 import {
@@ -24,11 +25,9 @@ import {
 import { labelNullablePathOptions } from "$lib/components/settings/settings-safety";
 import { perfCount, startPerfMark, endPerfMark } from "$lib/perf";
 import { createScopedLogger } from "$lib/logger";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const logger = createScopedLogger("settings-page-server");
-const SETTINGS_WRITE_HEADERS = {
-    "x-actor-roles": "platform:admin,settings:write,playback:operator"
-} as const;
 
 const FULL_SCHEMA_CACHE_TTL_MS = 10 * 60 * 1000;
 let fullSchemaCache: {
@@ -40,6 +39,7 @@ let fullSchemaCache: {
 async function getFullSettingsSchema(
     baseUrl: string,
     apiKey: string,
+    actorHeaders: Record<string, string>,
     fetchFn: typeof globalThis.fetch
 ): Promise<Record<string, unknown> | null> {
     if (
@@ -52,7 +52,7 @@ async function getFullSettingsSchema(
 
     const res = await providers.riven.GET("/api/v1/settings/schema", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...actorHeaders },
         fetch: fetchFn
     });
     if (res.error || !res.data) {
@@ -84,11 +84,12 @@ const PATHS = "filesystem";
 async function fetchFilesystem(
     baseUrl: string,
     apiKey: string,
+    actorHeaders: Record<string, string>,
     fetchFn: typeof globalThis.fetch
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
-        headers: { "x-api-key": apiKey, ...SETTINGS_WRITE_HEADERS },
+        headers: { "x-api-key": apiKey, ...actorHeaders },
         fetch: fetchFn,
         params: { path: { paths: PATHS } }
     });
@@ -261,12 +262,13 @@ function buildSettingsUiSchema(properties: Record<string, unknown>, keys: string
 async function getSchemaForKeys(
     baseUrl: string,
     apiKey: string,
+    actorHeaders: Record<string, string>,
     keys: string,
     fetchFn: typeof globalThis.fetch
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/schema/keys", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...actorHeaders },
         fetch: fetchFn,
         params: { query: { keys, title: "Settings" } }
     });
@@ -279,12 +281,13 @@ async function getSchemaForKeys(
 async function getSettingsForPaths(
     baseUrl: string,
     apiKey: string,
+    actorHeaders: Record<string, string>,
     paths: string,
     fetchFn: typeof globalThis.fetch
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...actorHeaders },
         fetch: fetchFn,
         params: { path: { paths } }
     });
@@ -373,6 +376,7 @@ async function loadSettingsDataWithRetry(
     fetchFn: typeof fetch,
     backendUrl: string,
     apiKey: string,
+    actorHeaders: Record<string, string>,
     keys: string,
     paths: string
 ): Promise<[Record<string, unknown>, Record<string, unknown>]> {
@@ -394,8 +398,8 @@ async function loadSettingsDataWithRetry(
 
         try {
             const result = (await Promise.all([
-                getSchemaForKeys(backendUrl, apiKey, keys, fetchWithTimeout),
-                getSettingsForPaths(backendUrl, apiKey, paths, fetchWithTimeout)
+                getSchemaForKeys(backendUrl, apiKey, actorHeaders, keys, fetchWithTimeout),
+                getSettingsForPaths(backendUrl, apiKey, actorHeaders, paths, fetchWithTimeout)
             ])) as [Record<string, unknown>, Record<string, unknown>];
 
             logger.info("Loading settings data attempt succeeded", {
@@ -444,8 +448,9 @@ export const load: PageServerLoad = async ({
         error(403, "Forbidden");
     }
 
-    const tabId = url.searchParams.get("tab") ?? DEFAULT_TAB_ID;
-    const tab = getTabById(tabId) ?? getTabById(DEFAULT_TAB_ID)!;
+    const actorHeaders = getActorHeadersForUser(locals.user);
+    const requestedTabId = url.searchParams.get("tab") ?? DEFAULT_TAB_ID;
+    const tab = getTabById(requestedTabId) ?? getTabById(DEFAULT_TAB_ID)!;
     const paths = getPathsForTab(tab);
     const keys = paths;
     const schemaCacheKey = getSettingsSchemaCacheKey(locals.backendUrl, tab.id, paths);
@@ -455,8 +460,8 @@ export const load: PageServerLoad = async ({
         if (tab.id === LIBRARY_PROFILES_TAB_ID) {
             try {
                 const [filesystem, fullSchema] = await Promise.all([
-                    fetchFilesystem(locals.backendUrl, locals.apiKey, fetch),
-                    getFullSettingsSchema(locals.backendUrl, locals.apiKey, fetch)
+                    fetchFilesystem(locals.backendUrl, locals.apiKey, actorHeaders, fetch),
+                    getFullSettingsSchema(locals.backendUrl, locals.apiKey, actorHeaders, fetch)
                 ]);
                 const profiles = (filesystem["library_profiles"] ?? {}) as Record<string, unknown>;
                 return {
@@ -480,14 +485,14 @@ export const load: PageServerLoad = async ({
                 const [rankingRes, metaRes, fullSchema] = await Promise.all([
                     providers.riven.GET("/api/v1/settings/get/{paths}", {
                         baseUrl: locals.backendUrl,
-                        headers: { "x-api-key": locals.apiKey },
+                        headers: { "x-api-key": locals.apiKey, ...actorHeaders },
                         fetch,
                         params: { path: { paths: "ranking,ranking_anime" } }
                     }),
                     fetch(`${locals.backendUrl}/api/v1/ranking/meta`, {
-                        headers: { "x-api-key": locals.apiKey }
+                        headers: { "x-api-key": locals.apiKey, ...actorHeaders }
                     }),
-                    getFullSettingsSchema(locals.backendUrl, locals.apiKey, fetch)
+                    getFullSettingsSchema(locals.backendUrl, locals.apiKey, actorHeaders, fetch)
                 ]);
 
                 let rankingPayload = rankingRes.data as Record<string, unknown> | undefined;
@@ -495,7 +500,7 @@ export const load: PageServerLoad = async ({
                     // Older backends without ranking_anime: fall back to movies pack only.
                     const fallback = await providers.riven.GET("/api/v1/settings/get/{paths}", {
                         baseUrl: locals.backendUrl,
-                        headers: { "x-api-key": locals.apiKey },
+                        headers: { "x-api-key": locals.apiKey, ...actorHeaders },
                         fetch,
                         params: { path: { paths: "ranking" } }
                     });
@@ -583,6 +588,29 @@ export const load: PageServerLoad = async ({
             }
         }
 
+        if (tab.id === USERS_TAB_ID) {
+            try {
+                const fullSchema = await getFullSettingsSchema(
+                    locals.backendUrl,
+                    locals.apiKey,
+                    actorHeaders,
+                    fetch
+                );
+
+                return {
+                    tabs: SETTINGS_TABS,
+                    activeTabId: tab.id,
+                    paths: "",
+                    searchIndex: buildSearchIndex(fullSchema),
+                    focusPath: url.searchParams.get("focus") ?? null,
+                    customData: {}
+                };
+            } catch (e) {
+                logger.error("Failed to load users settings tab", { error: e });
+                error(503, "Failed to load users settings.");
+            }
+        }
+
         error(404, "Custom tab not found");
     }
 
@@ -604,8 +632,15 @@ export const load: PageServerLoad = async ({
 
     try {
         [[schema, initialValue], fullSchema] = await Promise.all([
-            loadSettingsDataWithRetry(fetch, locals.backendUrl, locals.apiKey, keys, paths),
-            getFullSettingsSchema(locals.backendUrl, locals.apiKey, fetch)
+            loadSettingsDataWithRetry(
+                fetch,
+                locals.backendUrl,
+                locals.apiKey,
+                actorHeaders,
+                keys,
+                paths
+            ),
+            getFullSettingsSchema(locals.backendUrl, locals.apiKey, actorHeaders, fetch)
         ]);
     } catch (e) {
         logger.error("Settings page load failed", {
@@ -690,6 +725,7 @@ export const actions = {
             error(403, "Forbidden");
         }
 
+        const actorHeaders = getActorHeadersForUser(locals.user);
         const tabId = url.searchParams.get("tab") ?? DEFAULT_TAB_ID;
         const tab = getTabById(tabId) ?? getTabById(DEFAULT_TAB_ID)!;
         const paths = getPathsForTab(tab);
@@ -708,6 +744,7 @@ export const actions = {
             const rawSchema = await getSchemaForKeys(
                 locals.backendUrl,
                 locals.apiKey,
+                actorHeaders,
                 paths,
                 fetch
             );
@@ -764,6 +801,7 @@ export const actions = {
             const currentSettings = await getSettingsForPaths(
                 locals.backendUrl,
                 locals.apiKey,
+                actorHeaders,
                 paths,
                 fetch
             );
@@ -785,7 +823,7 @@ export const actions = {
             try {
                 const currentRes = await providers.riven.GET("/api/v1/settings/get/{paths}", {
                     baseUrl: locals.backendUrl,
-                    headers: { "x-api-key": locals.apiKey, ...SETTINGS_WRITE_HEADERS },
+                    headers: { "x-api-key": locals.apiKey, ...actorHeaders },
                     fetch,
                     params: { path: { paths: "filesystem" } }
                 });
@@ -835,7 +873,7 @@ export const actions = {
         const res = await providers.riven.POST("/api/v1/settings/set/{paths}", {
             body: payload,
             baseUrl: locals.backendUrl,
-            headers: { "x-api-key": locals.apiKey, ...SETTINGS_WRITE_HEADERS },
+            headers: { "x-api-key": locals.apiKey, ...actorHeaders },
             fetch,
             params: { path: { paths } }
         });

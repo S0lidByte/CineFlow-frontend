@@ -96,3 +96,12 @@ export const passkey = sqliteTable("passkey", {
     createdAt: integer("created_at", { mode: "timestamp_ms" }),
     aaguid: text("aaguid")
 });
+
+export const systemSettings = sqliteTable("system_settings", {
+    key: text("key").primaryKey(),
+    value: text("value").notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+        .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+        .$onUpdate(() => /* @__PURE__ */ new Date())
+        .notNull()
+});

@@ -6,6 +6,7 @@ import providers from "$lib/providers";
 import { superValidate } from "sveltekit-superforms";
 import * as dateUtils from "$lib/utils/date";
 import { createScopedLogger } from "$lib/logger";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const logger = createScopedLogger("library-page-server");
 
@@ -114,6 +115,7 @@ export const load: PageServerLoad = async (event) => {
     }
 
     const itemsSearchForm = await superValidate(event.url.searchParams, zod4(itemsSearchSchema));
+    const actorHeaders = getActorHeadersForUser(event.locals.user);
 
     const itemsResponse = await providers.riven.GET("/api/v1/items", {
         params: {
@@ -121,7 +123,8 @@ export const load: PageServerLoad = async (event) => {
         },
         baseUrl: event.locals.backendUrl,
         headers: {
-            "x-api-key": event.locals.apiKey
+            "x-api-key": event.locals.apiKey,
+            ...actorHeaders
         },
         fetch: event.fetch
     });

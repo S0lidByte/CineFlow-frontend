@@ -14,6 +14,7 @@ import { createScopedLogger } from "$lib/logger";
 import { resolveId, type ResolveResult } from "$lib/services/resolver";
 import { calculateSimilarity } from "$lib/utils/string";
 import * as dateUtils from "$lib/utils/date";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const logger = createScopedLogger("media-details");
 const TVDB_API_KEY = "6be85335-5c4f-4d8d-b945-d3ed0eb8cdce";
@@ -232,6 +233,7 @@ async function getTraktData(fetch: typeof globalThis.fetch, mediaId: string, isM
 export const load = (async ({ fetch, params, cookies, locals, request, url }) => {
     const { id, mediaType } = params;
     const customFetch = createCustomFetch(fetch);
+    const actorHeaders = getActorHeadersForUser(locals.user);
 
     try {
         if (mediaType !== "movie" && mediaType !== "tv") {
@@ -251,7 +253,7 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
                         query: { media_type: mediaType, extended: true }
                     },
                     baseUrl: locals.backendUrl,
-                    headers: { "x-api-key": locals.apiKey },
+                    headers: { "x-api-key": locals.apiKey, ...actorHeaders },
                     fetch
                 })
                 .catch(() => null);
@@ -358,7 +360,7 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
                         query: { media_type: mediaType, extended: true }
                     },
                     baseUrl: locals.backendUrl,
-                    headers: { "x-api-key": locals.apiKey },
+                    headers: { "x-api-key": locals.apiKey, ...actorHeaders },
                     fetch: fetch
                 })
                 .catch(() => null);
