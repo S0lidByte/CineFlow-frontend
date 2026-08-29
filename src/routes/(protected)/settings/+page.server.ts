@@ -11,6 +11,7 @@ import {
     getTabById,
     LIBRARY_PROFILES_TAB_ID,
     RANKING_TAB_ID,
+    USERS_TAB_ID,
     SETTINGS_TABS
 } from "$lib/components/settings/sections";
 import {
@@ -448,8 +449,8 @@ export const load: PageServerLoad = async ({
     }
 
     const actorHeaders = getActorHeadersForUser(locals.user);
-    const tabId = url.searchParams.get("tab") ?? DEFAULT_TAB_ID;
-    const tab = getTabById(tabId) ?? getTabById(DEFAULT_TAB_ID)!;
+    const requestedTabId = url.searchParams.get("tab") ?? DEFAULT_TAB_ID;
+    const tab = getTabById(requestedTabId) ?? getTabById(DEFAULT_TAB_ID)!;
     const paths = getPathsForTab(tab);
     const keys = paths;
     const schemaCacheKey = getSettingsSchemaCacheKey(locals.backendUrl, tab.id, paths);
@@ -584,6 +585,29 @@ export const load: PageServerLoad = async ({
             } catch (e) {
                 logger.error("Failed to load ranking settings tab", { error: e });
                 error(503, "Failed to load ranking settings.");
+            }
+        }
+
+        if (tab.id === USERS_TAB_ID) {
+            try {
+                const fullSchema = await getFullSettingsSchema(
+                    locals.backendUrl,
+                    locals.apiKey,
+                    actorHeaders,
+                    fetch
+                );
+
+                return {
+                    tabs: SETTINGS_TABS,
+                    activeTabId: tab.id,
+                    paths: "",
+                    searchIndex: buildSearchIndex(fullSchema),
+                    focusPath: url.searchParams.get("focus") ?? null,
+                    customData: {}
+                };
+            } catch (e) {
+                logger.error("Failed to load users settings tab", { error: e });
+                error(503, "Failed to load users settings.");
             }
         }
 

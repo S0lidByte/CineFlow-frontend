@@ -49,6 +49,9 @@ export const LIBRARY_PROFILES_TAB_ID = "library-profiles" as const;
 /** Stable ID for the custom Ranking / RTN panel. */
 export const RANKING_TAB_ID = "ranking" as const;
 
+/** Stable ID for the custom Users & Access panel. */
+export const USERS_TAB_ID = "users" as const;
+
 /** All settings tabs, ordered within each group as they appear in the sidebar. */
 export const SETTINGS_TABS: SectionTab[] = [
     // ── Core ──────────────────────────────────────────────────────────────────
@@ -68,6 +71,15 @@ export const SETTINGS_TABS: SectionTab[] = [
             "retry_library_batch_size",
             "tracemalloc"
         ]
+    },
+    {
+        id: "users",
+        label: "Users & Access",
+        icon: "users",
+        group: "core",
+        description: "Manage accounts, roles, access permissions, and public registration.",
+        keys: [],
+        custom: true
     },
 
     // ── Media Stack ───────────────────────────────────────────────────────────

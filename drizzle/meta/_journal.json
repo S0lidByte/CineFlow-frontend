@@ -15,6 +15,13 @@
             "when": 1761072026625,
             "tag": "0001_daffy_white_queen",
             "breakpoints": true
+        },
+        {
+            "idx": 2,
+            "version": "6",
+            "when": 1761100000000,
+            "tag": "0002_add_system_settings",
+            "breakpoints": true
         }
     ]
 }
