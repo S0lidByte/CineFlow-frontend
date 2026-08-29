@@ -3,6 +3,7 @@ import type { RequestHandler } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 import { produce } from "sveltekit-sse";
 import { createScopedLogger } from "$lib/logger";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const logger = createScopedLogger("scrape-stream");
 
@@ -21,6 +22,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         logger.error("Scrape stream proxy: BACKEND_URL is not configured");
         error(500, "Backend URL is not configured");
     }
+
+    const actorHeaders = getActorHeadersForUser(locals.user);
 
     return produce(async function start({ emit, lock }) {
         const abortController = new AbortController();
@@ -42,6 +45,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
                 method: "GET",
                 headers: {
                     "x-api-key": env.BACKEND_API_KEY ?? "",
+                    ...actorHeaders,
                     Accept: "text/event-stream",
                     "Cache-Control": "no-cache"
                 },

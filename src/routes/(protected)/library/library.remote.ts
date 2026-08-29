@@ -2,6 +2,7 @@ import { command } from "$app/server";
 import { z } from "zod";
 import providers from "$lib/providers";
 import { getRequestEvent } from "$app/server";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const itemIdsSchema = z.object({
     ids: z.array(z.string())
@@ -18,11 +19,13 @@ export const reset_items = command(itemIdsSchema, async ({ ids }) => {
         throw new Error("Backend URL or API key missing");
     }
 
+    const actorHeaders = getActorHeadersForUser(event.locals.user);
     const res = await providers.riven.POST("/api/v1/items/reset", {
         body: { ids },
         baseUrl: backendUrl,
         headers: {
-            "x-api-key": apiKey
+            "x-api-key": apiKey,
+            ...actorHeaders
         }
     });
 
@@ -43,11 +46,13 @@ export const retry_items = command(itemIdsSchema, async ({ ids }) => {
         throw new Error("Backend URL or API key missing");
     }
 
+    const actorHeaders = getActorHeadersForUser(event.locals.user);
     const res = await providers.riven.POST("/api/v1/items/retry", {
         body: { ids },
         baseUrl: backendUrl,
         headers: {
-            "x-api-key": apiKey
+            "x-api-key": apiKey,
+            ...actorHeaders
         }
     });
 
@@ -68,11 +73,13 @@ export const remove_items = command(itemIdsSchema, async ({ ids }) => {
         throw new Error("Backend URL or API key missing");
     }
 
+    const actorHeaders = getActorHeadersForUser(event.locals.user);
     const res = await providers.riven.DELETE("/api/v1/items/remove", {
         body: { ids },
         baseUrl: backendUrl,
         headers: {
-            "x-api-key": apiKey
+            "x-api-key": apiKey,
+            ...actorHeaders
         }
     });
 
@@ -93,10 +100,12 @@ export const retry_library = command(z.object({}), async () => {
         throw new Error("Backend URL or API key missing");
     }
 
+    const actorHeaders = getActorHeadersForUser(event.locals.user);
     const res = await providers.riven.POST("/api/v1/items/retry_library", {
         baseUrl: backendUrl,
         headers: {
-            "x-api-key": apiKey
+            "x-api-key": apiKey,
+            ...actorHeaders
         }
     });
 

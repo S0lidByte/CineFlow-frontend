@@ -1,15 +1,17 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import providers from "$lib/providers";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 /** POST: Regenerate root API key via backend; returns new key or error */
 export const POST: RequestHandler = async ({ locals, fetch: fetchFn }) => {
     if (locals.user?.role !== "admin") {
         return json({ error: "Forbidden" }, { status: 403 });
     }
+    const actorHeaders = getActorHeadersForUser(locals.user);
     const res = await providers.riven.POST("/api/v1/generateapikey", {
         baseUrl: locals.backendUrl,
-        headers: { "x-api-key": locals.apiKey },
+        headers: { "x-api-key": locals.apiKey, ...actorHeaders },
         fetch: fetchFn
     });
     if (res.error) {

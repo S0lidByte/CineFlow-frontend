@@ -2,8 +2,10 @@ import type { PageServerLoad } from "./$types";
 import providers from "$lib/providers";
 import { error } from "@sveltejs/kit";
 import * as dateUtils from "$lib/utils/date";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 export const load = (async ({ fetch, locals, url }) => {
+    const actorHeaders = getActorHeadersForUser(locals.user);
     const today = dateUtils.getToday();
     const yearParam = url.searchParams.get("year");
     const monthParam = url.searchParams.get("month");
@@ -39,7 +41,8 @@ export const load = (async ({ fetch, locals, url }) => {
             } as unknown as Record<string, string>
         },
         headers: {
-            "x-api-key": locals.apiKey
+            "x-api-key": locals.apiKey,
+            ...actorHeaders
         },
         fetch: fetch
     });

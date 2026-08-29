@@ -1,9 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
-
-const BACKEND_COMPAT_HEADERS = {
-    "x-actor-roles": "platform:admin,settings:write,playback:operator"
-} as const;
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const BODY_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const FORWARDED_REQUEST_HEADERS = [
@@ -41,9 +38,10 @@ const proxyRequest = async (method: string, locals: App.Locals, url: URL, reques
     targetUrl.search = url.search;
 
     try {
+        const actorHeaders = getActorHeadersForUser(locals.user);
         const headers = new Headers({
             "x-api-key": locals.apiKey,
-            ...BACKEND_COMPAT_HEADERS
+            ...actorHeaders
         });
 
         if (request) {
@@ -56,6 +54,12 @@ const proxyRequest = async (method: string, locals: App.Locals, url: URL, reques
             if (contentType && BODY_METHODS.has(method)) {
                 headers.set("content-type", contentType);
             }
+        }
+
+        // Explicitly guarantee client cannot spoof or override backend security headers
+        headers.set("x-api-key", locals.apiKey);
+        for (const [k, v] of Object.entries(actorHeaders)) {
+            headers.set(k, v);
         }
 
         const response = await fetch(targetUrl.toString(), {

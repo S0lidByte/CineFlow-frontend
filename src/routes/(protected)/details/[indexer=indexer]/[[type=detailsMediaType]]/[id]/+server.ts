@@ -2,6 +2,7 @@ import type { RequestHandler } from "./$types";
 import { error, json, redirect } from "@sveltejs/kit";
 import { resolveId, type Indexer, type MediaType } from "$lib/services/resolver";
 import { createCustomFetch } from "$lib/custom-fetch";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 interface ResolveAndRedirectOptions {
     from: Indexer;
@@ -11,6 +12,7 @@ interface ResolveAndRedirectOptions {
     customFetch: typeof fetch;
     rivenBaseUrl?: string;
     rivenApiKey?: string;
+    actorHeaders?: Record<string, string>;
 }
 
 /**
@@ -46,7 +48,12 @@ export const GET: RequestHandler = async ({ params, fetch, locals }) => {
     const { indexer, type, id } = params;
     const customFetch = createCustomFetch(fetch);
 
-    const rivenOpts = { rivenBaseUrl: locals.backendUrl, rivenApiKey: locals.apiKey };
+    const actorHeaders = getActorHeadersForUser(locals.user);
+    const rivenOpts = {
+        rivenBaseUrl: locals.backendUrl,
+        rivenApiKey: locals.apiKey,
+        actorHeaders
+    };
 
     switch (indexer) {
         case "tmdb":

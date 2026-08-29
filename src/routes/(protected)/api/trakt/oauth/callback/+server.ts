@@ -1,6 +1,7 @@
 import { error, redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import providers from "$lib/providers";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const FALLBACK = "/settings?tab=content";
 
@@ -64,9 +65,10 @@ export const GET: RequestHandler = async ({ locals, fetch: fetchFn, url, cookies
         );
     }
 
+    const actorHeaders = getActorHeadersForUser(locals.user);
     const res = await providers.riven.GET("/api/v1/trakt/oauth/callback", {
         baseUrl: locals.backendUrl,
-        headers: { "x-api-key": locals.apiKey },
+        headers: { "x-api-key": locals.apiKey, ...actorHeaders },
         params: { query: { code } },
         fetch: fetchFn
     });

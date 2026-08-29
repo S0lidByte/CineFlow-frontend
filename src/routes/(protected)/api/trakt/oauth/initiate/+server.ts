@@ -3,6 +3,7 @@ import type { RequestHandler } from "./$types";
 import providers from "$lib/providers";
 import { dev } from "$app/environment";
 import { randomBytes } from "node:crypto";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 /** GET: Start Trakt OAuth — redirects browser to Trakt authorize URL. */
 export const GET: RequestHandler = async ({ locals, fetch: fetchFn, url, cookies }) => {
@@ -10,9 +11,10 @@ export const GET: RequestHandler = async ({ locals, fetch: fetchFn, url, cookies
         throw error(403, "Forbidden");
     }
 
+    const actorHeaders = getActorHeadersForUser(locals.user);
     const res = await providers.riven.GET("/api/v1/trakt/oauth/initiate", {
         baseUrl: locals.backendUrl,
-        headers: { "x-api-key": locals.apiKey },
+        headers: { "x-api-key": locals.apiKey, ...actorHeaders },
         fetch: fetchFn
     });
 

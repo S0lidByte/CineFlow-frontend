@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import providers from "$lib/providers";
 import { createScopedLogger } from "$lib/logger";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const logger = createScopedLogger("library-profiles-page-server");
 const PATHS = "filesystem";
@@ -9,11 +10,12 @@ const PATHS = "filesystem";
 async function fetchFilesystem(
     baseUrl: string,
     apiKey: string,
+    actorHeaders: Record<string, string>,
     fetchFn: typeof globalThis.fetch
 ): Promise<Record<string, unknown>> {
     const res = await providers.riven.GET("/api/v1/settings/get/{paths}", {
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...actorHeaders },
         fetch: fetchFn,
         params: { path: { paths: PATHS } }
     });
@@ -25,13 +27,14 @@ async function fetchFilesystem(
 async function saveFilesystem(
     baseUrl: string,
     apiKey: string,
+    actorHeaders: Record<string, string>,
     filesystemData: Record<string, unknown>,
     fetchFn: typeof globalThis.fetch
 ): Promise<void> {
     const res = await providers.riven.POST("/api/v1/settings/set/{paths}", {
         body: { filesystem: filesystemData },
         baseUrl,
-        headers: { "x-api-key": apiKey },
+        headers: { "x-api-key": apiKey, ...actorHeaders },
         fetch: fetchFn,
         params: { path: { paths: PATHS } }
     });
@@ -64,12 +67,23 @@ export const actions = {
         }
 
         try {
+            const actorHeaders = getActorHeadersForUser(locals.user);
             // Fetch current filesystem to preserve all other fields (mount_path, cache, templates, etc.)
-            const filesystem = await fetchFilesystem(locals.backendUrl, locals.apiKey, fetch);
+            const filesystem = await fetchFilesystem(
+                locals.backendUrl,
+                locals.apiKey,
+                actorHeaders,
+                fetch
+            );
             const merged = { ...filesystem, library_profiles: profiles };
-            await saveFilesystem(locals.backendUrl, locals.apiKey, merged, fetch);
+            await saveFilesystem(locals.backendUrl, locals.apiKey, actorHeaders, merged, fetch);
             // Re-read so the client can baseline against the canonical stored payload.
-            const refreshed = await fetchFilesystem(locals.backendUrl, locals.apiKey, fetch);
+            const refreshed = await fetchFilesystem(
+                locals.backendUrl,
+                locals.apiKey,
+                actorHeaders,
+                fetch
+            );
             const savedProfiles = (refreshed.library_profiles ?? profiles) as Record<
                 string,
                 unknown

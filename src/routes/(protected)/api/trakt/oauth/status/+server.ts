@@ -1,5 +1,6 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 export type TraktOAuthStatus = {
     connected: boolean;
@@ -18,9 +19,11 @@ export const GET: RequestHandler = async ({ locals }) => {
         throw error(500, "Backend not configured");
     }
 
+    const actorHeaders = getActorHeadersForUser(locals.user);
     const res = await fetch(`${locals.backendUrl}/api/v1/trakt/oauth/status`, {
         headers: {
             "x-api-key": locals.apiKey,
+            ...actorHeaders,
             accept: "application/json"
         }
     });

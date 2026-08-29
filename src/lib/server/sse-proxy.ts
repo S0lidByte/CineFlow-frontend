@@ -2,6 +2,7 @@ import { error } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 import { produce } from "sveltekit-sse";
 import { createScopedLogger } from "$lib/logger";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 /** Options for creating an SSE proxy to the backend. */
 interface SseProxyOptions {
@@ -47,6 +48,8 @@ export function createSseProxy({ locals, path, eventName, logScope }: SseProxyOp
         error(500, "Backend URL is not configured");
     }
 
+    const actorHeaders = getActorHeadersForUser(locals.user);
+
     return produce(async function start({ emit, lock }) {
         const abortController = new AbortController();
 
@@ -55,6 +58,7 @@ export function createSseProxy({ locals, path, eventName, logScope }: SseProxyOp
                 method: "GET",
                 headers: {
                     "x-api-key": env.BACKEND_API_KEY || "",
+                    ...actorHeaders,
                     Accept: "text/event-stream",
                     "Cache-Control": "no-cache"
                 },

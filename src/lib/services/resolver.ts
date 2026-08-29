@@ -32,6 +32,7 @@ export interface ResolveOptions {
     customFetch: typeof fetch;
     rivenBaseUrl?: string;
     rivenApiKey?: string;
+    actorHeaders?: Record<string, string>;
     /** Optional existing data (e.g. from a previous fetch) to avoid redundant requests */
     data?: Record<string, unknown>;
 }
@@ -319,7 +320,7 @@ async function rivenToExternal(
     options: ResolveOptions,
     to: "tvdb" | "tmdb"
 ): Promise<ResolveResult> {
-    const { id, mediaType, customFetch, rivenBaseUrl, rivenApiKey } = options;
+    const { id, mediaType, customFetch, rivenBaseUrl, rivenApiKey, actorHeaders } = options;
 
     if (!rivenBaseUrl || !rivenApiKey) {
         logger.warn("Riven credentials not provided");
@@ -334,7 +335,7 @@ async function rivenToExternal(
                 query: { media_type: mediaType as any }
             },
             baseUrl: rivenBaseUrl,
-            headers: { "x-api-key": rivenApiKey },
+            headers: { "x-api-key": rivenApiKey, ...(actorHeaders ?? {}) },
             fetch: customFetch
         });
 

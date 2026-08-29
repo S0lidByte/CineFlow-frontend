@@ -1,5 +1,6 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { getActorHeadersForUser } from "$lib/server/permissions";
 
 export type ConnectionService =
     | "real_debrid"
@@ -64,12 +65,15 @@ export const POST: RequestHandler = async ({ locals, params }) => {
         throw error(404, "Unknown service");
     }
 
+    const actorHeaders = getActorHeadersForUser(locals.user);
+
     let res: Response;
     try {
         res = await fetch(`${locals.backendUrl}/api/v1/settings/test-connection/${service}`, {
             method: "POST",
             headers: {
                 "x-api-key": locals.apiKey,
+                ...actorHeaders,
                 accept: "application/json"
             }
         });
