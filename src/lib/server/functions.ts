@@ -1,5 +1,5 @@
 import { db, sqlite } from "./db";
-import { user, session, systemSettings } from "./schema";
+import { user, systemSettings } from "./schema";
 import { eq } from "drizzle-orm";
 import { env } from "$env/dynamic/private";
 import { createScopedLogger } from "$lib/logger";

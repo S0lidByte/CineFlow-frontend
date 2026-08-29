@@ -7,7 +7,6 @@
     import { Badge } from "$lib/components/ui/badge/index.js";
     import * as Dialog from "$lib/components/ui/dialog/index.js";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-    import * as Tooltip from "$lib/components/ui/tooltip/index.js";
     import { toast } from "svelte-sonner";
     import Users from "@lucide/svelte/icons/users";
     import UserPlus from "@lucide/svelte/icons/user-plus";
