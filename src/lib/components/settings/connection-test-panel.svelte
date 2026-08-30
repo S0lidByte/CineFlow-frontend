@@ -1,7 +1,7 @@
 <script lang="ts">
     /**
      * Settings connection probes for third-party integrations.
-     * Uses BFF routes only — never exposes BACKEND_API_KEY to the browser.
+     * Uses BFF routes only — never exposes BFF_API_KEY to the browser.
      * Soft-fails like dashboard service badges when the probe errors.
      */
     import { Button } from "$lib/components/ui/button/index.js";

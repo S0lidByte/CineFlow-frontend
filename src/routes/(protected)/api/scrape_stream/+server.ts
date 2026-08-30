@@ -44,7 +44,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
             const response = await fetch(targetUrl, {
                 method: "GET",
                 headers: {
-                    "x-api-key": env.BACKEND_API_KEY ?? "",
+                    "x-api-key": env.BFF_API_KEY ?? "",
                     ...actorHeaders,
                     Accept: "text/event-stream",
                     "Cache-Control": "no-cache"

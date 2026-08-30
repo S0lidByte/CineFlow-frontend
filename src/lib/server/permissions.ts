@@ -93,9 +93,7 @@ export function getActorHeadersForUser(
 
     const secret =
         overrideSecret ??
-        (typeof process !== "undefined"
-            ? process.env?.ACTOR_CONTEXT_SECRET || process.env?.BFF_API_KEY || ""
-            : "");
+        (typeof process !== "undefined" ? process.env?.ACTOR_CONTEXT_SECRET || "" : "");
     if (secret) {
         headers["x-actor-signature"] = signActorPayload(
             {

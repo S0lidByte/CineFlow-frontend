@@ -57,7 +57,7 @@ export function createSseProxy({ locals, path, eventName, logScope }: SseProxyOp
             const response = await fetch(`${backendUrl}${path}`, {
                 method: "GET",
                 headers: {
-                    "x-api-key": env.BACKEND_API_KEY || "",
+                    "x-api-key": env.BFF_API_KEY || "",
                     ...actorHeaders,
                     Accept: "text/event-stream",
                     "Cache-Control": "no-cache"

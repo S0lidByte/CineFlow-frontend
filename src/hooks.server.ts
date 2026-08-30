@@ -18,8 +18,11 @@ export const init: ServerInit = async () => {
     if (!env.BACKEND_URL) {
         throw new Error("BACKEND_URL environment variable is required");
     }
-    if (!env.BACKEND_API_KEY) {
-        throw new Error("BACKEND_API_KEY environment variable is required");
+    if (!env.BFF_API_KEY) {
+        throw new Error("BFF_API_KEY environment variable is required");
+    }
+    if (!env.ACTOR_CONTEXT_SECRET) {
+        throw new Error("ACTOR_CONTEXT_SECRET environment variable is required");
     }
     migrate(db, { migrationsFolder: "drizzle" });
 
@@ -50,7 +53,7 @@ export const betterAuthHandler: Handle = async ({ event, resolve }) => {
 
 const configureLocals: Handle = async ({ event, resolve }) => {
     event.locals.backendUrl = env.BACKEND_URL ?? "";
-    event.locals.apiKey = env.BACKEND_API_KEY ?? "";
+    event.locals.apiKey = env.BFF_API_KEY ?? "";
 
     return resolve(event);
 };

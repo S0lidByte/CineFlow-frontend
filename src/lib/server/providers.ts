@@ -14,8 +14,8 @@ const tmdbReadAccessToken =
     publicEnv.PUBLIC_TMDB_READ_ACCESS_TOKEN ||
     "";
 const backendUrl = privateEnv.BACKEND_URL?.replace(/\/+$/, "") || "";
-const backendApiKey = privateEnv.BACKEND_API_KEY || "";
-const useBackendTMDBProxy = !tmdbReadAccessToken && Boolean(backendUrl && backendApiKey);
+const bffApiKey = privateEnv.BFF_API_KEY || "";
+const useBackendTMDBProxy = !tmdbReadAccessToken && Boolean(backendUrl && bffApiKey);
 
 export const hasTMDBReadAccessToken = Boolean(tmdbReadAccessToken);
 export const tmdbProviderBaseUrl = useBackendTMDBProxy
@@ -26,7 +26,7 @@ const tmdbClient = createClient<TMDBPaths>({
     baseUrl: tmdbProviderBaseUrl,
     headers: {
         ...(tmdbReadAccessToken ? { Authorization: `Bearer ${tmdbReadAccessToken}` } : {}),
-        ...(useBackendTMDBProxy ? { "x-api-key": backendApiKey } : {}),
+        ...(useBackendTMDBProxy ? { "x-api-key": bffApiKey } : {}),
         "Content-Type": "application/json;charset=utf-8"
     },
     fetch: customFetch

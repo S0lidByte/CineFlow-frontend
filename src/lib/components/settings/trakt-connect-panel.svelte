@@ -1,7 +1,7 @@
 <script lang="ts">
     /**
      * Trakt OAuth connect chrome for Settings → Content.
-     * Uses BFF routes only — never exposes BACKEND_API_KEY to the browser.
+     * Uses BFF routes only — never exposes BFF_API_KEY to the browser.
      */
     import { onMount } from "svelte";
     import { page } from "$app/stores";

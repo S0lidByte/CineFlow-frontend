@@ -31,7 +31,7 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Save this section before switching tabs — unsaved changes trigger a guard dialog."
         ],
         highlights: [
-            { title: "API key", detail: "Must match BACKEND_API_KEY in the frontend .env." },
+            { title: "API key", detail: "Direct backend access only; do not expose it to the frontend." },
             { title: "Tracemalloc", detail: "Memory profiling for backend diagnostics only." }
         ]
     },
