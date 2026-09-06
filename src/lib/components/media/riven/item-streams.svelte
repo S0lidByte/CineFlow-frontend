@@ -97,7 +97,7 @@
                 toast.error("Failed to blacklist stream");
                 return;
             }
-            toast.success("Stream blacklisted");
+            toast.success(res.data?.message ?? "Stream blacklisted");
             await loadStreams();
         } catch (e) {
             logger.error("Blacklist stream error", e);
