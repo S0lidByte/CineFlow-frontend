@@ -471,6 +471,13 @@
             </div>
         {/if}
 
+        {#if rivenEpisode?.id != null}
+            {@const epId = typeof rivenEpisode.id === "number" ? rivenEpisode.id : Number(rivenEpisode.id)}
+            {#if Number.isFinite(epId)}
+                <ItemStreams itemId={epId} />
+            {/if}
+        {/if}
+
         {#if rivenEpisode?.filesystem_entry || rivenEpisode?.media_metadata}
             {@const meta = rivenEpisode.media_metadata}
             {@const fs = rivenEpisode.filesystem_entry}
@@ -846,7 +853,7 @@
                             {/if}
                         </div>
 
-                        {#if data.riven?.id != null && playbackItemId != null}
+                        {#if data.mediaDetails?.type === "movie" && data.riven?.id != null && playbackItemId != null}
                             <ItemStreams itemId={playbackItemId} />
                         {/if}
 
