@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.0...riven-frontend-v1.17.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* **build:** ensure prepare script does not fail docker container build ([38388d9](https://github.com/S0lidByte/CineFlow-frontend/commit/38388d9c37c5187fbc84d620b719fdea25573bf2))
+* **ui:** surface backend toast message on stream blacklist ([5979513](https://github.com/S0lidByte/CineFlow-frontend/commit/59795132d33b50f1e789be092a0e2262e1aace13))
+
 ## [1.17.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.16.0...riven-frontend-v1.17.0) (2026-09-06)
 
 ### Features
