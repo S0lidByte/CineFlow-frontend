@@ -472,7 +472,8 @@
         {/if}
 
         {#if rivenEpisode?.id != null}
-            {@const epId = typeof rivenEpisode.id === "number" ? rivenEpisode.id : Number(rivenEpisode.id)}
+            {@const epId =
+                typeof rivenEpisode.id === "number" ? rivenEpisode.id : Number(rivenEpisode.id)}
             {#if Number.isFinite(epId)}
                 <ItemStreams itemId={epId} />
             {/if}
