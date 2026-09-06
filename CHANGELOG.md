@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.17.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.16.0...riven-frontend-v1.17.0) (2026-09-06)
+
+### Features
+
+- **auth:** standardize frontend service credential on BFF_API_KEY ([89f00c7](https://github.com/S0lidByte/CineFlow-frontend/commit/89f00c7e284e00de15603893bef65aa719c9cfc5))
+
+### Bug Fixes
+
+- **frontend:** enforce SvelteKit route resolution and extract item request parser ([b98fa92](https://github.com/S0lidByte/CineFlow-frontend/commit/b98fa92a85153738e2faf1db4f111075cd2c3ac4))
+- **frontend:** target episode item ID for TV stream management ([6b13e17](https://github.com/S0lidByte/CineFlow-frontend/commit/6b13e17037d398debc8ca1fa6aef64099a086cc0))
+
 ## [1.16.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.15.5...riven-frontend-v1.16.0) (2026-08-27)
 
 ### Features
