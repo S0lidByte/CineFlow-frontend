@@ -11,13 +11,14 @@
         "dev": "vite dev",
         "build": "vite build",
         "preview": "vite preview",
-        "prepare": "svelte-kit sync || echo ''",
+        "prepare": "svelte-kit sync || echo '' && husky",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
         "format": "prettier --write .",
         "format:changelog": "prettier --write CHANGELOG.md",
         "lint": "prettier --check . && eslint .",
         "lint:changelog": "prettier --check CHANGELOG.md",
+        "lint-staged": "lint-staged",
         "ba:generate": "pnpx @better-auth/cli generate --config ./better-auth.config.ts --output ./src/lib/server/schema/ba-auth.ts --yes",
         "db:generate": "drizzle-kit generate",
         "db:pull": "tsx ./scripts/drizzle_pull.ts",
@@ -55,7 +56,9 @@
         "eslint-plugin-svelte": "^3.15.0",
         "formsnap": "^2.0.1",
         "globals": "^17.3.0",
+        "husky": "9.1.7",
         "layerchart": "2.0.0-next.27",
+        "lint-staged": "17.5.0",
         "mdsvex": "^0.12.6",
         "openapi-typescript": "^7.13.0",
         "prettier": "^3.8.1",
@@ -101,6 +104,13 @@
         "nprogress": "^0.2.0",
         "openapi-fetch": "^0.17.0",
         "zod": "^4.3.6"
+    },
+    "lint-staged": {
+        "*.{js,ts,svelte}": [
+            "prettier --write",
+            "eslint --fix"
+        ],
+        "*.{json,yml,yaml,md,css}": "prettier --write"
     },
     "overrides": {
         "@lucide/svelte": "^0.575.0"
