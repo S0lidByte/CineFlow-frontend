@@ -4,7 +4,6 @@
     import { browser } from "$app/environment";
     import { cn } from "$lib/utils";
     import type { Snippet } from "svelte";
-    import { resolve } from "$app/paths";
 
     import { getRatings, type RatingsData } from "$lib/stores/ratings";
 
@@ -118,9 +117,9 @@
                                 {#if ratingsData?.scores?.length}
                                     {#each ratingsData.scores as score (score.name)}
                                         <a
-                                            href={resolve(score.url as "/")}
+                                            href={score.url}
                                             target="_blank"
-                                            rel="noopener noreferrer"
+                                            rel="noopener noreferrer external"
                                             onclick={(e) => e.stopPropagation()}
                                             class="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-xs text-white/90 backdrop-blur-md transition-colors hover:bg-white/20">
                                             {#if score.image}

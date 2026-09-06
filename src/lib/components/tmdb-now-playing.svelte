@@ -2,7 +2,6 @@
     import * as Carousel from "$lib/components/ui/carousel/index.js";
     import { fly } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
-    import { resolve } from "$app/paths";
     import { type CarouselAPI } from "$lib/components/ui/carousel/context.js";
     import Autoplay from "embla-carousel-autoplay";
     import { TMDB_IMAGE_BASE_URL, TMDB_GENRES } from "$lib/providers";
@@ -300,9 +299,9 @@
                                             <div class="ml-2 flex items-center gap-4">
                                                 {#each ratings[item.id]!.scores! as score (score.name)}
                                                     <a
-                                                        href={resolve(score.url as unknown as "/")}
+                                                        href={score.url}
                                                         target="_blank"
-                                                        rel="noopener noreferrer"
+                                                        rel="noopener noreferrer external"
                                                         class="flex items-center gap-1.5 transition-opacity hover:opacity-80"
                                                         title={score.name}>
                                                         {#if score.image}

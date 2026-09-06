@@ -309,7 +309,8 @@
         for (const [k, v] of Object.entries(params)) {
             if (v !== null && v !== undefined) sp.set(k, v);
         }
-        return "?" + sp.toString();
+        const qs = sp.toString();
+        return resolve("/calendar") + (qs ? `?${qs}` : "");
     }
 
     function navigate(direction: "prev" | "next") {
@@ -349,7 +350,7 @@
             month: String(weekSunday.month),
             day: viewMode === "daily" ? String(target.day) : null
         });
-        goto(resolve(url as unknown as "/"), { keepFocus: true })
+        goto(resolve(url as "/"), { keepFocus: true })
             .catch(() => {})
             .finally(() => {
                 isNavigating = false;
@@ -365,7 +366,7 @@
             month: String(currentDate.month),
             day: mode === "daily" ? String(currentDate.day) : null
         });
-        goto(resolve(url as unknown as "/"))
+        goto(resolve(url as "/"))
             .catch(() => {})
             .finally(() => {
                 isNavigating = false;
@@ -375,7 +376,7 @@
     function goToday() {
         if (isNavigating) return;
         const url = buildUrl({ view: viewMode === "monthly" ? null : viewMode });
-        goto(resolve(url as unknown as "/")).catch(() => {});
+        goto(resolve(url as "/")).catch(() => {});
     }
 
     function formatDayTitle(date: CalendarDate) {

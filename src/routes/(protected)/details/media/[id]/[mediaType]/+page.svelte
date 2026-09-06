@@ -112,7 +112,7 @@
             const url = new URL(page.url);
             url.searchParams.delete("play");
             replaceState(
-                resolve((url.pathname + url.search + url.hash) as unknown as "/"),
+                resolve((url.pathname + url.search + url.hash) as "/"),
                 $state.snapshot(page.state)
             );
         }

@@ -7,6 +7,7 @@
     import Loader2 from "@lucide/svelte/icons/loader-2";
     import SeasonSelector, { type SeasonInfo } from "./season-selector.svelte";
     import { isRequestAvailabilityLocked } from "./availability";
+    import { parseAddItemsResponse } from "./item-request-parser";
     import { createScopedLogger } from "$lib/logger";
     import { type Snippet } from "svelte";
     import { SvelteSet } from "svelte/reactivity";
@@ -171,16 +172,18 @@
                     }
                 });
 
-                const message = response.data?.message;
-                const addedCount = message?.match(/Added (\d+) new item\(s\)/i)?.[1];
+                const parsed = parseAddItemsResponse(response.data?.message);
 
-                if (message && addedCount !== "0") {
-                    toast.success("Media item requested successfully!");
+                if (parsed.success) {
+                    toast.success(parsed.toastMessage);
                     await invalidateAll();
                     open = false;
                 } else {
-                    logger.error("Request was not queued:", response.error ?? message);
-                    toast.error(message ?? "Failed to request media item.");
+                    logger.error(
+                        "Request was not queued:",
+                        response.error ?? response.data?.message
+                    );
+                    toast.error(parsed.toastMessage);
                 }
             }
         } catch (e) {

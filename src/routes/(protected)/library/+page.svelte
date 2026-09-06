@@ -290,7 +290,7 @@
 
         const url = buildQueryUrl(true);
 
-        await goto(resolve((url.pathname + url.search) as unknown as "/"), {
+        await goto(resolve(("/library" + url.search) as "/"), {
             keepFocus: true,
             noScroll: true,
             replaceState: true,
@@ -310,7 +310,7 @@
         normalizeFilters();
         const url = buildQueryUrl(false);
 
-        await goto(resolve((url.pathname + url.search) as unknown as "/"), {
+        await goto(resolve(("/library" + url.search) as "/"), {
             keepFocus: true,
             noScroll: true,
             replaceState: true,
