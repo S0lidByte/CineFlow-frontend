@@ -147,7 +147,7 @@
                     <Button class={viewAllButtonClass} variant="ghost" href="/lists/trending/anime"
                         >View All</Button>
                 </div>
-                <ListCarousel data={anilistTrendingStore.items} indexer="anilist" />
+                <ListCarousel data={anilistTrendingStore.items} />
             </div>
         </div>
     </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { MediaListStore, type BaseListItem } from "$lib/services/lists-cache.svelte";
     import ListItem from "$lib/components/list-item.svelte";
+    import { Button } from "$lib/components/ui/button/index.js";
     import PortraitCardSkeleton from "$lib/components/media/portrait-card-skeleton.svelte";
     import { onMount } from "svelte";
     import PageShell from "$lib/components/page-shell.svelte";
@@ -63,7 +64,10 @@
                 class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9">
                 {#each anilistTrendingStore.items as item (item.id)}
                     <div class="aspect-[2/3] w-full">
-                        <ListItem data={item} indexer="anilist" type={item.media_type} />
+                        <ListItem
+                            data={item}
+                            indexer={item.indexer || "anilist"}
+                            type={item.media_type} />
                     </div>
                 {/each}
                 {#if anilistTrendingStore.loading}
@@ -74,7 +78,7 @@
                     {/each}
                 {/if}
             </div>
-        {:else}
+        {:else if anilistTrendingStore.loading || !anilistTrendingStore.initialized}
             <div
                 class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9">
                 {#each Array(12) as i (i)}
@@ -82,6 +86,13 @@
                         <PortraitCardSkeleton />
                     </div>
                 {/each}
+            </div>
+        {:else}
+            <div class="flex flex-col items-center justify-center gap-2 py-16">
+                <p class="text-muted-foreground">No trending anime found</p>
+                <Button variant="outline" size="sm" onclick={() => anilistTrendingStore.refresh()}>
+                    Retry
+                </Button>
             </div>
         {/if}
         <div bind:this={loadMoreTrigger}></div>

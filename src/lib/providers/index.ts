@@ -27,7 +27,7 @@ const tvdbClient = createClient<TVDBPaths>({
     fetch: customFetch
 });
 
-const TMDB_READ_ACCESS_TOKEN = env.PUBLIC_TMDB_READ_ACCESS_TOKEN || "";
+const TMDB_READ_ACCESS_TOKEN = env?.PUBLIC_TMDB_READ_ACCESS_TOKEN || "";
 
 const tmdbClient = createClient<TMDBPaths>({
     baseUrl: "https://api.themoviedb.org",
@@ -44,7 +44,7 @@ const traktClient = createClient<TraktPaths>({
         "Content-Type": "application/json",
         "trakt-api-version": "2",
         "trakt-api-key":
-            env.PUBLIC_TRAKT_CLIENT_ID ||
+            env?.PUBLIC_TRAKT_CLIENT_ID ||
             "0183a05ad97098d87287fe46da4ae286f434f32e8e951caad4cc147c947d79a3"
     },
     fetch: customFetch
