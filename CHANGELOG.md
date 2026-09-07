@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.2](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.1...riven-frontend-v1.17.2) (2026-09-07)
+
+
+### Bug Fixes
+
+* **anilist:** add graceful degradation and TMDB fallback for AniList outages ([13df1fa](https://github.com/S0lidByte/CineFlow-frontend/commit/13df1fab29e4eeb9a070455b0e8030712d8e6aff))
+
 ## [1.17.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.0...riven-frontend-v1.17.1) (2026-09-06)
 
 ### Bug Fixes
