@@ -94,7 +94,7 @@
 
 <FormBase
     title="Set Password"
-    description="Update your user profile information including username, name, and avatar.">
+    description="Set a secure password for your account to enable username and password login.">
     {#snippet content()}
         <form method="POST" use:enhance action="?/setPassword">
             {@render passwordFormField(form, "newPassword", "New Password")}

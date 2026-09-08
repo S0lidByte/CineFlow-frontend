@@ -4,6 +4,7 @@
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
     import { Button } from "$lib/components/ui/button/index.js";
+    import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
     import Passkeys from "$lib/components/auth/passkeys.svelte";
     import PasswordChangeForm from "$lib/components/auth/password-change-form.svelte";
     import EmailChangeForm from "$lib/components/auth/email-change-form.svelte";
@@ -14,17 +15,45 @@
     import { getInitials } from "$lib/utils";
     import * as Avatar from "$lib/components/ui/avatar/index.js";
     import PageShell from "$lib/components/page-shell.svelte";
+    import LoaderCircle from "@lucide/svelte/icons/loader-circle";
+    import Trash2 from "@lucide/svelte/icons/trash-2";
+    import LogOut from "@lucide/svelte/icons/log-out";
+    import { toast } from "svelte-sonner";
 
     let { data }: PageProps = $props();
+
+    let showDeleteConfirm = $state(false);
+    let isDeletingAccount = $state(false);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function hasCredentialProvider(providers: any[]): boolean {
         return providers.some((provider) => provider.providerId === "credential");
     }
+
+    async function confirmDeleteAccount() {
+        isDeletingAccount = true;
+        try {
+            await authClient.deleteUser({
+                fetchOptions: {
+                    onSuccess: () => {
+                        toast.success("Account deleted successfully.");
+                        goto(resolve("/auth/login"));
+                    },
+                    onError: (ctx) => {
+                        toast.error(ctx.error.message || "Failed to delete account.");
+                        isDeletingAccount = false;
+                    }
+                }
+            });
+        } catch {
+            toast.error("An unexpected error occurred while deleting your account.");
+            isDeletingAccount = false;
+        }
+    }
 </script>
 
 <svelte:head>
-    <title>Profile - Riven</title>
+    <title>Profile - CineFlow</title>
 </svelte:head>
 
 <PageShell>
@@ -80,24 +109,17 @@
         <Passkeys />
     </div>
 
-    <div class="mt-4 flex flex-col gap-2 md:flex-row">
+    <div class="mt-8 flex flex-col gap-3 border-t pt-6 md:flex-row">
         <Button
-            variant="secondary"
+            variant="destructive"
             class="w-full md:max-w-max"
-            onclick={async () => {
-                await authClient.deleteUser({
-                    fetchOptions: {
-                        onSuccess: () => {
-                            goto(resolve("/auth/login"));
-                        }
-                    }
-                });
-            }}>
+            onclick={() => (showDeleteConfirm = true)}>
+            <Trash2 class="mr-2 h-4 w-4" />
             Delete Account
         </Button>
 
         <Button
-            variant="destructive"
+            variant="outline"
             class="w-full md:max-w-max"
             onclick={async () => {
                 await authClient.signOut({
@@ -108,7 +130,34 @@
                     }
                 });
             }}>
+            <LogOut class="mr-2 h-4 w-4" />
             Logout
         </Button>
     </div>
 </PageShell>
+
+<AlertDialog.Root bind:open={showDeleteConfirm}>
+    <AlertDialog.Content class="border border-white/10 bg-zinc-950/95 backdrop-blur-2xl">
+        <AlertDialog.Header>
+            <AlertDialog.Title>Delete Account?</AlertDialog.Title>
+            <AlertDialog.Description>
+                This action is permanent and cannot be undone. All your profile settings, passkeys,
+                sessions, and preferences in CineFlow will be permanently deleted.
+            </AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Footer>
+            <AlertDialog.Cancel disabled={isDeletingAccount}>Cancel</AlertDialog.Cancel>
+            <AlertDialog.Action
+                class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={isDeletingAccount}
+                onclick={confirmDeleteAccount}>
+                {#if isDeletingAccount}
+                    <LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                {:else}
+                    Yes, Delete My Account
+                {/if}
+            </AlertDialog.Action>
+        </AlertDialog.Footer>
+    </AlertDialog.Content>
+</AlertDialog.Root>

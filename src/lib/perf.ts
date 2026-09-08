@@ -1,5 +1,5 @@
 import { browser } from "$app/environment";
-import { env } from "$env/dynamic/public";
+import { env } from "$lib/env-public";
 import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("perf");

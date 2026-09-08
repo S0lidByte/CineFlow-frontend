@@ -94,7 +94,6 @@ export const actions: Actions = {
         }
 
         try {
-            const isFirstUser = await noUserExists();
             if (isFirstUser) {
                 logger.info("No users exist, assigning admin role to the first registered user.");
 

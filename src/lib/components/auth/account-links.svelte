@@ -60,11 +60,21 @@
                                 variant="destructive"
                                 size="sm"
                                 onclick={async () => {
-                                    await authClient.unlinkAccount({
-                                        providerId: providerId
-                                    });
-                                    toast.success(`${providerId} unlinked successfully.`);
-                                    await goto(resolve("/auth"), { invalidateAll: true });
+                                    try {
+                                        const { error } = await authClient.unlinkAccount({
+                                            providerId: providerId
+                                        });
+                                        if (error) {
+                                            toast.error(
+                                                error.message || `Failed to unlink ${providerName}.`
+                                            );
+                                        } else {
+                                            toast.success(`${providerName} unlinked successfully.`);
+                                            await goto(resolve("/auth"), { invalidateAll: true });
+                                        }
+                                    } catch {
+                                        toast.error(`Failed to unlink ${providerName}.`);
+                                    }
                                 }}>
                                 <Link2Off class="mr-2 h-4 w-4" />
                                 Unlink
@@ -73,20 +83,28 @@
                             <Button
                                 size="sm"
                                 onclick={async () => {
-                                    if (isGenericOAuthProvider(providerId)) {
-                                        // Use oauth2.link() for generic OAuth providers
-                                        await authClient.oauth2.link({
-                                            providerId: providerId,
-                                            callbackURL: "/auth"
-                                        });
-                                    } else {
-                                        // Use linkSocial() for built-in social providers (plex)
-                                        await authClient.linkSocial({
-                                            provider: providerId,
-                                            callbackURL: "/auth"
-                                        });
+                                    try {
+                                        if (isGenericOAuthProvider(providerId)) {
+                                            // Use oauth2.link() for generic OAuth providers
+                                            await authClient.oauth2.link({
+                                                providerId: providerId,
+                                                callbackURL: "/auth"
+                                            });
+                                        } else {
+                                            // Use linkSocial() for built-in social providers (plex)
+                                            await authClient.linkSocial({
+                                                provider: providerId,
+                                                callbackURL: "/auth"
+                                            });
+                                        }
+                                    } catch (err) {
+                                        const errMessage =
+                                            err instanceof Error ? err.message : undefined;
+                                        toast.error(
+                                            errMessage ||
+                                                `Failed to initiate linking with ${providerName}.`
+                                        );
                                     }
-                                    toast.success(`${providerId} linked successfully.`);
                                 }}>
                                 <Link2 class="mr-2 h-4 w-4" />
                                 Link

@@ -1,4 +1,5 @@
 import { browser } from "$app/environment";
+import { SvelteSet } from "svelte/reactivity";
 import { PersistedState } from "runed";
 import { createScopedLogger } from "$lib/logger";
 
@@ -60,12 +61,12 @@ function extractItems<T>(data: unknown): T[] {
  * Deduplicates items by their id property
  */
 function deduplicateById<T extends { id?: unknown }>(items: T[]): T[] {
-    const seenIds: unknown[] = [];
+    const seenIds = new SvelteSet<unknown>();
     return items.filter((item) => {
-        if (item.id === undefined || seenIds.includes(item.id)) {
+        if (item.id === undefined || seenIds.has(item.id)) {
             return false;
         }
-        seenIds.push(item.id);
+        seenIds.add(item.id);
         return true;
     });
 }

@@ -43,8 +43,7 @@ export const auth = betterAuth({
         encryptOAuthTokens: true
     },
     emailAndPassword: {
-        enabled: env.DISABLE_EMAIL_PASSWORD !== "true",
-        disableSignUp: env.ENABLE_EMAIL_PASSWORD_SIGNUP !== "true"
+        enabled: env.DISABLE_EMAIL_PASSWORD !== "true"
     },
     socialProviders: {},
     trustedOrigins: [
@@ -119,7 +118,7 @@ export function getAuthProviders() {
     if (auth.options.emailAndPassword) {
         providers.credential = {
             enabled: auth.options.emailAndPassword.enabled,
-            disableSignup: auth.options.emailAndPassword.disableSignUp
+            disableSignup: false
         };
     }
 

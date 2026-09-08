@@ -9,7 +9,7 @@ This is different from @hey-api openapi-ts package.
 */
 
 import createClient from "openapi-fetch";
-import { env } from "$env/dynamic/public";
+import { env } from "$lib/env-public";
 
 import type { paths as TVDBPaths } from "./tvdb";
 import type { paths as TMDBPaths } from "./tmdb";

@@ -52,6 +52,6 @@
 <ModeWatcher defaultMode="dark" defaultTheme="darkmatter" />
 <Toaster richColors closeButton />
 
-<div class="bg-background h-screen overflow-hidden">
+<div class="bg-background min-h-svh w-full overflow-x-hidden">
     {@render children?.()}
 </div>

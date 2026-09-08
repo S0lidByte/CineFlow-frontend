@@ -46,8 +46,7 @@ export const auth = betterAuth({
         encryptOAuthTokens: true
     },
     emailAndPassword: {
-        enabled: process.env.DISABLE_EMAIL_PASSWORD !== "true",
-        disableSignUp: process.env.ENABLE_EMAIL_PASSWORD_SIGNUP !== "true"
+        enabled: process.env.DISABLE_EMAIL_PASSWORD !== "true"
     },
     socialProviders: {},
     trustedOrigins: [

@@ -1,5 +1,5 @@
 import { createConsola } from "consola";
-import { env } from "$env/dynamic/public";
+import { env } from "$lib/env-public";
 
 /**
  * Centralized logger instance for the application.
