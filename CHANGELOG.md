@@ -2,10 +2,9 @@
 
 ## [1.17.3](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.2...riven-frontend-v1.17.3) (2026-09-08)
 
-
 ### Bug Fixes
 
-* **auth:** harden signup flow, responsive login layout, O(N) list dedup, and env-public isolation ([bcaf137](https://github.com/S0lidByte/CineFlow-frontend/commit/bcaf137a05ef601fd58292c5278b71d1981fe653))
+- **auth:** harden signup flow, responsive login layout, O(N) list dedup, and env-public isolation ([bcaf137](https://github.com/S0lidByte/CineFlow-frontend/commit/bcaf137a05ef601fd58292c5278b71d1981fe653))
 
 ## [1.17.2](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.1...riven-frontend-v1.17.2) (2026-09-07)
 
