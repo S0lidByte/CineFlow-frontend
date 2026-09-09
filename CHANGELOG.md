@@ -2,10 +2,9 @@
 
 ## [1.17.4](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.3...riven-frontend-v1.17.4) (2026-09-09)
 
-
 ### Bug Fixes
 
-* **settings:** harden BFF test connection endpoint and enhance test suite ([9ea44a0](https://github.com/S0lidByte/CineFlow-frontend/commit/9ea44a00a22abe2e73d2358bef5abe2f667eb51b))
+- **settings:** harden BFF test connection endpoint and enhance test suite ([9ea44a0](https://github.com/S0lidByte/CineFlow-frontend/commit/9ea44a00a22abe2e73d2358bef5abe2f667eb51b))
 
 ## [1.17.3](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.2...riven-frontend-v1.17.3) (2026-09-08)
 
