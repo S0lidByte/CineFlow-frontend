@@ -108,6 +108,11 @@
                 id: "prowlarr",
                 label: "Prowlarr",
                 hint: "Checks the saved Prowlarr URL and API key."
+            },
+            {
+                id: "zilean",
+                label: "Zilean",
+                hint: "Tests the saved Zilean URL at `/healthchecks/ping`."
             }
         ],
         ops: [

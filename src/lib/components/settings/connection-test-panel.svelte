@@ -17,6 +17,7 @@
         | "plex"
         | "jackett"
         | "prowlarr"
+        | "zilean"
         | "opensubtitles"
         | "subdl";
 
@@ -102,8 +103,8 @@
         <div class="space-y-1">
             <h3 class="text-sm font-semibold">Connection tests</h3>
             <p class="text-muted-foreground text-xs">
-                Probe saved credentials for this section. Uses a short timeout and never shows
-                secrets. Save settings first if you just changed keys or URLs.
+                Probe saved connection settings for this section. Uses a short timeout and never
+                shows secrets. Save settings first if you just changed keys or URLs.
             </p>
         </div>
 

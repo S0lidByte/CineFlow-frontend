@@ -9,6 +9,7 @@ export type ConnectionService =
     | "plex"
     | "jackett"
     | "prowlarr"
+    | "zilean"
     | "opensubtitles"
     | "subdl";
 
@@ -25,6 +26,7 @@ const SUPPORTED = new Set<ConnectionService>([
     "plex",
     "jackett",
     "prowlarr",
+    "zilean",
     "opensubtitles",
     "subdl"
 ]);
@@ -67,10 +69,17 @@ export const POST: RequestHandler = async ({ locals, params }) => {
 
     const actorHeaders = getActorHeadersForUser(locals.user);
 
+    const base = locals.backendUrl.replace(/\/+$/, "");
+    const endpoint = `${base}/api/v1/settings/test-connection/${service}`;
+
+    const abortController = new AbortController();
+    const abortTimer = setTimeout(() => abortController.abort(), 7_000);
+
     let res: Response;
     try {
-        res = await fetch(`${locals.backendUrl}/api/v1/settings/test-connection/${service}`, {
+        res = await fetch(endpoint, {
             method: "POST",
+            signal: abortController.signal,
             headers: {
                 "x-api-key": locals.apiKey,
                 ...actorHeaders,
@@ -86,6 +95,8 @@ export const POST: RequestHandler = async ({ locals, params }) => {
             } satisfies ConnectionTestResult,
             { status: 200 }
         );
+    } finally {
+        clearTimeout(abortTimer);
     }
 
     if (!res.ok) {
@@ -101,9 +112,10 @@ export const POST: RequestHandler = async ({ locals, params }) => {
     }
 
     const data = (await res.json().catch(() => null)) as ConnectionTestResult | null;
+    const rawLatency = Number(data?.latency_ms);
     return json({
         ok: Boolean(data?.ok),
-        latency_ms: Math.max(0, Number(data?.latency_ms) || 0),
+        latency_ms: Number.isFinite(rawLatency) ? Math.max(0, rawLatency) : 0,
         message: safeMessage(data?.message, data?.ok ? "OK" : "Connection failed")
     } satisfies ConnectionTestResult);
 };
