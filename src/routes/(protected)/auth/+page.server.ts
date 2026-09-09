@@ -29,11 +29,31 @@ export const load: PageServerLoad = async (event) => {
         headers: event.request.headers
     });
 
+    let sessions: Array<{
+        id: string;
+        token: string;
+        createdAt: Date | string | number;
+        expiresAt: Date | string | number;
+        ipAddress?: string | null;
+        userAgent?: string | null;
+    }> = [];
+    try {
+        const sessionList = await auth.api.listSessions({
+            headers: event.request.headers
+        });
+        if (Array.isArray(sessionList)) {
+            sessions = sessionList;
+        }
+    } catch (err) {
+        logger.warn("Failed to load user sessions during SSR:", err);
+    }
+
     return {
         user: event.locals.user,
         session: event.locals.session,
         authProviders: getAuthProviders(),
         accounts,
+        sessions,
         passwordChangeForm,
         emailChangeForm,
         setPasswordForm,
@@ -164,8 +184,8 @@ export const actions: Actions = {
                 updatePayload.name = formData.newName;
             }
 
-            if (formData.newAvatar && formData.newAvatar.trim() !== "") {
-                updatePayload.image = formData.newAvatar;
+            if (formData.newAvatar !== undefined) {
+                updatePayload.image = formData.newAvatar.trim();
             }
 
             if (Object.keys(updatePayload).length > 0) {

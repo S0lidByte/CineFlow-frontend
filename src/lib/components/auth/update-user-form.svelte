@@ -10,6 +10,7 @@
     import LoaderCircle from "@lucide/svelte/icons/loader-circle";
     import { page } from "$app/state";
     import FormBase from "./form-base.svelte";
+    import AvatarPicker from "./avatar-picker.svelte";
 
     /**
      * @component UpdateUserForm
@@ -19,9 +20,11 @@
      */
 
     let {
-        data
+        data,
+        userName = "User"
     }: {
         data: SuperValidated<ChangeUserDataSchema>;
+        userName?: string;
     } = $props();
 
     const form = superForm(
@@ -75,14 +78,17 @@
                 <Form.FieldErrors />
             </Form.Field>
 
-            <Form.Field {form} name="newAvatar">
+            <Form.Field {form} name="newAvatar" class="mt-4">
                 <Form.Control>
                     {#snippet children({ props })}
                         <Form.Label for="newAvatar">Avatar</Form.Label>
-                        <Input
-                            placeholder="Your new avatar URL"
-                            {...props}
-                            bind:value={$formData.newAvatar} />
+                        <input type="hidden" {...props} bind:value={$formData.newAvatar} />
+                        <AvatarPicker
+                            bind:value={$formData.newAvatar}
+                            {userName}
+                            onSelect={(url) => {
+                                $formData.newAvatar = url;
+                            }} />
                     {/snippet}
                 </Form.Control>
                 <Form.FieldErrors />

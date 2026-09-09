@@ -56,29 +56,47 @@
                             <span>{providerName}</span>
                         </div>
                         {#if accounts.find((account) => account.providerId === providerId)}
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                onclick={async () => {
-                                    try {
-                                        const { error } = await authClient.unlinkAccount({
-                                            providerId: providerId
-                                        });
-                                        if (error) {
-                                            toast.error(
-                                                error.message || `Failed to unlink ${providerName}.`
-                                            );
-                                        } else {
-                                            toast.success(`${providerName} unlinked successfully.`);
-                                            await goto(resolve("/auth"), { invalidateAll: true });
+                            {@const isOnlyLoginMethod = accounts.length <= 1}
+                            <div class="flex items-center gap-2">
+                                {#if isOnlyLoginMethod}
+                                    <span
+                                        class="text-muted-foreground hidden text-xs italic sm:inline">
+                                        Only login method
+                                    </span>
+                                {/if}
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    disabled={isOnlyLoginMethod}
+                                    title={isOnlyLoginMethod
+                                        ? "Cannot unlink your only authentication method. Set a password or link another provider first."
+                                        : `Unlink ${providerName}`}
+                                    onclick={async () => {
+                                        try {
+                                            const { error } = await authClient.unlinkAccount({
+                                                providerId: providerId
+                                            });
+                                            if (error) {
+                                                toast.error(
+                                                    error.message ||
+                                                        `Failed to unlink ${providerName}.`
+                                                );
+                                            } else {
+                                                toast.success(
+                                                    `${providerName} unlinked successfully.`
+                                                );
+                                                await goto(resolve("/auth"), {
+                                                    invalidateAll: true
+                                                });
+                                            }
+                                        } catch {
+                                            toast.error(`Failed to unlink ${providerName}.`);
                                         }
-                                    } catch {
-                                        toast.error(`Failed to unlink ${providerName}.`);
-                                    }
-                                }}>
-                                <Link2Off class="mr-2 h-4 w-4" />
-                                Unlink
-                            </Button>
+                                    }}>
+                                    <Link2Off class="mr-2 h-4 w-4" />
+                                    Unlink
+                                </Button>
+                            </div>
                         {:else}
                             <Button
                                 size="sm"

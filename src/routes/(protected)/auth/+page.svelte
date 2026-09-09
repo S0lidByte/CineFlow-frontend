@@ -11,6 +11,7 @@
     import SetPasswordForm from "$lib/components/auth/set-password-form.svelte";
     import AccountLinks from "$lib/components/auth/account-links.svelte";
     import UpdateUserForm from "$lib/components/auth/update-user-form.svelte";
+    import SessionsManager from "$lib/components/auth/sessions-manager.svelte";
     import * as dateUtils from "$lib/utils/date";
     import { getInitials } from "$lib/utils";
     import * as Avatar from "$lib/components/ui/avatar/index.js";
@@ -71,21 +72,30 @@
             </Avatar.Root>
             <div>
                 <p class="text-lg font-semibold">{data.user.name}</p>
+                {#if data.user.username}
+                    <p class="text-primary/80 font-mono text-xs">@{data.user.username}</p>
+                {/if}
                 <p class="text-muted-foreground text-sm">{data.user.email}</p>
             </div>
         </div>
 
         <div class="flex flex-col">
             <p class="text-muted-foreground text-sm">
-                Member since {dateUtils.formatDate(data.user.createdAt)}
+                Member since {dateUtils.formatDate(
+                    data.user.createdAt ? new Date(data.user.createdAt).toISOString() : null
+                )}
             </p>
 
             <p class="text-muted-foreground text-sm">
-                Last updated {dateUtils.formatDate(data.user.updatedAt)}
+                Last updated {dateUtils.formatDate(
+                    data.user.updatedAt ? new Date(data.user.updatedAt).toISOString() : null
+                )}
             </p>
 
             <p class="text-muted-foreground text-sm">
-                Session expires at {dateUtils.formatDate(data.session.expiresAt)}
+                Session expires at {dateUtils.formatDate(
+                    data.session.expiresAt ? new Date(data.session.expiresAt).toISOString() : null
+                )}
             </p>
         </div>
     </div>
@@ -98,7 +108,11 @@
         {/if}
         <EmailChangeForm data={data.emailChangeForm} />
 
-        <UpdateUserForm data={data.changeUserDataForm} />
+        <UpdateUserForm data={data.changeUserDataForm} userName={data.user.name} />
+    </div>
+
+    <div class="mt-8">
+        <SessionsManager currentSessionToken={data.session.token} initialSessions={data.sessions} />
     </div>
 
     <div class="mt-8">

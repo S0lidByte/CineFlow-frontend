@@ -459,26 +459,6 @@
                                         <Form.FieldErrors class="text-xs" />
                                     </Form.Field>
 
-                                    <Form.Field form={registerForm} name="image">
-                                        <Form.Control>
-                                            {#snippet children({ props })}
-                                                <Form.Label
-                                                    class="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                                                    Avatar URL <span
-                                                        class="text-muted-foreground text-[10px] font-normal lowercase"
-                                                        >(optional)</span>
-                                                </Form.Label>
-                                                <Input
-                                                    {...props}
-                                                    type="url"
-                                                    placeholder="https://example.com/avatar.jpg"
-                                                    bind:value={$registerFormData.image}
-                                                    class="h-10" />
-                                            {/snippet}
-                                        </Form.Control>
-                                        <Form.FieldErrors class="text-xs" />
-                                    </Form.Field>
-
                                     <Form.Field form={registerForm} name="password">
                                         <Form.Control>
                                             {#snippet children({ props })}

@@ -7,17 +7,12 @@ const testModules = [
     "../src/lib/providers/anilist.test.ts",
     "../src/lib/components/media/riven/item-request-parser.test.ts",
     "../src/lib/components/settings/settings-safety.test.ts",
-    "../src/lib/components/settings/ranking-presets.clone.test.ts"
+    "../src/lib/components/settings/ranking-presets.clone.test.ts",
+    "../src/lib/server/admin-functions.test.ts"
 ];
-
-// `admin-functions.test.ts` is a SvelteKit/database integration test and requires
-// a SvelteKit-aware runner; it cannot run through plain tsx.
-const excludedTestModules = ["../src/lib/server/admin-functions.test.ts"];
 
 for (const testModule of testModules) {
     await import(testModule);
 }
 
-console.log(
-    `Executed ${testModules.length} frontend test file(s); ${excludedTestModules.length} SvelteKit integration test excluded.`
-);
+console.log(`Executed ${testModules.length} frontend test file(s) successfully.`);

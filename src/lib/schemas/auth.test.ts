@@ -58,7 +58,20 @@ console.log("Running Authentication Schemas & Sanitization Tests...");
 
 // --- 2. registerSchema Tests ---
 {
-    // Valid registration
+    // Valid registration (no image required)
+    const validNoImage = registerSchema.safeParse({
+        username: "standard_user",
+        email: "user@cineflow.local",
+        password: "strongPassword123",
+        confirmPassword: "strongPassword123"
+    });
+    assert.equal(validNoImage.success, true, "Registration without image should pass cleanly");
+    if (validNoImage.success) {
+        assert.equal(validNoImage.data.username, "standard_user");
+        assert.equal(validNoImage.data.image, undefined);
+    }
+
+    // Valid registration with optional image
     const valid = registerSchema.safeParse({
         username: "new_admin",
         email: "admin@cineflow.local",
@@ -66,7 +79,7 @@ console.log("Running Authentication Schemas & Sanitization Tests...");
         confirmPassword: "strongPassword123",
         image: "https://example.com/avatar.png"
     });
-    assert.equal(valid.success, true, "Valid registration should pass");
+    assert.equal(valid.success, true, "Valid registration with optional image should pass");
     if (valid.success) {
         assert.equal(valid.data.username, "new_admin");
         assert.equal(valid.data.email, "admin@cineflow.local");

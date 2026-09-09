@@ -5,6 +5,10 @@
  * SvelteKit environment modules. It is kept type-checked with the application.
  */
 import assert from "node:assert/strict";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { db } from "./db";
+import { user } from "./schema";
+import { eq } from "drizzle-orm";
 import {
     validateAdminMutation,
     isPublicRegistrationAllowed,
@@ -15,6 +19,26 @@ import {
 
 async function runTests() {
     console.log("Starting Admin User Management & Registration Security Tests...");
+
+    // Run migrations on the test database instance
+    try {
+        migrate(db, { migrationsFolder: "drizzle" });
+    } catch {
+        // Ignore if already migrated
+    }
+
+    // Ensure at least one admin user exists for count verification
+    const existingAdmins = await db.select().from(user).where(eq(user.role, "admin"));
+    if (existingAdmins.length === 0) {
+        await db.insert(user).values({
+            id: "test-admin-id",
+            name: "Test Admin",
+            email: "admin@cineflow.local",
+            role: "admin",
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+    }
 
     // Test 1: Non-admin actor rejection
     const nonAdminAttempt = await validateAdminMutation({

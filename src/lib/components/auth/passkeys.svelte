@@ -24,6 +24,7 @@
     let isRegisteringPasskey = $state(false);
     let userPasskeys = $state<Passkey[]>([]);
     let isLoadingPasskeys = $state(true);
+    let loadError = $state<string | null>(null);
     let editingPasskeyId = $state<string | null>(null);
     let editingPasskeyName = $state<string>("");
     let isUpdatingPasskey = $state(false);
@@ -36,11 +37,18 @@
 
     async function loadPasskeys() {
         isLoadingPasskeys = true;
+        loadError = null;
         try {
             const response = await authClient.passkey.listUserPasskeys();
-            userPasskeys = (response.data || []) as Passkey[];
+            if (response.error) {
+                loadError = response.error.message || "Failed to load passkeys";
+                userPasskeys = [];
+            } else {
+                userPasskeys = (response.data || []) as Passkey[];
+            }
         } catch (error) {
             logger.error("Failed to load passkeys:", error);
+            loadError = "An unexpected error occurred while loading passkeys.";
             userPasskeys = [];
         } finally {
             isLoadingPasskeys = false;
@@ -140,7 +148,18 @@
     </Card.Header>
     <Card.Content>
         {#if isLoadingPasskeys}
-            <p class="text-muted-foreground text-sm">Loading passkeys...</p>
+            <div class="text-muted-foreground flex items-center gap-2 py-2 text-sm">
+                <LoaderCircle class="h-4 w-4 animate-spin" />
+                <span>Loading passkeys...</span>
+            </div>
+        {:else if loadError}
+            <div
+                class="border-destructive/30 bg-destructive/10 my-2 flex items-center justify-between rounded-lg border p-3">
+                <span class="text-destructive text-xs">{loadError}</span>
+                <Button size="sm" variant="outline" class="h-7 text-xs" onclick={loadPasskeys}>
+                    Retry
+                </Button>
+            </div>
         {:else if userPasskeys.length > 0}
             <div class="mb-4 space-y-2">
                 {#each userPasskeys as passkey (passkey.id)}
