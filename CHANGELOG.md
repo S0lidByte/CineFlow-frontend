@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.18.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.4...riven-frontend-v1.18.0) (2026-09-09)
+
+
+### Features
+
+* **auth:** add avatar picker, session manager, and harden auth security ([04d5978](https://github.com/S0lidByte/CineFlow-frontend/commit/04d59787a2493272e7e9c095bf4d8e755d18f851))
+
+
+### Bug Fixes
+
+* **ci:** ignore CHANGELOG.md in prettier to prevent release PR lint failures ([78eac90](https://github.com/S0lidByte/CineFlow-frontend/commit/78eac903cfb72e990d7a9d34a1b8f35b131c1265))
+* **test:** exclude sveltekit integration test from tsx runner ([9241305](https://github.com/S0lidByte/CineFlow-frontend/commit/92413059edb164920bc5268b2898078583c92942))
+
 ## [1.17.4](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.3...riven-frontend-v1.17.4) (2026-09-09)
 
 ### Bug Fixes
