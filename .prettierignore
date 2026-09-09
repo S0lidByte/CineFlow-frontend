@@ -5,3 +5,6 @@ yarn.lock
 bun.lock
 bun.lockb
 scripts/trakt.apib
+
+# Automated Release Changelog
+CHANGELOG.md
