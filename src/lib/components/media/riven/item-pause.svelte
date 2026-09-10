@@ -25,6 +25,7 @@
             | undefined;
         size?: "default" | "sm" | "lg" | "icon" | "icon-sm" | "icon-lg" | undefined;
         class?: string;
+        ariaLabel?: string;
         children?: Snippet;
     }
     let {
@@ -33,6 +34,7 @@
         isPaused = false,
         variant = "ghost",
         size = "sm",
+        ariaLabel,
         children,
         ...restProps
     }: Props = $props();
@@ -68,7 +70,7 @@
 <AlertDialog.Root bind:open>
     <AlertDialog.Trigger>
         {#snippet child({ props })}
-            <Button {variant} {size} {...restProps} {...props}>
+            <Button {variant} {size} aria-label={ariaLabel} {...restProps} {...props}>
                 {#if children}
                     {@render children()}
                 {:else}

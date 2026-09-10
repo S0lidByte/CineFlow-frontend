@@ -1000,32 +1000,49 @@
                                         (s) => s.season_number === season.number
                                     )}
                                     <Carousel.Item class="basis-auto">
-                                        <button
-                                            onclick={() =>
-                                                (selectedSeason = season.number?.toString())}
-                                            class={cn(
-                                                "group relative block transition-all",
-                                                selectedSeason === season.number?.toString()
-                                                    ? ""
-                                                    : "opacity-60 hover:opacity-90"
-                                            )}>
-                                            <PortraitCard
-                                                title={season.number === 0
-                                                    ? "Specials"
-                                                    : `Season ${season.number}`}
-                                                image={season.image}
-                                                isSelected={selectedSeason ===
-                                                    season.number?.toString()}
-                                                class="w-28 md:w-32 lg:w-36">
-                                                {#snippet topRight()}
-                                                    {#if rivenSeason?.state}
-                                                        <StatusBadge
-                                                            state={rivenSeason.state}
-                                                            size="default" />
+                                        <div class="group relative">
+                                            <button
+                                                onclick={() =>
+                                                    (selectedSeason = season.number?.toString())}
+                                                class={cn(
+                                                    "block transition-all",
+                                                    selectedSeason === season.number?.toString()
+                                                        ? ""
+                                                        : "opacity-60 hover:opacity-90"
+                                                )}>
+                                                <PortraitCard
+                                                    title={season.number === 0
+                                                        ? "Specials"
+                                                        : `Season ${season.number}`}
+                                                    image={season.image}
+                                                    isSelected={selectedSeason ===
+                                                        season.number?.toString()}
+                                                    class="w-28 md:w-32 lg:w-36">
+                                                    {#snippet topRight()}
+                                                        {#if rivenSeason?.state}
+                                                            <StatusBadge
+                                                                state={rivenSeason.state}
+                                                                size="default" />
+                                                        {/if}
+                                                    {/snippet}
+                                                </PortraitCard>
+                                            </button>
+                                            {#if rivenSeason?.id != null && rivenSeason.state !== "Completed"}
+                                                <ItemPause
+                                                    title={`${data.mediaDetails?.details.title ?? "Show"} — ${season.number === 0 ? "Specials" : `Season ${season.number}`}`}
+                                                    ids={[rivenSeason.id.toString()]}
+                                                    isPaused={rivenSeason.state === "Paused"}
+                                                    size="icon-sm"
+                                                    class="bg-background/90 hover:bg-background absolute right-1 bottom-7 z-10 shadow-sm"
+                                                    ariaLabel={`${rivenSeason.state === "Paused" ? "Resume" : "Pause"} ${season.number === 0 ? "Specials" : `Season ${season.number}`}`}>
+                                                    {#if rivenSeason.state === "Paused"}
+                                                        <Play class="size-3.5" />
+                                                    {:else}
+                                                        <Pause class="size-3.5" />
                                                     {/if}
-                                                {/snippet}
-                                            </PortraitCard>
-                                        </button>
+                                                </ItemPause>
+                                            {/if}
+                                        </div>
                                     </Carousel.Item>
                                 {/each}
                             </Carousel.Content>
