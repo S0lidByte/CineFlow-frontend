@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.20.0...riven-frontend-v1.21.0) (2026-09-10)
+
+
+### Features
+
+* **auth:** extract shared auth utils, harden svelte 5 reactivity, and add component unit tests ([cd69f5a](https://github.com/S0lidByte/CineFlow-frontend/commit/cd69f5a47caa3c8fbe72a4a50fa398a3e0d9a76d))
+
 ## [1.20.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.19.0...riven-frontend-v1.20.0) (2026-09-10)
 
 
