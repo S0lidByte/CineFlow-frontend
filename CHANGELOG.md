@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.18.0...riven-frontend-v1.19.0) (2026-09-10)
+
+
+### Features
+
+* add per-season pause controls ([6bfa212](https://github.com/S0lidByte/CineFlow-frontend/commit/6bfa212bba7884b1a59f25548c3e51da9325eac8))
+
 ## [1.18.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.17.4...riven-frontend-v1.18.0) (2026-09-09)
 
 
