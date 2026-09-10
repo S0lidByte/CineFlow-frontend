@@ -101,8 +101,8 @@
     let activeTab = $state(data.isFirstUser ? "register" : "login");
 
     async function plexLogin() {
-        await authClient.signIn.oauth2({
-            providerId: "plex",
+        await authClient.signIn.social({
+            provider: "plex",
             callbackURL: "/"
         });
     }
@@ -362,8 +362,8 @@
                                                 if (key === "plex") {
                                                     await plexLogin();
                                                 } else {
-                                                    await authClient.signIn.oauth2({
-                                                        providerId: key,
+                                                    await authClient.signIn.social({
+                                                        provider: key,
                                                         callbackURL: "/"
                                                     });
                                                 }

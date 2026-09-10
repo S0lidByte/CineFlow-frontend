@@ -125,27 +125,25 @@ export class NotificationStore {
 
         try {
             this.#connection = source("/api/notifications", {
-                open: () => {
+                onopen: () => {
                     this.#connectionStatus = "connected";
                     logger.info("Notification stream connected");
                 },
-                close: ({ connect }) => {
+                onclose: ({ connect }) => {
                     if (this.#connectionStatus !== "disconnected") {
                         this.#connectionStatus = "error";
                         logger.info("Notification stream closed, reconnecting...");
                         // Auto-reconnect
                         setTimeout(() => {
-                            try {
-                                if (this.#connectionStatus !== "disconnected") {
-                                    connect();
-                                }
-                            } catch (e) {
-                                logger.error("Notification reconnect failed:", e);
+                            if (this.#connectionStatus !== "disconnected") {
+                                void connect().catch((error) => {
+                                    logger.error("Notification reconnect failed:", error);
+                                });
                             }
                         }, 1000);
                     }
                 },
-                error: (error) => {
+                onerror: ({ error }) => {
                     logger.error("Notification stream error:", error);
                     this.#connectionStatus = "error";
                 }

@@ -27,14 +27,6 @@
             { enabled: boolean; disableSignup: boolean; name?: string; icon?: string }
         >;
     } = $props();
-
-    // Built-in social providers that use linkSocial()
-    // Plex is now a generic OAuth provider, so it's no longer in this list
-    const builtInProviders: string[] = [];
-
-    function isGenericOAuthProvider(providerId: string): boolean {
-        return !builtInProviders.includes(providerId) && providerId !== "credential";
-    }
 </script>
 
 <Card.Root>
@@ -56,6 +48,9 @@
                             <span>{providerName}</span>
                         </div>
                         {#if accounts.find((account) => account.providerId === providerId)}
+                            {@const linkedAccount = accounts.find(
+                                (account) => account.providerId === providerId
+                            )}
                             {@const isOnlyLoginMethod = accounts.length <= 1}
                             <div class="flex items-center gap-2">
                                 {#if isOnlyLoginMethod}
@@ -73,8 +68,9 @@
                                         : `Unlink ${providerName}`}
                                     onclick={async () => {
                                         try {
+                                            if (!linkedAccount) return;
                                             const { error } = await authClient.unlinkAccount({
-                                                providerId: providerId
+                                                accountId: linkedAccount.id
                                             });
                                             if (error) {
                                                 toast.error(
@@ -102,19 +98,10 @@
                                 size="sm"
                                 onclick={async () => {
                                     try {
-                                        if (isGenericOAuthProvider(providerId)) {
-                                            // Use oauth2.link() for generic OAuth providers
-                                            await authClient.oauth2.link({
-                                                providerId: providerId,
-                                                callbackURL: "/auth"
-                                            });
-                                        } else {
-                                            // Use linkSocial() for built-in social providers (plex)
-                                            await authClient.linkSocial({
-                                                provider: providerId,
-                                                callbackURL: "/auth"
-                                            });
-                                        }
+                                        await authClient.linkSocial({
+                                            provider: providerId,
+                                            callbackURL: "/auth"
+                                        });
                                     } catch (err) {
                                         const errMessage =
                                             err instanceof Error ? err.message : undefined;

@@ -95,21 +95,21 @@ export class LogStore {
         this.#error = null;
 
         this.#connection = source("/api/logs", {
-            open() {
-                // Connection opened
+            onopen: () => {
+                this.#connectionStatus = "connected";
             },
-            close: ({ connect }) => {
+            onclose: ({ connect }) => {
                 if (this.#connectionStatus !== "disconnected") {
                     this.#connectionStatus = "error";
                     // Auto-reconnect
                     setTimeout(() => {
                         if (this.#connectionStatus !== "disconnected") {
-                            connect();
+                            void connect();
                         }
                     }, 1000);
                 }
             },
-            error: (error) => {
+            onerror: ({ error }) => {
                 logger.error("Log stream error:", error);
                 this.#error = "Connection error";
                 this.#connectionStatus = "error";
