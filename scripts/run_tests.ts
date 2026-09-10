@@ -1,5 +1,7 @@
 // Explicitly inventory every current frontend *.test.ts module. Dynamic imports run
 // global fetch/environment mocks sequentially rather than concurrently.
+export {};
+
 const testModules = [
     "../src/routes/(protected)/api/[...backendProxy]/backend-proxy.security.test.ts",
     "../tests/routes/settings-test-connection.security.test.ts",

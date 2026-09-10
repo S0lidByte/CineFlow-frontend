@@ -1943,7 +1943,7 @@ export interface components {
              * Mount Path
              * Format: path
              * @description Path where Riven will mount the virtual filesystem
-             * @default \path\to\riven\mount
+             * @default /path/to/riven/mount
              */
             mount_path: string;
             /**
@@ -1957,7 +1957,7 @@ export interface components {
              * Cache Dir
              * Format: path
              * @description Warm (or sole) directory for caching downloaded chunks. Default /dev/shm/riven-cache is RAM-backed (tmpfs): large budgets can OOM-kill the process (bare 'Killed'). Prefer a disk path under your data volume for large warm caches. On tmpfs, effective size is limited by tmpfs_cache_max_mb (default 1 GiB) and half of free shm.
-             * @default \dev\shm\riven-cache
+             * @default /dev/shm/riven-cache
              */
             cache_dir: string;
             /**
@@ -4041,7 +4041,7 @@ export interface components {
              * Library Path
              * Format: path
              * @description Path to which your media library mount point
-             * @default \path\to\library\mount
+             * @default /path/to/library/mount
              */
             library_path: string;
             /** @description Plex library configuration */
