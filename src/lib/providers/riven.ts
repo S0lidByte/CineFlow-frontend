@@ -131,6 +131,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Prometheus Metrics
+         * @description Prometheus text exposition of streaming cache counters (API-key protected).
+         */
+        get: operations["prometheus_metrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/downloader_user_info": {
         parameters: {
             query?: never;
@@ -205,6 +225,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/trakt/oauth/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trakt Oauth Status */
+        get: operations["trakt_oauth_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/trakt/oauth/callback": {
         parameters: {
             query?: never;
@@ -222,6 +259,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/trakt/oauth/disconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trakt Oauth Disconnect */
+        post: operations["trakt_oauth_disconnect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stats": {
         parameters: {
             query?: never;
@@ -233,10 +287,10 @@ export interface paths {
          * Get Stats
          * @description Produce aggregated statistics for the media library and its items.
          *
-         *     The response includes total counts for media items, movies, shows, seasons, and episodes; the total number of filesystem symlinks (determined by existence of FilesystemEntry records linked to movie or episode items); a mapping of each state to its item count; the number of incomplete items; and a mapping of incomplete item IDs to their scraped attempt counts.
+         *     The response includes total counts for media items, movies, shows, seasons, and episodes; the total number of filesystem symlinks (determined by existence of FilesystemEntry records linked to movie or episode items); a mapping of each state to its item count; the number of incomplete items; release-year histogram; request activity by day; and a capped ``needs_attention`` queue (top incomplete items by scrape attempts).
          *
          *     Returns:
-         *         StatsResponse: Aggregated statistics with keys `total_items`, `total_movies`, `total_shows`, `total_seasons`, `total_episodes`, `total_symlinks`, `incomplete_items`, `incomplete_retries`, and `states`.
+         *         StatsResponse: Aggregated library statistics including ``needs_attention``.
          */
         get: operations["stats"];
         put?: never;
@@ -720,6 +774,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ranking/meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Ranking Meta
+         * @description Deny-key map and attribute titles for the Ranking settings panel.
+         */
+        get: operations["get_ranking_meta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ranking/presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Ranking Presets
+         * @description Shared Ranking Studio preset contract (ids + options) for FE alignment.
+         */
+        get: operations["get_ranking_presets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ranking/funnel/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Scrape Funnel Summary
+         * @description Return the last remembered scrape funnel summary for an item (process-local).
+         */
+        get: operations["get_scrape_funnel_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ranking/validate-patterns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Ranking Patterns
+         * @description Validate require/exclude/preferred regex lists (length, compile, ReDoS heuristics).
+         */
+        post: operations["validate_ranking_patterns"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ranking/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Ranking
+         * @description Run a release title through RTN using current (or provided) ranking settings.
+         */
+        post: operations["test_ranking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scrape": {
         parameters: {
             query?: never;
@@ -849,7 +1003,7 @@ export interface paths {
         };
         /**
          * Get Settings Schema
-         * @description Get the JSON schema for the settings.
+         * @description Get the JSON schema for the settings. Cached for faster repeated loads.
          */
         get: operations["get_settings_schema"];
         put?: never;
@@ -979,6 +1133,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings/test-connection/{service}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Settings Connection
+         * @description Probe a third-party integration using saved settings.
+         *
+         *     Returns ``{ok, latency_ms, message}`` without secrets. The response wait is
+         *     bounded to five seconds; cancellation of an in-flight sync probe is
+         *     cooperative and the worker may finish later.
+         */
+        post: operations["test_settings_connection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/webhook/overseerr": {
         parameters: {
             query?: never;
@@ -993,6 +1171,29 @@ export interface paths {
          * @description Webhook for Overseerr
          */
         post: operations["overseerr_api_v1_webhook_overseerr_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhook/plex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plex Webhook
+         * @description Plex webhook: parse ``media.scrobble``, map provider GUIDs, optionally sync.
+         *
+         *     When ``content.plex_webhook.sync_to_trakt`` is false (default), logs GUIDs only.
+         *     When true and Trakt OAuth is connected, POSTs to Trakt ``/sync/history``.
+         */
+        post: operations["plex_webhook_api_v1_webhook_plex_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1094,6 +1295,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tmdb/{tmdb_path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Proxy TMDB GET requests */
+        get: operations["proxy_tmdb_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1149,39 +1367,6 @@ export interface components {
              */
             password: string;
         };
-        /** StremThruConfig */
-        StremThruConfig: {
-            /**
-             * Enabled
-             * @description Enable StremThru Torznab scraper
-             * @default false
-             */
-            enabled: boolean;
-            /**
-             * Url
-             * @description StremThru instance URL (self-hosted or public)
-             * @default https://stremthru.13377001.xyz
-             */
-            url: string;
-            /**
-             * Timeout
-             * @description Request timeout in seconds
-             * @default 30
-             */
-            timeout: number;
-            /**
-             * Retries
-             * @description Number of retries for failed requests
-             * @default 1
-             */
-            retries: number;
-            /**
-             * Ratelimit
-             * @description Enable rate limiting
-             * @default true
-             */
-            ratelimit: boolean;
-        };
         /** AddMediaItemPayload */
         AddMediaItemPayload: {
             /**
@@ -1230,6 +1415,11 @@ export interface components {
              */
             api_key: string;
             /**
+             * Cors Origins
+             * @description Allowed CORS origins. Use ['*'] for all origins (credentials disabled). Prefer explicit origins in production (e.g. ['http://localhost:3000']).
+             */
+            cors_origins?: string[];
+            /**
              * Log Level
              * @description Logging level
              * @default INFO
@@ -1249,11 +1439,23 @@ export interface components {
              */
             enable_stream_tracing: boolean;
             /**
+             * Stream Tracing Sample Every
+             * @description When stream tracing is on, emit 1 of every N high-frequency STREAM lines (cache_hit / hot body reads). Lifecycle, scans, and URL refresh always log. Set to 1 to log every hot event (previous behavior).
+             * @default 50
+             */
+            stream_tracing_sample_every: number;
+            /**
              * Retry Interval
              * @description Interval in seconds to retry failed library items (24 hours default, 0 to disable)
              * @default 86400
              */
             retry_interval: number;
+            /**
+             * Retry Library Batch Size
+             * @description Max incomplete movie/show IDs to enqueue per scheduled retry_library tick (caps queue storms; manual API retry remains uncapped)
+             * @default 50
+             */
+            retry_library_batch_size: number;
             /**
              * Tracemalloc
              * @description Enable Python memory tracking (debug)
@@ -1270,8 +1472,10 @@ export interface components {
             content?: components["schemas"]["ContentModel"];
             /** @description Scraper configuration */
             scraping?: components["schemas"]["ScraperModel"];
-            /** @description Result ranking configuration */
+            /** @description RTN ranking and trash filters for movies and non-anime shows. DEBUG rejects map to custom_ranks.<category>.<attribute> as denied by: <category>_<attribute> (e.g. audio_dolby_digital_plus). Anime items use ranking_anime instead. */
             ranking?: components["schemas"]["RTNSettingsModel"];
+            /** @description Independent RTN ranking for anime items (is_anime). Defaults to the Anime Dub Friendly preset so anime can be tuned separately from movies/shows. Soft-opt-ins under Scraping still apply on top. */
+            ranking_anime?: components["schemas"]["RTNSettingsModel"];
             /** @description Indexer configuration */
             indexer?: components["schemas"]["IndexerModel"];
             /** @description Database configuration */
@@ -1424,6 +1628,27 @@ export interface components {
             ratelimit: boolean;
         };
         /**
+         * ConnectionTestResponse
+         * @description Result of a Settings connection probe. Never includes secrets.
+         */
+        ConnectionTestResponse: {
+            /**
+             * Ok
+             * @description Whether the probe succeeded
+             */
+            ok: boolean;
+            /**
+             * Latency Ms
+             * @description Wall-clock probe latency in milliseconds
+             */
+            latency_ms: number;
+            /**
+             * Message
+             * @description Safe human-readable status (no credentials or secret URLs)
+             */
+            message: string;
+        };
+        /**
          * Container
          * @description Root model for container mapping file IDs to file information.
          *
@@ -1448,6 +1673,8 @@ export interface components {
             overseerr?: components["schemas"]["OverseerrModel"];
             /** @description Plex Watchlist configuration */
             plex_watchlist?: components["schemas"]["PlexWatchlistModel"];
+            /** @description Plex inbound webhook (scrobble dry-run or Trakt history sync) */
+            plex_webhook?: components["schemas"]["PlexWebhookModel"];
             /** @description MDBList configuration */
             mdblist?: components["schemas"]["MdblistModel"];
             /** @description Listrr configuration */
@@ -1632,6 +1859,18 @@ export interface components {
              */
             episode_filesize_mb_max: number;
             /**
+             * Movie Min Avg Bitrate
+             * @description Optional minimum average bitrate for movies (MiB per minute of runtime; 0 = disabled). Uses MediaItem.runtime from TMDB when available; riven-ts parity.
+             * @default 0
+             */
+            movie_min_avg_bitrate: number;
+            /**
+             * Episode Min Avg Bitrate
+             * @description Optional minimum average bitrate for episodes (MiB per minute of runtime; 0 = disabled). Uses MediaItem.runtime from TVDB (episode or series average); riven-ts parity.
+             * @default 0
+             */
+            episode_min_avg_bitrate: number;
+            /**
              * Proxy Url
              * @description Proxy URL for downloaders (optional)
              * @default
@@ -1704,7 +1943,7 @@ export interface components {
              * Mount Path
              * Format: path
              * @description Path where Riven will mount the virtual filesystem
-             * @default /path/to/riven/mount
+             * @default \path\to\riven\mount
              */
             mount_path: string;
             /**
@@ -1718,16 +1957,14 @@ export interface components {
              * Cache Dir
              * Format: path
              * @description Warm (or sole) directory for caching downloaded chunks. Default /dev/shm/riven-cache is RAM-backed (tmpfs): large budgets can OOM-kill the process (bare 'Killed'). Prefer a disk path under your data volume for large warm caches. On tmpfs, effective size is limited by tmpfs_cache_max_mb (default 1 GiB) and half of free shm.
-             * @default /dev/shm/riven-cache
+             * @default \dev\shm\riven-cache
              */
             cache_dir: string;
             /**
              * Cache Hot Dir
-             * Format: path
              * @description Optional hot-tier directory (typically tmpfs). When set, new chunks are written here first; LRU overflow is demoted to cache_dir (warm). Leave empty for a single-tier cache. Bare /dev/shm or /run/shm paths are automatically scoped to a riven-cache subdirectory so unrelated shared-memory files are never treated as cache data.
-             * @default null
              */
-            cache_hot_dir: string | null;
+            cache_hot_dir?: string | null;
             /**
              * Cache Max Size Mb
              * @description Maximum warm (or sole) cache size in MB (10 GiB default on disk). When cache_dir is on tmpfs (/dev/shm), effective size is also limited by tmpfs_cache_max_mb and half of free shm.
@@ -1789,6 +2026,64 @@ export interface components {
              * @default {show[title]} - s{season:02d}e{episode:02d}
              */
             episode_file_template: string;
+        };
+        /** FunnelReasonCount */
+        FunnelReasonCount: {
+            /** Reason */
+            reason: string;
+            /** Count */
+            count: number;
+        };
+        /** FunnelSummaryResponse */
+        FunnelSummaryResponse: {
+            /** Message */
+            message: string;
+            /**
+             * Found
+             * @default false
+             */
+            found: boolean;
+            /** Item Id */
+            item_id?: number | null;
+            /** Item Log */
+            item_log?: string | null;
+            /**
+             * Found Count
+             * @default 0
+             */
+            found_count: number;
+            /**
+             * Ranked
+             * @default 0
+             */
+            ranked: number;
+            /**
+             * New
+             * @default 0
+             */
+            new: number;
+            /**
+             * Already Known
+             * @default 0
+             */
+            already_known: number;
+            /**
+             * Blacklisted
+             * @default 0
+             */
+            blacklisted: number;
+            /**
+             * Rtn Rejected
+             * @default 0
+             */
+            rtn_rejected: number;
+            /**
+             * Content Filtered
+             * @default 0
+             */
+            content_filtered: number;
+            /** Rtn Top */
+            rtn_top?: components["schemas"]["FunnelReasonCount"][];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1903,7 +2198,7 @@ export interface components {
             /**
              * Infohash Fetch Timeout
              * @description Timeout in seconds for parallel infohash fetching from URLs
-             * @default 30
+             * @default 120
              */
             infohash_fetch_timeout: number;
             /**
@@ -1937,6 +2232,14 @@ export interface components {
         /**
          * LanguagesConfig
          * @description Configuration for which languages are enabled.
+         *
+         *     Attributes:
+         *         required: Languages that MUST be present in the torrent. If set, torrents without
+         *                   at least one of these languages will be excluded.
+         *         allowed: Languages that bypass the exclusion logic. If a torrent contains any of
+         *                  these languages, it won't be excluded even if it also contains excluded languages.
+         *         exclude: Languages that should be excluded from results.
+         *         preferred: Languages that are preferred (used for ranking).
          */
         LanguagesConfig: {
             /**
@@ -1944,6 +2247,11 @@ export interface components {
              * @default []
              */
             required: string[];
+            /**
+             * Allowed
+             * @default []
+             */
+            allowed: string[];
             /**
              * Exclude
              * @default []
@@ -2297,6 +2605,17 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** NeedsAttentionItem */
+        NeedsAttentionItem: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** State */
+            state: string;
+            /** Scraped Times */
+            scraped_times: number;
+        };
         /** NotificationsModel */
         NotificationsModel: {
             /**
@@ -2315,6 +2634,40 @@ export interface components {
              * @description Notification service URLs (e.g., Discord webhooks)
              */
             service_urls?: string[];
+        };
+        /** OpenSubtitlesProviderConfig */
+        OpenSubtitlesProviderConfig: {
+            /**
+             * Enabled
+             * @description Enable OpenSubtitles provider
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Username
+             * @description OpenSubtitles username
+             * @default
+             */
+            username: string;
+            /**
+             * Password
+             * Format: password
+             * @description OpenSubtitles password
+             * @default
+             */
+            password: string;
+            /**
+             * User Agent
+             * @description OpenSubtitles user agent
+             * @default VLSub 0.11.1
+             */
+            user_agent: string;
+            /**
+             * Allow Anonymous
+             * @description Allow fallback to anonymous login when username/password are empty.
+             * @default true
+             */
+            allow_anonymous: boolean;
         };
         /**
          * OptionsConfig
@@ -2451,6 +2804,12 @@ export interface components {
              * @default false
              */
             use_webhook: boolean;
+            /**
+             * Webhook Secret
+             * @description Optional shared secret for POST /webhook/overseerr. When set, requests must include matching X-Webhook-Secret header (in addition to API auth).
+             * @default
+             */
+            webhook_secret: string;
         };
         /** OverseerrWebhookResponse */
         OverseerrWebhookResponse: {
@@ -2482,6 +2841,50 @@ export interface components {
             parsed_metadata: {
                 [key: string]: unknown;
             };
+        };
+        /** PatternIssueModel */
+        PatternIssueModel: {
+            /** Field */
+            field: string;
+            /** Index */
+            index: number;
+            /** Pattern */
+            pattern: string;
+            /** Message */
+            message: string;
+        };
+        /** PatternPreviewModel */
+        PatternPreviewModel: {
+            /** Require Matches */
+            require_matches?: string[];
+            /** Exclude Matches */
+            exclude_matches?: string[];
+            /** Preferred Matches */
+            preferred_matches?: string[];
+        };
+        /** PatternValidateRequest */
+        PatternValidateRequest: {
+            /** Require */
+            require?: string[];
+            /** Exclude */
+            exclude?: string[];
+            /** Preferred */
+            preferred?: string[];
+            /**
+             * Preview Title
+             * @description Optional release title for match preview
+             */
+            preview_title?: string | null;
+        };
+        /** PatternValidateResponse */
+        PatternValidateResponse: {
+            /** Message */
+            message: string;
+            /** Valid */
+            valid: boolean;
+            /** Errors */
+            errors?: components["schemas"]["PatternIssueModel"][];
+            preview?: components["schemas"]["PatternPreviewModel"] | null;
         };
         /** PauseResponse */
         PauseResponse: {
@@ -2534,6 +2937,39 @@ export interface components {
              */
             rss?: string[];
         };
+        /**
+         * PlexWebhookModel
+         * @description Inbound Plex (or Tautulli relay) webhook for watch/scrobble events.
+         *
+         *     When ``sync_to_trakt`` is false (default), only sanitizes/logs provider GUIDs.
+         *     When true and Trakt OAuth is connected, posts ``media.scrobble`` to
+         *     ``POST /sync/history`` (Plex → Trakt only).
+         */
+        PlexWebhookModel: {
+            /**
+             * Webhook Secret
+             * @description Optional shared secret for POST /webhook/plex. When set, requests must include matching X-Webhook-Secret header or webhook_secret query param (in addition to API auth). Put the secret in the Plex webhook URL.
+             * @default
+             */
+            webhook_secret: string;
+            /**
+             * Sync To Trakt
+             * @description When enabled, media.scrobble webhooks POST matched items to Trakt /sync/history (requires Trakt OAuth connected). Default is dry-run only.
+             * @default false
+             */
+            sync_to_trakt: boolean;
+        };
+        /** PlexWebhookResponse */
+        PlexWebhookResponse: {
+            /** Success */
+            success: boolean;
+            /** Event */
+            event?: string | null;
+            /** Guids */
+            guids?: string[] | null;
+            /** Message */
+            message?: string | null;
+        };
         /** PostProcessing */
         PostProcessing: {
             /** @description Subtitle post-processing configuration */
@@ -2574,9 +3010,15 @@ export interface components {
             /**
              * Infohash Fetch Timeout
              * @description Timeout in seconds for parallel infohash fetching from URLs
-             * @default 30
+             * @default 120
              */
             infohash_fetch_timeout: number;
+            /**
+             * Max Concurrent Infohash Fetches
+             * @description Maximum concurrent download URL resolutions across all Prowlarr indexers
+             * @default 10
+             */
+            max_concurrent_infohash_fetches: number;
             /**
              * Ratelimit
              * @description Enable rate limiting
@@ -2647,6 +3089,135 @@ export interface components {
             /** @description Custom ranking configurations for specific attributes */
             custom_ranks?: components["schemas"]["CustomRanksConfig"];
         };
+        /** RankingMetaResponse */
+        RankingMetaResponse: {
+            /** Message */
+            message: string;
+            /** Deny Keys */
+            deny_keys: {
+                [key: string]: string;
+            };
+            /** Attribute Titles */
+            attribute_titles: {
+                [key: string]: string;
+            };
+            /** Categories */
+            categories: {
+                [key: string]: string;
+            };
+            /** Soft Opt In Links */
+            soft_opt_in_links: {
+                [key: string]: {
+                    [key: string]: string;
+                };
+            };
+            /** Pattern Limits */
+            pattern_limits: {
+                [key: string]: number;
+            };
+            /** Title Matching Modes */
+            title_matching_modes?: {
+                [key: string]: unknown;
+            }[];
+            /** Presets */
+            presets?: {
+                [key: string]: unknown;
+            }[];
+            /** Golden Titles */
+            golden_titles?: {
+                [key: string]: string;
+            };
+        };
+        /** RankingTestRequest */
+        RankingTestRequest: {
+            /**
+             * Raw Title
+             * @description Torrent / release title to test
+             */
+            raw_title: string;
+            /**
+             * Correct Title
+             * @description Optional media title for similarity scoring
+             */
+            correct_title?: string | null;
+            /**
+             * Infohash
+             * @description Optional infohash (40 hex chars)
+             */
+            infohash?: string | null;
+            /**
+             * Remove Trash
+             * @description Apply trash heuristics
+             * @default true
+             */
+            remove_trash: boolean;
+            /**
+             * Ranking Overrides
+             * @description Optional category→attribute map to force-enable fetch without saving
+             */
+            ranking_overrides?: {
+                [key: string]: string[];
+            } | null;
+            /**
+             * For Anime
+             * @description When true (and ranking payload omitted), base overrides on ranking_anime
+             * @default false
+             */
+            for_anime: boolean;
+            /**
+             * Ranking
+             * @description Optional full ranking settings payload to test against (unsaved edits)
+             */
+            ranking?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Aliases
+             * @description Optional title aliases (country → names) for remake / alias diagnose. Empty dict disables aliases for this test.
+             */
+            aliases?: {
+                [key: string]: string[];
+            } | null;
+        };
+        /** RankingTestResponse */
+        RankingTestResponse: {
+            /** Message */
+            message: string;
+            /** Accepted */
+            accepted: boolean;
+            /**
+             * Rank
+             * @default 0
+             */
+            rank: number;
+            /**
+             * Lev Ratio
+             * @default 0
+             */
+            lev_ratio: number;
+            /**
+             * Fetch
+             * @default false
+             */
+            fetch: boolean;
+            /** Deny Reason */
+            deny_reason?: string | null;
+            /** Deny Help */
+            deny_help?: string | null;
+            /** Scraping Hint */
+            scraping_hint?: string | null;
+            /** Title Similarity Threshold */
+            title_similarity_threshold?: number | null;
+            /**
+             * Aliases Used
+             * @default false
+             */
+            aliases_used: boolean;
+            /** Parsed */
+            parsed?: {
+                [key: string]: unknown;
+            } | null;
+        };
         /** RarbgConfig */
         RarbgConfig: {
             /**
@@ -2684,7 +3255,7 @@ export interface components {
         RealDebridModel: {
             /**
              * Enabled
-             * @description Enable Real-Debrid
+             * @description Enable Real-Debrid. RD enforces account-side fair usage on unrestrict/streaming; when hit, CineFlow cools down ~5 minutes and skips further unrestricts. Wait out the cooldown and avoid simultaneous streams.
              * @default false
              */
             enabled: boolean;
@@ -2839,6 +3410,17 @@ export interface components {
              */
             enable_aliases: boolean;
             /**
+             * Enable Remake Aliases
+             * @description Opt-in: during scrape ranking, merge remake_alias_groups into item aliases when enable_aliases is on and the item title (or an existing alias) matches a name in a group. Default False keeps classic titles strict — remakes (e.g. Knights of the Zodiac ↔ Saint Seiya) stay title_mismatch until you opt in. Does not lower title_similarity.
+             * @default false
+             */
+            enable_remake_aliases: boolean;
+            /**
+             * Remake Alias Groups
+             * @description Groups of remake / alternate titles that should match each other when enable_remake_aliases is on. Each group is a list of titles, e.g. [["Knights of the Zodiac", "Saint Seiya"]]. Only applied when the item title or an existing alias matches a name in the group (case-insensitive). Empty by default — add groups intentionally.
+             */
+            remake_alias_groups?: string[][];
+            /**
              * Bucket Limit
              * @description Maximum results per quality bucket
              * @default 5
@@ -2846,8 +3428,8 @@ export interface components {
             bucket_limit: number;
             /**
              * Max Failed Attempts
-             * @description Maximum failed scrape attempts before giving up
-             * @default 0
+             * @description Maximum failed scrape attempts before marking an item as failed; legacy value 0 uses the default limit of 10
+             * @default 10
              */
             max_failed_attempts: number;
             /**
@@ -2856,6 +3438,18 @@ export interface components {
              * @default false
              */
             dubbed_anime_only: boolean;
+            /**
+             * Anime Allow Extras Dubbed
+             * @description Opt-in: for is_anime items only, temporarily enable custom_ranks.extras.dubbed.fetch during ranking. Default False keeps strict ranking. Enable when scrape funnel shows high extras_dubbed rejects with good raw finds.
+             * @default false
+             */
+            anime_allow_extras_dubbed: boolean;
+            /**
+             * Anime Allow Multi Audio
+             * @description Opt-in: for is_anime items only, retry ranking after missing_required_language when the release looks like MULTI/dual-audio. Default False keeps strict language rules.
+             * @default false
+             */
+            anime_allow_multi_audio: boolean;
             /** @description Torrentio configuration */
             torrentio?: components["schemas"]["TorrentioConfig"];
             /** @description Jackett configuration */
@@ -3027,12 +3621,7 @@ export interface components {
              * Needs Attention
              * @description Top incomplete/failed items by scrape attempts (capped; for Dashboard ops queue)
              */
-            needs_attention?: {
-                id: number;
-                title: string;
-                state: string;
-                scraped_times: number;
-            }[];
+            needs_attention?: components["schemas"]["NeedsAttentionItem"][];
         };
         /** StreamModel */
         StreamModel: {
@@ -3098,6 +3687,55 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /** StremThruConfig */
+        StremThruConfig: {
+            /**
+             * Enabled
+             * @description Enable StremThru Torznab scraper
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Url
+             * @description StremThru instance URL (self-hosted or public)
+             * @default https://stremthru.13377001.xyz
+             */
+            url: string;
+            /**
+             * Timeout
+             * @description Request timeout in seconds
+             * @default 30
+             */
+            timeout: number;
+            /**
+             * Retries
+             * @description Number of retries for failed requests
+             * @default 1
+             */
+            retries: number;
+            /**
+             * Ratelimit
+             * @description Enable rate limiting
+             * @default true
+             */
+            ratelimit: boolean;
+        };
+        /** SubDLProviderConfig */
+        SubDLProviderConfig: {
+            /**
+             * Enabled
+             * @description Enable SubDL provider
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Api Key
+             * Format: password
+             * @description SubDL API key (required when enabled)
+             * @default
+             */
+            api_key: string;
+        };
         /** SubtitleConfig */
         SubtitleConfig: {
             /**
@@ -3123,38 +3761,6 @@ export interface components {
             codec?: string | null;
             /** Language */
             language?: string | null;
-        };
-        /** OpenSubtitlesProviderConfig */
-        OpenSubtitlesProviderConfig: {
-            /**
-             * Enabled
-             * @description Enable this subtitle provider
-             * @default false
-             */
-            enabled: boolean;
-            /** @description OpenSubtitles username */
-            username?: string;
-            /** @description OpenSubtitles password */
-            password?: string;
-            /** @description OpenSubtitles user agent */
-            user_agent?: string;
-            /** @description Allow fallback to anonymous login when username/password are empty. */
-            allow_anonymous?: boolean;
-        };
-        /** SubDLProviderConfig */
-        SubDLProviderConfig: {
-            /**
-             * Enabled
-             * @description Enable SubDL provider
-             * @default false
-             */
-            enabled: boolean;
-            /**
-             * Api Key
-             * @description SubDL API key (required when enabled)
-             * @default
-             */
-            api_key: string;
         };
         /** SubtitleProvidersDict */
         SubtitleProvidersDict: {
@@ -3288,7 +3894,7 @@ export interface components {
             enabled: boolean;
             /**
              * Api Key
-             * @description Trakt API key
+             * @description Trakt Client ID (from trakt.tv/oauth/applications — not the Client Secret)
              * @default
              */
             api_key: string;
@@ -3363,6 +3969,19 @@ export interface components {
             /** Auth Url */
             auth_url: string;
         };
+        /** TraktOAuthStatusResponse */
+        TraktOAuthStatusResponse: {
+            /** Connected */
+            connected: boolean;
+            /** Has Client Id */
+            has_client_id: boolean;
+            /** Has Client Secret */
+            has_client_secret: boolean;
+            /** Redirect Uri */
+            redirect_uri: string;
+            /** Redirect Uri Hint */
+            redirect_uri_hint: string;
+        };
         /** TraktOauthModel */
         TraktOauthModel: {
             /**
@@ -3379,7 +3998,7 @@ export interface components {
             oauth_client_secret: string;
             /**
              * Oauth Redirect Uri
-             * @description Trakt OAuth redirect URI
+             * @description Trakt OAuth redirect URI — must match the Redirect URI registered at trakt.tv/oauth/applications. For CineFlow Connect, use your frontend ORIGIN + /api/trakt/oauth/callback (e.g. http://localhost:3000/api/trakt/oauth/callback), not the backend /api/v1/trakt/oauth/callback (that route requires an API key).
              * @default
              */
             oauth_redirect_uri: string;
@@ -3422,7 +4041,7 @@ export interface components {
              * Library Path
              * Format: path
              * @description Path to which your media library mount point
-             * @default /path/to/library/mount
+             * @default \path\to\library\mount
              */
             library_path: string;
             /** @description Plex library configuration */
@@ -3463,6 +4082,10 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
         /**
          * VideoMetadata
@@ -3546,10 +4169,14 @@ export interface operations {
     };
     backup_database: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -3584,10 +4211,14 @@ export interface operations {
     };
     download_backup: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 filename: string;
             };
@@ -3622,10 +4253,14 @@ export interface operations {
     };
     restore_database: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -3666,9 +4301,14 @@ export interface operations {
         parameters: {
             query?: {
                 filename?: string | null;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3703,10 +4343,14 @@ export interface operations {
     };
     health: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -3739,12 +4383,58 @@ export interface operations {
             };
         };
     };
+    prometheus_metrics: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     download_user_info: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -3779,10 +4469,14 @@ export interface operations {
     };
     generate_apikey: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -3817,10 +4511,14 @@ export interface operations {
     };
     services: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -3857,10 +4555,14 @@ export interface operations {
     };
     trakt_oauth_initiate: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -3893,14 +4595,103 @@ export interface operations {
             };
         };
     };
+    trakt_oauth_status: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TraktOAuthStatusResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     trakt_oauth_callback: {
         parameters: {
             query: {
                 /** @description The OAuth code returned by Trakt */
                 code: string;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trakt_oauth_disconnect: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3935,10 +4726,14 @@ export interface operations {
     };
     stats: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -3973,10 +4768,14 @@ export interface operations {
     };
     logs: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4011,10 +4810,14 @@ export interface operations {
     };
     events: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4049,10 +4852,14 @@ export interface operations {
     };
     mount: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4087,10 +4894,14 @@ export interface operations {
     };
     upload_logs: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4126,9 +4937,16 @@ export interface operations {
     fetch_calendar: {
         parameters: {
             query?: {
-                api_key?: string | null;
+                start_date?: string | null;
+                end_date?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4163,10 +4981,14 @@ export interface operations {
     };
     get_vfs_stats: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4201,10 +5023,14 @@ export interface operations {
     };
     generate_debug_bundle: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4239,10 +5065,14 @@ export interface operations {
     };
     get_states: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4294,9 +5124,14 @@ export interface operations {
                 search?: string | null;
                 /** @description Include extended item details */
                 extended?: boolean;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4331,10 +5166,14 @@ export interface operations {
     };
     add_items: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4378,9 +5217,14 @@ export interface operations {
                 media_type: "movie" | "tv" | "item";
                 /** @description Whether to include extended information */
                 extended?: boolean;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path: {
                 /**
                  * @description The ID of the media item. For 'item' type, use the numeric item ID;
@@ -4423,10 +5267,14 @@ export interface operations {
     };
     reset_items: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4465,10 +5313,14 @@ export interface operations {
     };
     retry_items: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4507,10 +5359,14 @@ export interface operations {
     };
     retry_library_items: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4545,10 +5401,14 @@ export interface operations {
     };
     remove_item: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4587,10 +5447,14 @@ export interface operations {
     };
     get_item_streams: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description The ID of the media item */
                 item_id: number;
@@ -4628,10 +5492,14 @@ export interface operations {
     };
     blacklist_item_stream: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description The ID of the media item */
                 item_id: number;
@@ -4671,10 +5539,14 @@ export interface operations {
     };
     unblacklist_item_stream: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description The ID of the media item */
                 item_id: number;
@@ -4714,10 +5586,14 @@ export interface operations {
     };
     reset_item_streams: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description The ID of the media item */
                 item_id: number;
@@ -4755,10 +5631,14 @@ export interface operations {
     };
     pause_items: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4797,10 +5677,14 @@ export interface operations {
     };
     unpause_items: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4839,10 +5723,14 @@ export interface operations {
     };
     composite_reindexer: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4881,10 +5769,14 @@ export interface operations {
     };
     get_item_aliases: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description The ID of the media item */
                 item_id: number;
@@ -4922,10 +5814,14 @@ export interface operations {
     };
     get_item_metadata: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description The ID of the media item */
                 item_id: number;
@@ -4941,6 +5837,228 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MediaMetadata"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ranking_meta: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingMetaResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ranking_presets: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scrape_funnel_summary: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunnelSummaryResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_ranking_patterns: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatternValidateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatternValidateResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_ranking: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RankingTestRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingTestResponse"];
                 };
             };
             /** @description Not found */
@@ -4986,9 +6104,14 @@ export interface operations {
                 min_filesize_override?: number | null;
                 /** @description Maximum filesize in MB */
                 max_filesize_override?: number | null;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5032,9 +6155,14 @@ export interface operations {
                 imdb_id?: string | null;
                 /** @description The media type */
                 media_type?: ("movie" | "tv") | null;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5062,10 +6190,14 @@ export interface operations {
     };
     session_action: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description Identifier of the scraping session */
                 session_id: string;
@@ -5102,10 +6234,14 @@ export interface operations {
     };
     auto_scrape: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -5137,10 +6273,14 @@ export interface operations {
     };
     parse_torrent_titles: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -5189,9 +6329,14 @@ export interface operations {
                     | null;
                 /** @description Number of requests to fetch */
                 take?: number;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5219,10 +6364,14 @@ export interface operations {
     };
     get_settings_schema: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -5264,9 +6413,14 @@ export interface operations {
                 keys: string;
                 /** @description Title of the schema */
                 title?: string;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5303,10 +6457,14 @@ export interface operations {
     };
     load_settings: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -5341,10 +6499,14 @@ export interface operations {
     };
     save_settings: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -5379,10 +6541,14 @@ export interface operations {
     };
     get_all_settings: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -5417,10 +6583,14 @@ export interface operations {
     };
     get_settings: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description Comma-separated list of settings paths */
                 paths: string;
@@ -5460,10 +6630,14 @@ export interface operations {
     };
     set_all_settings: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -5504,10 +6678,14 @@ export interface operations {
     };
     set_settings: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description Comma-separated list of settings paths to update */
                 paths: string;
@@ -5529,6 +6707,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_settings_connection: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path: {
+                /** @description Integration to probe (saved settings only) */
+                service:
+                    | "real_debrid"
+                    | "all_debrid"
+                    | "debrid_link"
+                    | "plex"
+                    | "jackett"
+                    | "prowlarr"
+                    | "zilean"
+                    | "opensubtitles"
+                    | "subdl";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionTestResponse"];
                 };
             };
             /** @description Not found */
@@ -5587,12 +6819,54 @@ export interface operations {
             };
         };
     };
-    get_event_types_api_v1_stream_event_types_get: {
+    plex_webhook_api_v1_webhook_plex_post: {
         parameters: {
             query?: {
                 api_key?: string | null;
             };
             header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlexWebhookResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_event_types_api_v1_stream_event_types_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5627,10 +6901,14 @@ export interface operations {
     };
     stream_events_api_v1_stream__event_type__get: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 /** @description The type of event to stream */
                 event_type: string;
@@ -5668,10 +6946,14 @@ export interface operations {
     };
     stream_file_api_v1_stream_file__item_id__get: {
         parameters: {
-            query?: {
-                api_key?: string | null;
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
             };
-            header?: never;
             path: {
                 item_id: number;
             };
@@ -5713,9 +6995,14 @@ export interface operations {
                 profile?: string | null;
                 level?: string | null;
                 resolution?: string | null;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path: {
                 item_id: number;
             };
@@ -5757,9 +7044,14 @@ export interface operations {
                 profile?: string | null;
                 level?: string | null;
                 resolution?: string | null;
-                api_key?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
             path: {
                 item_id: number;
                 seq: number;
@@ -5783,6 +7075,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    proxy_tmdb_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tmdb_path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
             };
             /** @description Validation Error */
             422: {
