@@ -86,7 +86,7 @@
         "typescript-eslint": "^8.70.0",
         "vaul-svelte": "1.0.0-next.7",
         "vite": "^7.3.6",
-        "vitest": "4.1.6"
+        "vitest": "5.0.0"
     },
     "dependencies": {
         "@better-auth/passkey": "^1.7.3",
