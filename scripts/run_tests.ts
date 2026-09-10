@@ -10,6 +10,7 @@ const testModules = [
     "../src/lib/components/media/riven/item-request-parser.test.ts",
     "../src/lib/components/settings/settings-safety.test.ts",
     "../src/lib/components/settings/ranking-presets.clone.test.ts",
+    "../src/lib/components/auth/auth-components.test.ts",
     "../src/lib/server/admin-functions.test.ts"
 ];
 

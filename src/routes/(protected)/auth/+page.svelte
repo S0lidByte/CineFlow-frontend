@@ -26,9 +26,8 @@
     let showDeleteConfirm = $state(false);
     let isDeletingAccount = $state(false);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function hasCredentialProvider(providers: any[]): boolean {
-        return providers.some((provider) => provider.providerId === "credential");
+    function hasCredentialProvider(accounts?: Array<{ providerId: string }> | null): boolean {
+        return Array.isArray(accounts) && accounts.some((a) => a.providerId === "credential");
     }
 
     async function confirmDeleteAccount() {
@@ -36,9 +35,9 @@
         try {
             await authClient.deleteUser({
                 fetchOptions: {
-                    onSuccess: () => {
+                    onSuccess: async () => {
                         toast.success("Account deleted successfully.");
-                        goto(resolve("/auth/login"));
+                        await goto(resolve("/auth/login"), { invalidateAll: true });
                     },
                     onError: (ctx) => {
                         toast.error(ctx.error.message || "Failed to delete account.");
@@ -83,19 +82,19 @@
             <p class="text-muted-foreground text-sm">
                 Member since {dateUtils.formatDate(
                     data.user.createdAt ? new Date(data.user.createdAt).toISOString() : null
-                )}
+                ) ?? "Unknown"}
             </p>
 
             <p class="text-muted-foreground text-sm">
                 Last updated {dateUtils.formatDate(
                     data.user.updatedAt ? new Date(data.user.updatedAt).toISOString() : null
-                )}
+                ) ?? "Unknown"}
             </p>
 
             <p class="text-muted-foreground text-sm">
                 Session expires at {dateUtils.formatDate(
                     data.session.expiresAt ? new Date(data.session.expiresAt).toISOString() : null
-                )}
+                ) ?? "Unknown"}
             </p>
         </div>
     </div>
@@ -138,8 +137,8 @@
             onclick={async () => {
                 await authClient.signOut({
                     fetchOptions: {
-                        onSuccess: () => {
-                            goto(resolve("/auth/login"));
+                        onSuccess: async () => {
+                            await goto(resolve("/auth/login"), { invalidateAll: true });
                         }
                     }
                 });

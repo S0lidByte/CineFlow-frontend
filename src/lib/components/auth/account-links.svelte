@@ -4,6 +4,7 @@
     import Link2 from "@lucide/svelte/icons/link-2";
     import Link2Off from "@lucide/svelte/icons/link-2-off";
     import { authClient } from "$lib/auth-client";
+    import { isOnlyLoginMethod as checkIsOnlyLoginMethod } from "$lib/utils/auth";
     import { toast } from "svelte-sonner";
     import { goto } from "$app/navigation";
     import { resolve } from "$app/paths";
@@ -51,7 +52,7 @@
                             {@const linkedAccount = accounts.find(
                                 (account) => account.providerId === providerId
                             )}
-                            {@const isOnlyLoginMethod = accounts.length <= 1}
+                            {@const isOnlyLoginMethod = checkIsOnlyLoginMethod(accounts, providers)}
                             <div class="flex items-center gap-2">
                                 {#if isOnlyLoginMethod}
                                     <span

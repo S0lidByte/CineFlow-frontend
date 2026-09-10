@@ -2,6 +2,7 @@
     import { authClient } from "$lib/auth-client";
     import * as Card from "$lib/components/ui/card/index.js";
     import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+    import { parsePasskeyError } from "$lib/utils/auth";
     import { toast } from "svelte-sonner";
     import Fingerprint from "@lucide/svelte/icons/fingerprint";
     import Pencil from "@lucide/svelte/icons/pencil";
@@ -65,12 +66,12 @@
                         loadPasskeys();
                     },
                     onError(context) {
-                        toast.error(context.error.message || "Failed to register passkey");
+                        toast.error(parsePasskeyError(context.error));
                     }
                 }
             });
-        } catch {
-            toast.error("Failed to register passkey");
+        } catch (err) {
+            toast.error(parsePasskeyError(err));
         } finally {
             isRegisteringPasskey = false;
         }
@@ -127,12 +128,12 @@
                         loadPasskeys();
                     },
                     onError(context) {
-                        toast.error(context.error.message || "Failed to delete passkey");
+                        toast.error(parsePasskeyError(context.error));
                     }
                 }
             });
-        } catch {
-            toast.error("Failed to delete passkey");
+        } catch (err) {
+            toast.error(parsePasskeyError(err));
         } finally {
             isDeletingPasskey = false;
         }

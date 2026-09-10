@@ -3,6 +3,7 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { getInitials } from "$lib/utils";
+    import { sanitizeAvatarUrl } from "$lib/utils/auth";
     import Check from "@lucide/svelte/icons/check";
     import Sparkles from "@lucide/svelte/icons/sparkles";
     import Link from "@lucide/svelte/icons/link";
@@ -10,14 +11,20 @@
 
     interface Props {
         value: string;
-        userName: string;
-        onSelect: (url: string) => void;
+        userName?: string;
+        onSelect?: (url: string) => void;
     }
 
     let { value = $bindable(""), userName = "User", onSelect }: Props = $props();
 
     let showCustomUrlInput = $state(false);
     let customUrlText = $state("");
+
+    $effect(() => {
+        if (value && !PRESETS.some((p) => p.url === value)) {
+            customUrlText = value;
+        }
+    });
 
     const PRESETS = [
         {
@@ -85,13 +92,13 @@
 
     function selectPreset(url: string) {
         value = url;
-        onSelect(url);
+        onSelect?.(url);
     }
 
     function applyCustomUrl() {
-        const trimmed = customUrlText.trim();
-        value = trimmed;
-        onSelect(trimmed);
+        const sanitized = sanitizeAvatarUrl(customUrlText);
+        value = sanitized;
+        onSelect?.(sanitized);
     }
 </script>
 
@@ -176,7 +183,13 @@
                     type="url"
                     placeholder="https://example.com/avatar.png"
                     bind:value={customUrlText}
-                    class="h-8 text-xs" />
+                    class="h-8 text-xs"
+                    onkeydown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            applyCustomUrl();
+                        }
+                    }} />
                 <Button
                     type="button"
                     size="sm"

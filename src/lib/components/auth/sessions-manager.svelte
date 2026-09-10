@@ -10,8 +10,8 @@
     import LoaderCircle from "@lucide/svelte/icons/loader-circle";
     import RefreshCw from "@lucide/svelte/icons/refresh-cw";
     import { authClient } from "$lib/auth-client";
+    import { parseUserAgent, formatAuthTimestamp } from "$lib/utils/auth";
     import { toast } from "svelte-sonner";
-    import * as dateUtils from "$lib/utils/date";
     import { onMount } from "svelte";
 
     interface SessionItem {
@@ -35,26 +35,20 @@
     let revokingToken = $state<string | null>(null);
     let isRevokingOthers = $state(false);
     let showRevokeOthersConfirm = $state(false);
+    let lastSyncedInitialSessions = $state<SessionItem[] | null>(null);
 
     $effect(() => {
-        if (initialSessions && initialSessions.length > 0 && sessions.length === 0) {
-            sessions = initialSessions;
+        if (initialSessions !== lastSyncedInitialSessions) {
+            lastSyncedInitialSessions = initialSessions;
+            sessions = initialSessions ?? [];
         }
     });
 
     onMount(() => {
-        if (!initialSessions.length) {
+        if (!initialSessions || !initialSessions.length) {
             void fetchSessions();
         }
     });
-
-    function formatTimestamp(value: Date | string | number | null | undefined): string {
-        if (!value) return "Unknown";
-        if (value instanceof Date) return dateUtils.formatDate(value.toISOString()) ?? "Unknown";
-        if (typeof value === "number")
-            return dateUtils.formatDate(new Date(value).toISOString()) ?? "Unknown";
-        return dateUtils.formatDate(String(value)) ?? "Unknown";
-    }
 
     async function fetchSessions() {
         isLoading = true;
@@ -104,32 +98,6 @@
             isRevokingOthers = false;
         }
     }
-
-    function parseDevice(userAgent?: string | null) {
-        if (!userAgent) return { type: "desktop", name: "Unknown Device / Browser" };
-        const ua = userAgent.toLowerCase();
-
-        let os = "Unknown OS";
-        if (ua.includes("windows")) os = "Windows";
-        else if (ua.includes("macintosh") || ua.includes("mac os")) os = "macOS";
-        else if (ua.includes("android")) os = "Android";
-        else if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ios")) os = "iOS";
-        else if (ua.includes("linux")) os = "Linux";
-
-        let browser = "Browser";
-        if (ua.includes("edg/")) browser = "Edge";
-        else if (ua.includes("chrome") && !ua.includes("edg/")) browser = "Chrome";
-        else if (ua.includes("safari") && !ua.includes("chrome")) browser = "Safari";
-        else if (ua.includes("firefox")) browser = "Firefox";
-        else if (ua.includes("opr") || ua.includes("opera")) browser = "Opera";
-
-        const isMobile = ua.includes("mobile") || ua.includes("android") || ua.includes("iphone");
-
-        return {
-            type: isMobile ? "mobile" : "desktop",
-            name: `${browser} on ${os}`
-        };
-    }
 </script>
 
 <Card.Root>
@@ -175,7 +143,7 @@
             <div class="divide-border/50 flex flex-col divide-y">
                 {#each sessions as s (s.id || s.token)}
                     {@const isCurrent = s.token === currentSessionToken}
-                    {@const device = parseDevice(s.userAgent)}
+                    {@const device = parseUserAgent(s.userAgent)}
                     <div
                         class="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div class="flex items-start gap-3">
@@ -204,9 +172,9 @@
                                         <span>IP: {s.ipAddress}</span>
                                         <span>•</span>
                                     {/if}
-                                    <span>Signed in {formatTimestamp(s.createdAt)}</span>
+                                    <span>Signed in {formatAuthTimestamp(s.createdAt)}</span>
                                     <span>•</span>
-                                    <span>Expires {formatTimestamp(s.expiresAt)}</span>
+                                    <span>Expires {formatAuthTimestamp(s.expiresAt)}</span>
                                 </div>
                             </div>
                         </div>
