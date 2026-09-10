@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.19.0...riven-frontend-v1.20.0) (2026-09-10)
+
+
+### Features
+
+* **api:** synchronize generated client and test runner ([355a0a0](https://github.com/S0lidByte/CineFlow-frontend/commit/355a0a0543477686c6e441457f833fb5f9daaca4))
+* **testing:** add vitest baseline and portable openapi generation with local fallback ([db6aa7e](https://github.com/S0lidByte/CineFlow-frontend/commit/db6aa7efe1987f0f1e4a7c7bb482d65b9fa9c613))
+
 ## [1.19.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.18.0...riven-frontend-v1.19.0) (2026-09-10)
 
 
