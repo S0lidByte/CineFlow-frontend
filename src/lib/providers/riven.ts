@@ -774,6 +774,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/operations/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Operation Timeline
+         * @description List historical and active operations with redaction and filtering.
+         */
+        get: operations["list_operation_timeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/timeline/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream Operation Timeline
+         * @description Stream live operational updates via Server-Sent Events (SSE).
+         */
+        get: operations["stream_operation_timeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/timeline/{operation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Operation Timeline Item
+         * @description Get details for a single operation ledger item.
+         */
+        get: operations["get_operation_timeline_item"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/timeline/{operation_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry Operation Timeline Item
+         * @description Re-schedule a failed or dead-lettered operation for immediate retry.
+         */
+        post: operations["retry_operation_timeline_item"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ranking/meta": {
         parameters: {
             query?: never;
@@ -2668,6 +2748,81 @@ export interface components {
              * @default true
              */
             allow_anonymous: boolean;
+        };
+        /** OperationRetryResponse */
+        OperationRetryResponse: {
+            /** Success */
+            success: boolean;
+            /** Message */
+            message: string;
+            operation?: components["schemas"]["OperationTimelineItem"] | null;
+        };
+        /** OperationTimelineItem */
+        OperationTimelineItem: {
+            /** Id */
+            id: string;
+            /** Correlation Id */
+            correlation_id: string;
+            /** Media Item Id */
+            media_item_id?: number | null;
+            /** Operation Type */
+            operation_type: string;
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /** Status */
+            status: string;
+            /**
+             * Attempt Count
+             * @default 0
+             */
+            attempt_count: number;
+            /** Idempotency Key */
+            idempotency_key?: string | null;
+            /**
+             * Scheduled At
+             * Format: date-time
+             */
+            scheduled_at: string;
+            /** Lease Expires At */
+            lease_expires_at?: string | null;
+            /** Worker Id */
+            worker_id?: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /** Completed At */
+            completed_at?: string | null;
+            /** Error Classification */
+            error_classification?: string | null;
+            /** Error Message */
+            error_message?: string | null;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** OperationTimelineListResponse */
+        OperationTimelineListResponse: {
+            /** Items */
+            items: components["schemas"]["OperationTimelineItem"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
         };
         /**
          * OptionsConfig
@@ -5837,6 +5992,193 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MediaMetadata"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_operation_timeline: {
+        parameters: {
+            query?: {
+                /** @description Filter by operation status (pending, processing, completed, failed) */
+                status?: string | null;
+                /** @description Filter by operation type */
+                operation_type?: string | null;
+                /** @description Filter by correlation ID */
+                correlation_id?: string | null;
+                /** @description Filter by media item ID */
+                media_item_id?: number | null;
+                /** @description Max number of items to return */
+                limit?: number;
+                /** @description Pagination offset */
+                offset?: number;
+            };
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationTimelineListResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_operation_timeline: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_operation_timeline_item: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path: {
+                /** @description The UUID of the operation to retrieve */
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationTimelineItem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_operation_timeline_item: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path: {
+                /** @description The UUID of the operation to retry */
+                operation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationRetryResponse"];
                 };
             };
             /** @description Not found */

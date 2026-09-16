@@ -82,6 +82,17 @@ export function createSseProxy({ locals, path, eventName, logScope }: SseProxyOp
                 };
             }
 
+            // Flush the response headers immediately. Without an initial event,
+            // the backend can remain silent until its 30-second keepalive and the
+            // browser cannot complete the SSE handshake.
+            const { error: readyError } = emit("ready", "{}");
+            if (readyError) {
+                reader.cancel();
+                return function stop() {
+                    abortController.abort();
+                };
+            }
+
             const decoder = new TextDecoder();
             let buffer = "";
             // Accumulate `data:` lines for multi-line SSE messages.

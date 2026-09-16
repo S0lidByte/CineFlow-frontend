@@ -12,7 +12,10 @@ const localSchemaPath = path.resolve(scriptDirectory, "../../Triven_backend/open
 
 let schemaSource: string;
 
-if (BACKEND_URL) {
+if (process.env.USE_LOCAL_SCHEMA === "true" && fs.existsSync(localSchemaPath)) {
+    schemaSource = localSchemaPath;
+    console.log(`USE_LOCAL_SCHEMA is set. Using local schema file: ${localSchemaPath}`);
+} else if (BACKEND_URL) {
     schemaSource = new URL("openapi.json", `${BACKEND_URL.replace(/\/$/, "")}/`).href;
 } else if (fs.existsSync(localSchemaPath)) {
     schemaSource = localSchemaPath;

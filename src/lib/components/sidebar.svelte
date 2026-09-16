@@ -10,6 +10,7 @@
     import { resolve } from "$app/paths";
     import CalendarDays from "@lucide/svelte/icons/calendar-days";
     import FileClock from "@lucide/svelte/icons/file-clock";
+    import Activity from "@lucide/svelte/icons/activity";
     import Home from "@lucide/svelte/icons/home";
     import LayoutDashboard from "@lucide/svelte/icons/layout-dashboard";
     import LogOut from "@lucide/svelte/icons/log-out";
@@ -32,6 +33,7 @@
         { href: "/explore", icon: Search, label: "Explore" },
         { href: "/calendar", icon: CalendarDays, label: "Calendar" },
         { href: "/auth", icon: User, label: "Profile" },
+        { href: "/activity", icon: Activity, label: "Activity" },
         { href: "/settings", icon: Settings, label: "Settings" },
         { href: "/logs", icon: FileClock, label: "Logs" }
     ] as const;
