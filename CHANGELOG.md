@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.21.0...riven-frontend-v1.22.0) (2026-09-16)
+
+
+### Features
+
+* **activity:** add operational timeline activity dashboard and SSE proxy ([98d7cdd](https://github.com/S0lidByte/CineFlow-frontend/commit/98d7cdd9a53933cfb70e37fb8ca84b930ab35709))
+
 ## [1.21.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.20.0...riven-frontend-v1.21.0) (2026-09-10)
 
 
