@@ -48,13 +48,16 @@ export function createSseProxy({ locals, path, eventName, logScope }: SseProxyOp
         error(500, "Backend URL is not configured");
     }
 
+    const baseUrl = backendUrl.replace(/\/+$/, "");
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    const targetUrl = `${baseUrl}${normalizedPath}`;
     const actorHeaders = getActorHeadersForUser(locals.user);
 
     return produce(async function start({ emit, lock }) {
         const abortController = new AbortController();
 
         try {
-            const response = await fetch(`${backendUrl}${path}`, {
+            const response = await fetch(targetUrl, {
                 method: "GET",
                 headers: {
                     "x-api-key": env.BFF_API_KEY || "",
