@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.22.0...riven-frontend-v1.22.1) (2026-09-16)
+
+
+### Bug Fixes
+
+* **sse-proxy:** normalize base URL and path slashes for SSE proxying ([cf98fee](https://github.com/S0lidByte/CineFlow-frontend/commit/cf98fee136f7db86210307baeac200bd9ce3830d))
+
 ## [1.22.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.21.0...riven-frontend-v1.22.0) (2026-09-16)
 
 
