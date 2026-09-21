@@ -15,7 +15,7 @@ import {
     syncEpisodeDeepLink
 } from "./episode-details";
 import type { FilesystemEntry, RivenMediaItem } from "$lib/types/riven";
-import type { ParsedShowDetails } from "$lib/providers/parser";
+import type { ParsedShowDetails, TVDBEpisodeItem } from "$lib/providers/parser";
 
 console.log("Running Episode Details Sheet & Canonical Contract Unit Tests...");
 
@@ -453,6 +453,86 @@ console.log("Running Episode Details Sheet & Canonical Contract Unit Tests...");
     // Out of bounds season / episode
     const ep99 = mockShow.episodes.find((e) => e.seasonNumber === 1 && e.number === 99);
     assert.equal(ep99, undefined, "Non-existent episode 99 returns undefined");
+}
+
+// =========================================================================
+// 6. Episode Details Sheet State Lifecycle & Deep-Link Synchronization
+// =========================================================================
+{
+    // Simulate state machine transitions for Episode Details Sheet
+    interface EpisodeSheetState {
+        isOpen: boolean;
+        selection: { episode: TVDBEpisodeItem; rivenEpisode?: unknown } | null;
+        queryParams: URLSearchParams;
+    }
+
+    const state: EpisodeSheetState = {
+        isOpen: false,
+        selection: null,
+        queryParams: new URLSearchParams()
+    };
+
+    function openEpisode(ep: TVDBEpisodeItem, rivenEp?: unknown) {
+        state.selection = { episode: ep, rivenEpisode: rivenEp };
+        state.isOpen = true;
+        if (ep.seasonNumber != null && ep.number != null) {
+            state.queryParams = syncEpisodeDeepLink(state.queryParams, {
+                season: ep.seasonNumber,
+                episode: ep.number
+            });
+        }
+    }
+
+    function closeEpisode() {
+        state.isOpen = false;
+        state.selection = null;
+        state.queryParams = syncEpisodeDeepLink(state.queryParams, null);
+    }
+
+    // Step 1: Initial state is closed
+    assert.equal(state.isOpen, false, "Initial sheet state is closed");
+    assert.equal(state.selection, null, "Initial selection is null");
+    assert.equal(state.queryParams.toString(), "", "Initial query params are empty");
+
+    // Step 2: Open episode S1E1
+    const testEp: TVDBEpisodeItem = {
+        id: 1001,
+        seriesId: 1234,
+        seasonNumber: 1,
+        number: 1,
+        name: "Pilot",
+        overview: "Walter White is diagnosed.",
+        image: "s1e1.jpg",
+        aired: "2008-01-20",
+        runtime: 58,
+        nameTranslations: null,
+        overviewTranslations: null,
+        imageType: 1,
+        isMovie: 0,
+        seasons: null,
+        absoluteNumber: 1,
+        lastUpdated: "2023-01-01",
+        finaleType: null,
+        year: "2008"
+    };
+
+    openEpisode(testEp);
+    assert.equal(state.isOpen, true, "Opening episode sets isOpen to true");
+    const activeSel = state.selection as { episode: TVDBEpisodeItem } | null;
+    assert.equal(activeSel?.episode.id, 1001, "Selection has episode ID 1001");
+    assert.equal(state.queryParams.get("season"), "1", "Deep-link season query parameter is 1");
+    assert.equal(state.queryParams.get("episode"), "1", "Deep-link episode query parameter is 1");
+
+    // Step 3: Close episode sheet
+    closeEpisode();
+    assert.equal(state.isOpen, false, "Closing episode sets isOpen to false");
+    assert.equal(state.selection, null, "Closing episode resets selection to null");
+    assert.equal(state.queryParams.has("season"), false, "Closing episode removes season param");
+    assert.equal(state.queryParams.has("episode"), false, "Closing episode removes episode param");
+
+    // Step 4: Validate reactive sync when URL has no deep link
+    const parsedFromEmpty = parseEpisodeDeepLink(state.queryParams.toString());
+    assert.equal(parsedFromEmpty, null, "Parsed deep link is null after close");
 }
 
 console.log("All Episode Details Sheet & Canonical Contract Unit Tests passed successfully!");

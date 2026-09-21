@@ -384,7 +384,7 @@
 {/snippet}
 
 {#if isMobile.current}
-    <Drawer.Root {open} onOpenChange={handleOpenChange} direction="bottom">
+    <Drawer.Root bind:open onOpenChange={handleOpenChange} direction="bottom">
         <Drawer.Content class="flex max-h-[85vh] flex-col overflow-hidden outline-none">
             <div
                 class="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col overflow-hidden px-4 pb-6 md:px-6">
@@ -402,7 +402,7 @@
         </Drawer.Content>
     </Drawer.Root>
 {:else}
-    <Sheet.Root {open} onOpenChange={handleOpenChange}>
+    <Sheet.Root bind:open onOpenChange={handleOpenChange}>
         <Sheet.Content
             side="right"
             class="flex w-full flex-col overflow-hidden border-l border-white/10 bg-zinc-950/95 backdrop-blur-2xl sm:max-w-xl md:max-w-2xl lg:max-w-3xl">

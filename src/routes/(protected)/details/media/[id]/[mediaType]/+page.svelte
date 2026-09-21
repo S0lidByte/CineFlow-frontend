@@ -2,6 +2,7 @@
     import { browser } from "$app/environment";
     import { page } from "$app/state";
     import { resolve } from "$app/paths";
+    import { goto } from "$app/navigation";
     import { type PageProps } from "./$types";
     import type { ParsedShowDetails, TVDBEpisodeItem } from "$lib/providers/parser";
     import { fade, fly } from "svelte/transition";
@@ -118,7 +119,12 @@
             if (browser) {
                 const url = new URL(window.location.href);
                 url.searchParams.delete("play");
-                history.replaceState(history.state, "", url);
+                goto(resolve((url.pathname + url.search) as "/"), {
+                    replaceState: true,
+                    noScroll: true,
+                    keepFocus: true,
+                    invalidate: []
+                });
             }
         }
     });
@@ -185,6 +191,24 @@
         selectedSeason = getInitialSeason();
     });
 
+    function syncUrlQueryParams(season?: number | null, episode?: number | null) {
+        if (!browser) return;
+        const url = new URL(window.location.href);
+        if (season != null && episode != null) {
+            url.searchParams.set("season", season.toString());
+            url.searchParams.set("episode", episode.toString());
+        } else {
+            url.searchParams.delete("season");
+            url.searchParams.delete("episode");
+        }
+        goto(resolve((url.pathname + url.search) as "/"), {
+            replaceState: true,
+            noScroll: true,
+            keepFocus: true,
+            invalidate: []
+        });
+    }
+
     function openEpisodeDetails(
         episode: TVDBEpisodeItem | EpisodeItemData | SnippetEpisode,
         rivenEpisode?: RivenEpisode | SnippetRivenEpisode | null
@@ -196,13 +220,7 @@
             const deepLinkKey = getEpisodeDeepLinkKey(episode.seasonNumber, episode.number);
             handledEpisodeDeepLinkKey = deepLinkKey;
             highlightedEpisodeKey = deepLinkKey;
-
-            if (browser) {
-                const url = new URL(window.location.href);
-                url.searchParams.set("season", episode.seasonNumber.toString());
-                url.searchParams.set("episode", episode.number.toString());
-                history.replaceState(history.state, "", url);
-            }
+            syncUrlQueryParams(episode.seasonNumber, episode.number);
         }
     }
 
@@ -211,14 +229,7 @@
         if (!open) {
             activeEpisodeSelection = null;
             handledEpisodeDeepLinkKey = null;
-            if (browser) {
-                const url = new URL(window.location.href);
-                if (url.searchParams.has("season") || url.searchParams.has("episode")) {
-                    url.searchParams.delete("season");
-                    url.searchParams.delete("episode");
-                    history.replaceState(history.state, "", url);
-                }
-            }
+            syncUrlQueryParams(null, null);
         }
     }
 
@@ -229,6 +240,10 @@
         const episode = deepLinkEpisode;
         if (!season || !episode) {
             handledEpisodeDeepLinkKey = null;
+            if (isEpisodeSheetOpen) {
+                isEpisodeSheetOpen = false;
+                activeEpisodeSelection = null;
+            }
             return;
         }
 
