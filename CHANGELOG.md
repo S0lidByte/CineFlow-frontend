@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.22.1...riven-frontend-v1.23.0) (2026-09-21)
+
+
+### Features
+
+* **media:** add adaptive episode details sheet and deep linking ([eb95dab](https://github.com/S0lidByte/CineFlow-frontend/commit/eb95dabb63d43d283539aebe7d7b3f3957e143ee))
+
 ## [1.22.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.22.0...riven-frontend-v1.22.1) (2026-09-16)
 
 
