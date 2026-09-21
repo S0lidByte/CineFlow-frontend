@@ -15,22 +15,10 @@ import { resolveId, type ResolveResult } from "$lib/services/resolver";
 import { calculateSimilarity } from "$lib/utils/string";
 import * as dateUtils from "$lib/utils/date";
 import { getActorHeadersForUser } from "$lib/server/permissions";
+import { ALLOWED_INDEXERS, parsePositiveIntegerId } from "./media-params";
 
 const logger = createScopedLogger("media-details");
 const TVDB_API_KEY = "6be85335-5c4f-4d8d-b945-d3ed0eb8cdce";
-export const ALLOWED_INDEXERS = new Set(["tvdb", "tmdb"]);
-
-export function parsePositiveIntegerId(value: string | null | undefined): number | null {
-    if (!value || typeof value !== "string") {
-        return null;
-    }
-    const trimmed = value.trim();
-    if (!/^\d+$/.test(trimmed)) {
-        return null;
-    }
-    const parsed = Number(trimmed);
-    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
-}
 
 /**
  * Cache for failed ID resolutions to prevent hitting APIs repeatedly for unresolvable content.

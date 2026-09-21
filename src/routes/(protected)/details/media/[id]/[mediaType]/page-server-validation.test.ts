@@ -4,7 +4,7 @@
  */
 
 import assert from "node:assert/strict";
-import { ALLOWED_INDEXERS, parsePositiveIntegerId } from "./+page.server";
+import { ALLOWED_INDEXERS, parsePositiveIntegerId } from "./media-params";
 
 console.log("Running Media Details Server Loader Validation Tests...");
 
