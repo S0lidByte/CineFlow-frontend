@@ -723,7 +723,7 @@ export interface TVDBBaseItem {
     };
 }
 
-interface TVDBEpisodeItem {
+export interface TVDBEpisodeItem {
     id: number;
     seriesId: number;
     name: string;

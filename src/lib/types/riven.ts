@@ -34,8 +34,13 @@ export interface MediaMetadata {
 }
 
 export interface FilesystemEntry {
+    id?: number;
     file_size?: number;
     original_filename?: string;
+    available_in_vfs?: boolean;
+    unrestricted_url?: string | null;
+    download_url?: string | null;
+    provider?: string | null;
 }
 
 export interface RivenEpisode {

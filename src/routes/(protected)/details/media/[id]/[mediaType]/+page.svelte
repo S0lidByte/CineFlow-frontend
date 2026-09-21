@@ -2,9 +2,8 @@
     import { browser } from "$app/environment";
     import { page } from "$app/state";
     import { resolve } from "$app/paths";
-    import { replaceState } from "$app/navigation";
     import { type PageProps } from "./$types";
-    import type { ParsedShowDetails } from "$lib/providers/parser";
+    import type { ParsedShowDetails, TVDBEpisodeItem } from "$lib/providers/parser";
     import { fade, fly } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
     import { tick } from "svelte";
@@ -12,18 +11,15 @@
     import { Badge } from "$lib/components/ui/badge/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
     import * as Dialog from "$lib/components/ui/dialog/index.js";
-    import * as Sheet from "$lib/components/ui/sheet/index.js";
-    import * as Drawer from "$lib/components/ui/drawer/index.js";
     import Play from "@lucide/svelte/icons/play";
-    import FileJson from "@lucide/svelte/icons/file-json";
     import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
     import RefreshCw from "@lucide/svelte/icons/refresh-cw";
-    import Trash2 from "@lucide/svelte/icons/trash-2";
     import Search from "@lucide/svelte/icons/search";
     import Pause from "@lucide/svelte/icons/pause";
     import Download from "@lucide/svelte/icons/download";
+    import Trash2 from "@lucide/svelte/icons/trash-2";
+    import FileJson from "@lucide/svelte/icons/file-json";
     import { cn } from "$lib/utils";
-    import { IsMobile } from "$lib/hooks/is-mobile.svelte";
     import PortraitCard from "$lib/components/media/portrait-card.svelte";
     import type { RivenEpisode } from "$lib/types/riven";
     import type { SeasonInfo } from "$lib/components/media/riven/season-selector.svelte";
@@ -38,6 +34,9 @@
     import CollectionSheet from "$lib/components/media/collection-sheet.svelte";
     import LandscapeCard from "$lib/components/media/landscape-card.svelte";
     import StatusBadge from "$lib/components/media/status-badge.svelte";
+    import EpisodeDetailsSheet, {
+        type EpisodeItemData
+    } from "$lib/components/media/episode-details-sheet.svelte";
     import VideoPlayer from "$lib/components/media/video-player.svelte";
     import { toast } from "svelte-sonner";
     import X from "@lucide/svelte/icons/x";
@@ -51,6 +50,7 @@
         overview?: string | null;
         aired?: string | null;
         runtime?: number | null;
+        seasonNumber?: number | null;
     }
 
     interface SnippetRivenEpisode extends Partial<RivenEpisode> {
@@ -59,7 +59,13 @@
         media_metadata?: RivenEpisode["media_metadata"];
     }
 
-    const isMobile = new IsMobile();
+    interface ActiveEpisodeSelection {
+        episode: EpisodeItemData;
+        rivenEpisode?: RivenEpisode | Partial<RivenEpisode> | null;
+    }
+
+    let activeEpisodeSelection = $state<ActiveEpisodeSelection | null>(null);
+    let isEpisodeSheetOpen = $state(false);
 
     const externalMeta: Record<string, { name: string; url: string }> = {
         imdb: { name: "IMDb", url: "https://www.imdb.com/title/" },
@@ -109,12 +115,11 @@
     $effect(() => {
         if (!playParamCleaned && showVideoPlayer && page.url.searchParams.has("play")) {
             playParamCleaned = true;
-            const url = new URL(page.url);
-            url.searchParams.delete("play");
-            replaceState(
-                resolve((url.pathname + url.search + url.hash) as "/"),
-                $state.snapshot(page.state)
-            );
+            if (browser) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete("play");
+                history.replaceState(history.state, "", url);
+            }
         }
     });
 
@@ -142,7 +147,7 @@
     ): string | null {
         if (seasonNumber === null || seasonNumber === undefined) return null;
         if (episodeNumber === null || episodeNumber === undefined) return null;
-        return `${seasonNumber}-${episodeNumber}`;
+        return `s${seasonNumber}-e${episodeNumber}`;
     }
 
     const deepLinkSeason = $derived.by(() =>
@@ -180,24 +185,81 @@
         selectedSeason = getInitialSeason();
     });
 
+    function openEpisodeDetails(
+        episode: TVDBEpisodeItem | EpisodeItemData | SnippetEpisode,
+        rivenEpisode?: RivenEpisode | SnippetRivenEpisode | null
+    ) {
+        activeEpisodeSelection = { episode, rivenEpisode };
+        isEpisodeSheetOpen = true;
+
+        if (episode.seasonNumber != null && episode.number != null) {
+            const deepLinkKey = getEpisodeDeepLinkKey(episode.seasonNumber, episode.number);
+            handledEpisodeDeepLinkKey = deepLinkKey;
+            highlightedEpisodeKey = deepLinkKey;
+
+            if (browser) {
+                const url = new URL(window.location.href);
+                url.searchParams.set("season", episode.seasonNumber.toString());
+                url.searchParams.set("episode", episode.number.toString());
+                history.replaceState(history.state, "", url);
+            }
+        }
+    }
+
+    function handleEpisodeSheetOpenChange(open: boolean) {
+        isEpisodeSheetOpen = open;
+        if (!open) {
+            activeEpisodeSelection = null;
+            handledEpisodeDeepLinkKey = null;
+            if (browser) {
+                const url = new URL(window.location.href);
+                if (url.searchParams.has("season") || url.searchParams.has("episode")) {
+                    url.searchParams.delete("season");
+                    url.searchParams.delete("episode");
+                    history.replaceState(history.state, "", url);
+                }
+            }
+        }
+    }
+
     $effect(() => {
         if (!browser || data.mediaDetails?.type !== "tv") return;
 
         const season = deepLinkSeason;
         const episode = deepLinkEpisode;
-        if (!season || !episode) return;
+        if (!season || !episode) {
+            handledEpisodeDeepLinkKey = null;
+            return;
+        }
 
         const deepLinkKey = getEpisodeDeepLinkKey(season, episode);
         if (!deepLinkKey || handledEpisodeDeepLinkKey === deepLinkKey) return;
 
-        const selectedSeasonNumber = parsePositiveIntParam(selectedSeason ?? null);
-        if (selectedSeasonNumber !== season) return;
-
         const details = data.mediaDetails.details as ParsedShowDetails;
-        const episodeExists = details.episodes?.some(
+        const matchedEpisode = details?.episodes?.find(
             (ep) => ep.seasonNumber === season && ep.number === episode
         );
-        if (!episodeExists) return;
+        if (!matchedEpisode) return;
+
+        const selectedSeasonNumber = parsePositiveIntParam(selectedSeason ?? null);
+        if (selectedSeasonNumber !== season) {
+            const hasRequestedSeason = details?.seasons?.some((s) => s.number === season);
+            if (hasRequestedSeason) {
+                selectedSeason = season.toString();
+            } else {
+                return;
+            }
+        }
+
+        const rivenSeason = data.riven?.seasons?.find((s) => s.season_number === season);
+        const rivenEpisode = rivenSeason?.episodes?.find((e) => e.episode_number === episode);
+
+        activeEpisodeSelection = {
+            episode: matchedEpisode,
+            rivenEpisode
+        };
+        isEpisodeSheetOpen = true;
+        handledEpisodeDeepLinkKey = deepLinkKey;
 
         const domId = getEpisodeCardDomId(season, episode);
         if (!domId) return;
@@ -209,7 +271,6 @@
 
                 el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
                 highlightedEpisodeKey = deepLinkKey;
-                handledEpisodeDeepLinkKey = deepLinkKey;
 
                 if (highlightResetTimeout) {
                     clearTimeout(highlightResetTimeout);
@@ -236,11 +297,24 @@
     // Never fall back to TMDB/TVDB external IDs — those are not Riven item PKs.
     // Actions (reset/retry/stream) must use data.riven.id only.
     let rivenId = $derived(data.riven?.id ?? undefined);
+    let activePlaybackItemId = $state<number | undefined>(undefined);
     let playbackItemId = $derived.by(() => {
+        if (activePlaybackItemId !== undefined) return activePlaybackItemId;
         if (rivenId === null || rivenId === undefined) return undefined;
 
         const parsed = Number(rivenId);
         return Number.isFinite(parsed) ? parsed : undefined;
+    });
+
+    function handleEpisodePlay(itemId: number) {
+        activePlaybackItemId = itemId;
+        showVideoPlayer = true;
+    }
+
+    $effect(() => {
+        if (!showVideoPlayer) {
+            activePlaybackItemId = undefined;
+        }
     });
 
     // For ratings, we need TMDB ID. For TV shows, check external_ids.tmdb first (in case URL has TVDB ID)
@@ -434,151 +508,6 @@
             {/if}
         {/snippet}
     </LandscapeCard>
-{/snippet}
-
-{#snippet episodeMetadata(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode | undefined)}
-    <div class="mt-2 flex flex-wrap items-center gap-2">
-        <span class="text-muted-foreground font-serif text-sm"
-            >{data.mediaDetails?.details.title}</span>
-        <span class="text-muted-foreground">•</span>
-        {#if episode.aired}<Badge variant="outline" class="font-mono text-xs">{episode.aired}</Badge
-            >{/if}
-        {#if episode.runtime}<Badge variant="outline" class="font-mono text-xs"
-                >{episode.runtime} min</Badge
-            >{/if}
-        {#if rivenEpisode}<StatusBadge
-                class="text-xs"
-                state={rivenEpisode.state ?? "Unknown"} />{/if}
-    </div>
-{/snippet}
-
-{#snippet episodeBody(episode: SnippetEpisode, rivenEpisode: SnippetRivenEpisode | undefined)}
-    <div class="mt-6 flex flex-1 flex-col gap-8 overflow-y-auto px-6 pb-36">
-        {#if episode.overview}
-            <p class="text-muted-foreground text-base leading-relaxed">
-                {episode.overview}
-            </p>
-        {/if}
-
-        {#if episode.image}
-            <div
-                class="relative w-full max-w-[640px] overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10">
-                <img
-                    alt={episode.name}
-                    class="aspect-video w-full object-cover"
-                    src={episode.image}
-                    loading="lazy" />
-            </div>
-        {/if}
-
-        {#if rivenEpisode?.id != null}
-            {@const epId =
-                typeof rivenEpisode.id === "number" ? rivenEpisode.id : Number(rivenEpisode.id)}
-            {#if Number.isFinite(epId)}
-                <ItemStreams itemId={epId} />
-            {/if}
-        {/if}
-
-        {#if rivenEpisode?.filesystem_entry || rivenEpisode?.media_metadata}
-            {@const meta = rivenEpisode.media_metadata}
-            {@const fs = rivenEpisode.filesystem_entry}
-            {@const video = meta?.video}
-            <div class="flex flex-col gap-6">
-                {@render sectionHeading("File Details")}
-                <div class="flex flex-col gap-4 text-sm">
-                    <!-- Filenames -->
-                    {#if meta?.filename}
-                        <div>
-                            <p
-                                class="text-primary font-mono text-xs font-semibold tracking-wider uppercase">
-                                Current Filename
-                            </p>
-                            <p class="text-muted-foreground mt-1 font-mono text-xs break-all">
-                                {meta.filename}
-                            </p>
-                        </div>
-                    {/if}
-
-                    <!-- Video -->
-                    {#if video}
-                        <div class="flex flex-col gap-2">
-                            <span
-                                class="text-primary font-mono text-xs font-semibold tracking-wider uppercase"
-                                >Video</span>
-                            <div class="flex flex-wrap gap-2">
-                                {#if video.resolution_width && video.resolution_height}<Badge
-                                        variant="outline"
-                                        class="font-mono text-xs"
-                                        >{video.resolution_width}x{video.resolution_height}</Badge
-                                    >{/if}
-                                {#if video.codec}<Badge variant="outline" class="font-mono text-xs"
-                                        >{video.codec}</Badge
-                                    >{/if}
-                                {#if video.hdr_type}<Badge
-                                        variant="outline"
-                                        class="font-mono text-xs">{video.hdr_type}</Badge
-                                    >{/if}
-                            </div>
-                        </div>
-                    {/if}
-
-                    <!-- Audio - Show ALL tracks -->
-                    {#if meta?.audio_tracks?.length}
-                        <div class="flex flex-col gap-2">
-                            <span
-                                class="text-primary font-mono text-xs font-semibold tracking-wider uppercase"
-                                >Audio</span>
-                            <div class="flex flex-wrap gap-2">
-                                {#each meta.audio_tracks as track, i (i)}
-                                    <Badge variant="outline" class="font-mono text-xs"
-                                        >{track.codec}{track.channels
-                                            ? track.channels === 8
-                                                ? " 7.1"
-                                                : track.channels === 6
-                                                  ? " 5.1"
-                                                  : ` ${track.channels}ch`
-                                            : ""}{track.language &&
-                                        typeof track.language === "string"
-                                            ? ` (${track.language.toUpperCase()})`
-                                            : ""}</Badge>
-                                {/each}
-                            </div>
-                        </div>
-                    {/if}
-
-                    <!-- Source -->
-                    {#if meta?.quality_source}
-                        <div class="flex flex-col gap-2">
-                            <span
-                                class="text-primary font-mono text-xs font-semibold tracking-wider uppercase"
-                                >Source</span>
-                            <div class="flex flex-wrap gap-2">
-                                <Badge variant="outline" class="font-mono text-xs"
-                                    >{meta.quality_source}</Badge>
-                                {#if meta?.is_remux}<Badge
-                                        variant="outline"
-                                        class="font-mono text-xs">REMUX</Badge
-                                    >{/if}
-                            </div>
-                        </div>
-                    {/if}
-
-                    <!-- Size -->
-                    {#if fs?.file_size}
-                        <div class="flex flex-col gap-2">
-                            <span
-                                class="text-primary font-mono text-xs font-semibold tracking-wider uppercase"
-                                >Size</span>
-                            <div class="flex items-center">
-                                <span class="text-muted-foreground font-mono text-xs"
-                                    >{formatSize(Number(fs.file_size))}</span>
-                            </div>
-                        </div>
-                    {/if}
-                </div>
-            </div>
-        {/if}
-    </div>
 {/snippet}
 
 <svelte:head>
@@ -953,7 +882,7 @@
                             <CollectionSheet
                                 collectionId={movieDetails.collection.id}
                                 collectionName={movieDetails.collection.name}>
-                                {#snippet trigger({ props })}
+                                {#snippet trigger({ props }: { props: Record<string, unknown> })}
                                     <button
                                         {...props}
                                         class="group border-border/50 relative block min-h-[6rem] w-full overflow-hidden rounded-xl border text-left shadow-lg transition-all duration-300 md:min-h-[9rem]">
@@ -1062,7 +991,8 @@
                                     (s) => s.season_number === Number(selectedSeason)
                                 )}
                                 {@const rivenEpisode = rivenSeason?.episodes?.find(
-                                    (e) => e.episode_number === episode.number
+                                    (candidate) =>
+                                        getRivenEpisodeNumber(candidate) === episode.number
                                 )}
                                 {@const episodeDeepLinkKey = getEpisodeDeepLinkKey(
                                     episode.seasonNumber,
@@ -1076,59 +1006,20 @@
                                     episode.number
                                 )}
 
-                                {#if isMobile.current}
-                                    <Drawer.Root direction="bottom">
-                                        <div
-                                            id={episodeDomId ?? undefined}
-                                            class={cn(
-                                                "rounded-xl transition-all duration-500",
-                                                isEpisodeDeepLinked &&
-                                                    "ring-primary ring-offset-background shadow-primary/20 shadow-lg ring-2 ring-offset-2"
-                                            )}>
-                                            <Drawer.Trigger class="group w-full text-left">
-                                                {@render episodeTrigger(episode, rivenEpisode)}
-                                            </Drawer.Trigger>
-                                        </div>
-                                        <Drawer.Content class="max-h-[85vh] outline-none">
-                                            <div class="mx-auto w-full max-w-4xl px-4 pb-6 md:px-6">
-                                                <Drawer.Header class="px-0 pt-2 pb-0 text-left">
-                                                    <Drawer.Title
-                                                        class="font-heading text-2xl font-bold tracking-tight">
-                                                        S{episode.seasonNumber}E{episode.number} - {episode.name}
-                                                    </Drawer.Title>
-                                                    {@render episodeMetadata(episode, rivenEpisode)}
-                                                </Drawer.Header>
-                                                {@render episodeBody(episode, rivenEpisode)}
-                                            </div>
-                                        </Drawer.Content>
-                                    </Drawer.Root>
-                                {:else}
-                                    <Sheet.Root>
-                                        <div
-                                            id={episodeDomId ?? undefined}
-                                            class={cn(
-                                                "rounded-xl transition-all duration-500",
-                                                isEpisodeDeepLinked &&
-                                                    "ring-primary ring-offset-background shadow-primary/20 shadow-lg ring-2 ring-offset-2"
-                                            )}>
-                                            <Sheet.Trigger class="group w-full text-left">
-                                                {@render episodeTrigger(episode, rivenEpisode)}
-                                            </Sheet.Trigger>
-                                        </div>
-                                        <Sheet.Content
-                                            side="right"
-                                            class="flex w-full flex-col overflow-hidden border-l border-white/10 bg-zinc-950/95 backdrop-blur-2xl sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
-                                            <Sheet.Header class="px-6 pt-6">
-                                                <Sheet.Title
-                                                    class="font-heading text-2xl font-bold tracking-tight">
-                                                    S{episode.seasonNumber}E{episode.number} - {episode.name}
-                                                </Sheet.Title>
-                                                {@render episodeMetadata(episode, rivenEpisode)}
-                                            </Sheet.Header>
-                                            {@render episodeBody(episode, rivenEpisode)}
-                                        </Sheet.Content>
-                                    </Sheet.Root>
-                                {/if}
+                                <div
+                                    id={episodeDomId ?? undefined}
+                                    class={cn(
+                                        "rounded-xl transition-all duration-500",
+                                        isEpisodeDeepLinked &&
+                                            "ring-primary ring-offset-background shadow-primary/20 shadow-lg ring-2 ring-offset-2"
+                                    )}>
+                                    <button
+                                        type="button"
+                                        class="group w-full cursor-pointer text-left focus:outline-none"
+                                        onclick={() => openEpisodeDetails(episode, rivenEpisode)}>
+                                        {@render episodeTrigger(episode, rivenEpisode)}
+                                    </button>
+                                </div>
                             {/each}
                         </div>
                     </section>
@@ -1506,4 +1397,14 @@
             </div>
         </Dialog.Content>
     </Dialog.Root>
+
+    <!-- Centralized Responsive Episode Details Sheet/Drawer -->
+    <EpisodeDetailsSheet
+        bind:open={isEpisodeSheetOpen}
+        episode={activeEpisodeSelection?.episode ?? null}
+        rivenEpisode={activeEpisodeSelection?.rivenEpisode ?? null}
+        showTitle={data.mediaDetails?.details.title}
+        externalId={data.mediaDetails?.details?.id?.toString() ?? null}
+        onPlay={handleEpisodePlay}
+        onOpenChange={handleEpisodeSheetOpenChange} />
 {/key}

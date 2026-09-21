@@ -10,6 +10,7 @@ const testModules = [
     "../src/lib/schemas/auth.test.ts",
     "../src/lib/providers/anilist.test.ts",
     "../src/lib/components/media/riven/item-request-parser.test.ts",
+    "../src/lib/components/media/episode-details-sheet.test.ts",
     "../src/lib/components/settings/settings-safety.test.ts",
     "../src/lib/components/settings/ranking-presets.clone.test.ts",
     "../src/lib/components/auth/auth-components.test.ts",
