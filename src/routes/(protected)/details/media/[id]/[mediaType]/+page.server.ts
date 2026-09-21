@@ -7,7 +7,7 @@ import type {
     TVDBBaseItem
 } from "$lib/providers/parser";
 import type { RivenMediaItem } from "$lib/types/riven";
-import { error, redirect, type Cookies } from "@sveltejs/kit";
+import { error, isHttpError, isRedirect, redirect, type Cookies } from "@sveltejs/kit";
 import { createCustomFetch } from "$lib/custom-fetch";
 import { createScopedLogger } from "$lib/logger";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,6 +18,19 @@ import { getActorHeadersForUser } from "$lib/server/permissions";
 
 const logger = createScopedLogger("media-details");
 const TVDB_API_KEY = "6be85335-5c4f-4d8d-b945-d3ed0eb8cdce";
+export const ALLOWED_INDEXERS = new Set(["tvdb", "tmdb"]);
+
+export function parsePositiveIntegerId(value: string | null | undefined): number | null {
+    if (!value || typeof value !== "string") {
+        return null;
+    }
+    const trimmed = value.trim();
+    if (!/^\d+$/.test(trimmed)) {
+        return null;
+    }
+    const parsed = Number(trimmed);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
 
 /**
  * Cache for failed ID resolutions to prevent hitting APIs repeatedly for unresolvable content.
@@ -240,11 +253,27 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
             error(400, "Invalid media type");
         }
 
-        if (!id || isNaN(Number(id))) {
-            error(400, "Invalid ID");
+        const parsedId = parsePositiveIntegerId(id);
+        if (!parsedId) {
+            error(400, "Invalid ID: must be a positive integer");
+        }
+
+        const indexerParam = url.searchParams.get("indexer");
+        if (indexerParam !== null && !ALLOWED_INDEXERS.has(indexerParam)) {
+            error(
+                400,
+                `Invalid indexer: '${indexerParam}'. Allowed values: ${Array.from(ALLOWED_INDEXERS).join(", ")}`
+            );
         }
 
         if (mediaType === "movie") {
+            if (indexerParam && indexerParam !== "tmdb") {
+                error(
+                    400,
+                    `Invalid indexer for movie: '${indexerParam}'. Movies only support TMDB indexer.`
+                );
+            }
+
             // Fetch Riven data in parallel with other requests (non-blocking)
             const rivenPromise = providers.riven
                 .GET("/api/v1/items/{id}", {
@@ -264,7 +293,7 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
                     providers.tmdb.GET(`/3/movie/{movie_id}`, {
                         params: {
                             path: {
-                                movie_id: Number(id)
+                                movie_id: parsedId
                             },
                             query: {
                                 append_to_response:
@@ -323,21 +352,20 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
             }
 
             // Check if the ID is already a TVDB ID (passed via query param from library)
-            const indexerParam = url.searchParams.get("indexer");
             const isAlreadyTvdbId = indexerParam === "tvdb";
 
             let tvdbId: number;
 
             if (isAlreadyTvdbId) {
                 // ID is already a TVDB ID, no resolution needed
-                tvdbId = Number(id);
+                tvdbId = parsedId;
             } else {
                 // Resolve TMDB ID to TVDB ID
                 const { data: resolved, error: resolveError } = await fetchWithStatus(
                     resolveId({
                         from: "tmdb",
                         to: "tvdb",
-                        id: Number(id),
+                        id: parsedId,
                         mediaType: "tv",
                         tvdbToken,
                         customFetch
@@ -754,8 +782,11 @@ export const load = (async ({ fetch, params, cookies, locals, request, url }) =>
             };
         }
     } catch (err) {
-        // Re-throw SvelteKit errors (like 400, 503) so they render the error page
-        if (err && typeof err === "object" && "status" in err && "body" in err) {
+        // Re-throw SvelteKit errors and redirects (like 400, 404, 502, 503, 307) so they render properly
+        if (isHttpError(err) || isRedirect(err)) {
+            throw err;
+        }
+        if (err && typeof err === "object" && "status" in err) {
             throw err;
         }
         logger.error("Unexpected error loading media details:", err);
