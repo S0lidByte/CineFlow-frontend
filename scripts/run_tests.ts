@@ -15,6 +15,7 @@ const testModules = [
     "../src/lib/components/settings/settings-safety.test.ts",
     "../src/lib/components/settings/ranking-presets.clone.test.ts",
     "../src/lib/components/auth/auth-components.test.ts",
+    "../src/lib/services/ratings-matcher.test.ts",
     "../src/lib/server/admin-functions.test.ts"
 ];
 
