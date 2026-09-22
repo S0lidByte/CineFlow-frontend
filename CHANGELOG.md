@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.3](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.23.2...riven-frontend-v1.23.3) (2026-09-22)
+
+
+### Bug Fixes
+
+* **frontend:** include existing item_id in TV auto scrape request payload ([aced627](https://github.com/S0lidByte/CineFlow-frontend/commit/aced6272a4bf592957f00e224c62ac87a6d3344a))
+
 ## [1.23.2](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.23.1...riven-frontend-v1.23.2) (2026-09-22)
 
 
