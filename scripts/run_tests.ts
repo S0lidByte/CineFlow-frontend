@@ -14,6 +14,7 @@ const testModules = [
     "../src/lib/components/media/collection-details.test.ts",
     "../src/routes/(protected)/details/media/[id]/[mediaType]/page-server-validation.test.ts",
     "../src/lib/components/settings/settings-safety.test.ts",
+    "../src/lib/components/settings/settings-schema-transform.test.ts",
     "../src/lib/components/settings/ranking-presets.clone.test.ts",
     "../src/lib/components/auth/auth-components.test.ts",
     "../src/lib/services/ratings-matcher.test.ts",

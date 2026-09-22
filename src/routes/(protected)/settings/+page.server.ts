@@ -23,6 +23,12 @@ import {
     type SettingsSearchEntry
 } from "$lib/components/settings/settings-field-index";
 import { labelNullablePathOptions } from "$lib/components/settings/settings-safety";
+import {
+    buildSettingsUiSchema,
+    pruneLibraryProfilesFromSchema,
+    pruneLibraryProfilesFromValue,
+    sanitizeSettingsSchemaTitles
+} from "$lib/components/settings/settings-schema-transform";
 import { perfCount, startPerfMark, endPerfMark } from "$lib/perf";
 import { createScopedLogger } from "$lib/logger";
 import { getActorHeadersForUser } from "$lib/server/permissions";
@@ -131,132 +137,6 @@ function setCachedSettingsSchema(cacheKey: string, schema: Record<string, unknow
         schema,
         expiresAt: Date.now() + SETTINGS_SCHEMA_CACHE_TTL_MS
     });
-}
-
-/** Remove library_profiles from filesystem schema defs so the dedicated tab owns that field. */
-function pruneLibraryProfilesFromSchema(schema: Record<string, unknown>): void {
-    if (!schema.$defs) return;
-    const defs = schema.$defs as Record<string, unknown>;
-    const fsModel = defs.FilesystemModel as Record<string, unknown> | undefined;
-    const fsProps = fsModel?.properties as Record<string, unknown> | undefined;
-    if (fsProps && fsProps.library_profiles !== undefined) {
-        delete fsProps.library_profiles;
-    }
-}
-
-function pruneLibraryProfilesFromValue(initialValue: Record<string, unknown>): void {
-    const fsVal = initialValue.filesystem as Record<string, unknown> | undefined;
-    if (fsVal && fsVal.library_profiles !== undefined) {
-        delete fsVal.library_profiles;
-    }
-}
-
-/** Pydantic/OpenAPI model class names that should not appear as UI headings. */
-function isNoiseSchemaTitle(title: string): boolean {
-    return (
-        title === "Settings" ||
-        /Model$/i.test(title) ||
-        /Config$/i.test(title) ||
-        /Dict$/i.test(title) ||
-        /Parameters$/i.test(title) ||
-        /ParametersDict$/i.test(title)
-    );
-}
-
-function humanizeSchemaKey(key: string): string {
-    return key
-        .replace(/_/g, " ")
-        .replace(/([a-z])([A-Z])/g, "$1 $2")
-        .replace(/\b\w/g, (c) => c.toUpperCase())
-        .replace(/\bConfig\b/gi, "")
-        .replace(/\bModel\b/gi, "")
-        .replace(/\bDict\b/gi, "")
-        .replace(/\s+/g, " ")
-        .trim();
-}
-
-/**
- * Strip noisy schema titles (ScraperModel, TorrentioConfig, …) and replace
- * with humanized key labels. Mutates in place.
- */
-function sanitizeSettingsSchemaTitles(schema: Record<string, unknown>): void {
-    const visit = (node: unknown, propertyKey?: string): void => {
-        if (!node || typeof node !== "object" || Array.isArray(node)) return;
-        const obj = node as Record<string, unknown>;
-
-        if (typeof obj.title === "string" && isNoiseSchemaTitle(obj.title)) {
-            if (propertyKey) {
-                obj.title = humanizeSchemaKey(propertyKey);
-            } else {
-                // Def title without a property key — strip suffix to readable form
-                obj.title = humanizeSchemaKey(
-                    obj.title.replace(/(Config|Model|Dict|ParametersDict|Parameters)$/i, "")
-                );
-            }
-        } else if (typeof obj.title === "string" && /(Config|Model|Dict)$/i.test(obj.title)) {
-            // Soft-clean titles that embed Config/Model even when not fully matched above
-            obj.title = humanizeSchemaKey(
-                obj.title.replace(/(Config|Model|Dict|ParametersDict)$/i, "")
-            );
-        }
-
-        if (obj.properties && typeof obj.properties === "object") {
-            for (const [key, value] of Object.entries(obj.properties as Record<string, unknown>)) {
-                visit(value, key);
-            }
-        }
-
-        if (obj.$defs && typeof obj.$defs === "object") {
-            for (const value of Object.values(obj.$defs as Record<string, unknown>)) {
-                visit(value);
-            }
-        }
-
-        if (obj.definitions && typeof obj.definitions === "object") {
-            for (const value of Object.values(obj.definitions as Record<string, unknown>)) {
-                visit(value);
-            }
-        }
-
-        if (obj.items) visit(obj.items);
-        if (Array.isArray(obj.anyOf)) obj.anyOf.forEach((v) => visit(v));
-        if (Array.isArray(obj.oneOf)) obj.oneOf.forEach((v) => visit(v));
-        if (Array.isArray(obj.allOf)) obj.allOf.forEach((v) => visit(v));
-    };
-
-    visit(schema);
-    if (typeof schema.title === "string" && isNoiseSchemaTitle(schema.title)) {
-        delete schema.title;
-    }
-}
-
-/**
- * Declarative map of schema key → SJSF UI component override.
- * Adding a new custom widget only requires a new entry here — no changes
- * to buildSettingsUiSchema itself.
- */
-const WIDGET_OVERRIDES: Record<string, Record<string, unknown>> = {
-    api_key: { "ui:components": { textWidget: "apiKeyWidget" } }
-};
-
-function buildSettingsUiSchema(properties: Record<string, unknown>, keys: string[]): UiSchemaRoot {
-    const order = keys.filter((k) => properties[k] !== undefined);
-    const ui: Record<string, unknown> = {
-        "ui:order": order.length > 0 ? order : undefined,
-        // Page shell already shows the section title — hide root schema model name.
-        "ui:options": { title: false, description: false }
-    };
-
-    // Merge any widget overrides whose key is present in the current tab's schema.
-    for (const [key, override] of Object.entries(WIDGET_OVERRIDES)) {
-        if (properties[key] !== undefined) {
-            ui[key] = override;
-        }
-    }
-
-    // Removed `ui:widget: "hidden"` for `library_profiles` because the property is now fully
-    // pruned from the schema payload itself inside the `load` and `actions` functions.
-    return ui as UiSchemaRoot;
 }
 
 async function getSchemaForKeys(
@@ -663,14 +543,10 @@ export const load: PageServerLoad = async ({
         });
     }
 
-    // Deep-clone schema before mutation so the cached reference is never altered.
-    // pruneLibraryProfilesFromSchema mutates its argument in-place; without cloning,
-    // a cache hit would return an already-pruned object and prune again (idempotent
-    // now, but fragile as logic evolves).
-    const workingSchema = structuredClone(schema);
-    pruneLibraryProfilesFromSchema(workingSchema);
-    pruneLibraryProfilesFromValue(initialValue);
-    sanitizeSettingsSchemaTitles(workingSchema);
+    // Transform cloned data so backend responses and cached references remain pristine.
+    let workingSchema = pruneLibraryProfilesFromSchema(structuredClone(schema));
+    initialValue = pruneLibraryProfilesFromValue(initialValue);
+    workingSchema = sanitizeSettingsSchemaTitles(workingSchema);
     labelNullablePathOptions(workingSchema);
 
     const props = (workingSchema.properties ?? {}) as Record<string, unknown>;
@@ -748,10 +624,9 @@ export const actions = {
                 paths,
                 fetch
             );
-            // Clone before mutation so the cached object stays pristine.
-            schema = structuredClone(rawSchema);
-            pruneLibraryProfilesFromSchema(schema);
-            sanitizeSettingsSchemaTitles(schema);
+            // Transform a clone so the raw backend response stays pristine.
+            schema = pruneLibraryProfilesFromSchema(structuredClone(rawSchema));
+            schema = sanitizeSettingsSchemaTitles(schema);
             labelNullablePathOptions(schema);
             setCachedSettingsSchema(schemaCacheKey, schema);
             perfCount("settings.schema.cache.set", 1, { tab: tab.id });
