@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.2](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.23.1...riven-frontend-v1.23.2) (2026-09-22)
+
+
+### Bug Fixes
+
+* **deps:** update devalue override to &gt;=5.9.2 for security advisory GHSA-9rgm-9g3h-6x36 ([183f5c3](https://github.com/S0lidByte/CineFlow-frontend/commit/183f5c30ce0e49b5b9f70e29a56be25c2d03abe1))
+
 ## [1.23.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.23.0...riven-frontend-v1.23.1) (2026-09-21)
 
 
