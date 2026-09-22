@@ -130,15 +130,25 @@
 
         try {
             if (mediaType === "tv" && seasons.length > 0 && hasSelectedTvTargets && externalId) {
+                const parsedItemId =
+                    validIds.length > 0 && !isNaN(Number(validIds[0]))
+                        ? Number(validIds[0])
+                        : undefined;
+
                 const body: {
                     media_type: "tv";
                     tvdb_id: string;
+                    item_id?: number;
                     season_numbers?: number[];
                     episode_numbers?: Record<string, number[]>;
                 } = {
                     media_type: "tv",
                     tvdb_id: externalId
                 };
+
+                if (parsedItemId !== undefined) {
+                    body.item_id = parsedItemId;
+                }
 
                 if (sortedSelectedSeasonNumbers.length > 0) {
                     body.season_numbers = sortedSelectedSeasonNumbers;
