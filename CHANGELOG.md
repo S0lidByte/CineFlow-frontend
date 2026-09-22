@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.23.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.23.0...riven-frontend-v1.23.1) (2026-09-21)
+
+
+### Bug Fixes
+
+* **details:** validate server loader params and re-throw sveltekit control errors ([803115c](https://github.com/S0lidByte/CineFlow-frontend/commit/803115c240aaee9c3b21bda1eefa42a184d9d39c))
+* **frontend:** extract media params validation helper to standalone module ([893fab4](https://github.com/S0lidByte/CineFlow-frontend/commit/893fab41b2a10b65f54e525082329dde62f2a0e4))
+* **frontend:** sync episode details sheet state and router-aware deep linking ([8c88281](https://github.com/S0lidByte/CineFlow-frontend/commit/8c882819c58751a944280e1c4b81157a27e5ee9d))
+
 ## [1.23.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.22.1...riven-frontend-v1.23.0) (2026-09-21)
 
 
