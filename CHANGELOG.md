@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.23.3...riven-frontend-v1.24.0) (2026-09-22)
+
+
+### Features
+
+* **ratings:** add pure Jaro-Winkler metadata matcher and enrich Rotten Tomatoes & IMDb scores ([a5833c6](https://github.com/S0lidByte/CineFlow-frontend/commit/a5833c6caec915b0a2308786ebd80c79347c8ec0))
+
 ## [1.23.3](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.23.2...riven-frontend-v1.23.3) (2026-09-22)
 
 
