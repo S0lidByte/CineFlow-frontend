@@ -69,7 +69,7 @@ export const auth = betterAuth({
         openAPI(),
         passkey({
             rpID: env.PASSKEY_RP_ID || "riven",
-            rpName: env.PASSKEY_RP_NAME || "Riven Media",
+            rpName: env.PASSKEY_RP_NAME || "CineFlow",
             origin: env.ORIGIN || "http://localhost:5173"
         }),
         lastLoginMethod({
@@ -81,7 +81,7 @@ export const auth = betterAuth({
                     ? [
                           plexOAuth({
                               clientId: env.PLEX_CLIENT_ID || "riven",
-                              product: "Riven Media",
+                              product: "CineFlow",
                               version: "1.0",
                               platform: "Web",
                               device: "Browser",

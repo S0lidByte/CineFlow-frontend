@@ -407,7 +407,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
-    <title>Calendar - Riven</title>
+    <title>Calendar - CineFlow</title>
 </svelte:head>
 
 {#snippet itemIcon(item: EntertainmentItem, size = 4)}

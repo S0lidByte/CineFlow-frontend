@@ -35,7 +35,7 @@
 </script>
 
 <svelte:head>
-    <title>Trending Animes - Riven</title>
+    <title>Trending Animes - CineFlow</title>
 </svelte:head>
 
 <PageShell class="bg-background relative flex min-h-screen flex-col overflow-x-hidden">

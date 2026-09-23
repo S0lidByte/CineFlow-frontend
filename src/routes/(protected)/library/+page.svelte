@@ -389,6 +389,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>Library - CineFlow</title>
+</svelte:head>
+
 <PageShell class="bg-background relative flex min-h-screen flex-col overflow-x-hidden">
     <!-- Immersive Background -->
     <div class="pointer-events-none fixed inset-0 z-0">

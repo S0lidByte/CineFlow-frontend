@@ -118,7 +118,7 @@
 </script>
 
 <svelte:head>
-    <title>Dashboard - Riven</title>
+    <title>Dashboard - CineFlow</title>
 </svelte:head>
 
 {#snippet KPICard({

@@ -66,7 +66,7 @@
                 Resetting "{title ?? "Media Item"}"
             </AlertDialog.Title>
             <AlertDialog.Description>
-                This will send a request to Riven to reset this media. You will be notified when
+                This will send a request to CineFlow to reset this media. You will be notified when
                 it's done.
             </AlertDialog.Description>
         </AlertDialog.Header>

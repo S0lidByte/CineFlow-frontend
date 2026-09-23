@@ -53,7 +53,7 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         highlights: [
             {
                 title: "VFS",
-                detail: "Riven mounts debrid content through FUSE with HTTP range support."
+                detail: "CineFlow mounts debrid content through FUSE with HTTP range support."
             },
             {
                 title: "Paths",

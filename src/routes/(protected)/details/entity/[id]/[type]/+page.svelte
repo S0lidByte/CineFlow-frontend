@@ -126,7 +126,7 @@
 </script>
 
 <svelte:head>
-    <title>{data.entity.name} - Riven</title>
+    <title>{data.entity.name} - CineFlow</title>
 
     {#if birthdayToday && !data.entity.deathday}
         <style>

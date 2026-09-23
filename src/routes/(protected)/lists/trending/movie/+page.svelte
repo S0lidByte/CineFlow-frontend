@@ -69,7 +69,7 @@
 </script>
 
 <svelte:head>
-    <title>Trending Movies - Riven</title>
+    <title>Trending Movies - CineFlow</title>
 </svelte:head>
 
 <PageShell class="bg-background relative flex min-h-screen flex-col overflow-x-hidden">

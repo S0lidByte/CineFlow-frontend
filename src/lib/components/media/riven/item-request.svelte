@@ -221,7 +221,7 @@
                 Requesting "{title ?? "Media Item"}"
             </AlertDialog.Title>
             <AlertDialog.Description>
-                This will send a request to Riven to add this media.
+                This will send a request to CineFlow to add this media.
             </AlertDialog.Description>
         </AlertDialog.Header>
 

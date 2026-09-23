@@ -36,8 +36,8 @@
             }
         };
 
-        window.addEventListener("riven:search", handleSearch);
-        return () => window.removeEventListener("riven:search", handleSearch);
+        window.addEventListener("cineflow:search", handleSearch);
+        return () => window.removeEventListener("cineflow:search", handleSearch);
     });
 
     // Local input value state to decouple from URL updates while typing

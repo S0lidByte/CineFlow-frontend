@@ -71,7 +71,7 @@ export interface PlexOAuthOptions {
     clientId: string;
     /**
      * The name of your application/product
-     * @default "Riven Media"
+     * @default "CineFlow"
      */
     product?: string;
     /**
@@ -124,7 +124,7 @@ export function getPlexHeaders(
     includeToken?: string
 ): Record<string, string> {
     const headers: Record<string, string> = {
-        "X-Plex-Product": options.product || "Riven Media",
+        "X-Plex-Product": options.product || "CineFlow",
         "X-Plex-Version": options.version || "1.0",
         "X-Plex-Client-Identifier": options.clientId,
         "X-Plex-Platform": options.platform || "Web",
@@ -165,7 +165,7 @@ export function buildPlexAuthUrl(
     pinCode: string,
     forwardUrl?: string
 ): URL {
-    const product = options.product || "Riven Media";
+    const product = options.product || "CineFlow";
     const version = options.version || "1.0";
     const platform = options.platform || "Web";
     const device = options.device || "Browser";
@@ -325,7 +325,7 @@ export function plexOAuth(options: PlexOAuthOptions & { baseURL?: string }): Gen
 export function getDefaultPlexOptions(env: Record<string, string | undefined>): PlexOAuthOptions {
     return {
         clientId: env.PLEX_CLIENT_ID || "riven",
-        product: "Riven Media",
+        product: "CineFlow",
         version: "1.0",
         platform: "Web",
         device: "Browser",

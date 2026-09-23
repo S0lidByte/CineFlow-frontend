@@ -389,7 +389,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
-    <title>Settings - Riven</title>
+    <title>Settings - CineFlow</title>
 </svelte:head>
 
 <PageShell class="relative h-full px-4 pt-16 md:px-6 md:pt-20 lg:px-8">

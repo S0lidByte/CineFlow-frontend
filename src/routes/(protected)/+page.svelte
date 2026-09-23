@@ -60,7 +60,7 @@
 {/snippet}
 
 <svelte:head>
-    <title>Home - Riven</title>
+    <title>Home - CineFlow</title>
 </svelte:head>
 
 <PageShell

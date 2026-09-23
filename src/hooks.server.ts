@@ -27,7 +27,7 @@ export const init: ServerInit = async () => {
     migrate(db, { migrationsFolder: "drizzle" });
 
     // @ts-expect-error ignore
-    logger.box(`Riven Frontend v${__APP_VERSION__}`);
+    logger.box(`CineFlow Frontend v${__APP_VERSION__}`);
 };
 
 export const betterAuthHandler: Handle = async ({ event, resolve }) => {

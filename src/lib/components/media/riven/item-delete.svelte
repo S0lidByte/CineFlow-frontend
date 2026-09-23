@@ -69,7 +69,7 @@
                 Deleting "{title ?? "Media Item"}"
             </AlertDialog.Title>
             <AlertDialog.Description>
-                This will send a request to Riven to delete this media. You will be notified when
+                This will send a request to CineFlow to delete this media. You will be notified when
                 it's removed.
             </AlertDialog.Description>
         </AlertDialog.Header>

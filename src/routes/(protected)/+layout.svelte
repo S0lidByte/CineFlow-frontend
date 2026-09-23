@@ -54,7 +54,7 @@
 </script>
 
 <svelte:head>
-    <title>Riven</title>
+    <title>CineFlow</title>
     <link
         rel="preload"
         as="font"

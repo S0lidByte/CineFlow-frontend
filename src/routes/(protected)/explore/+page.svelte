@@ -150,7 +150,7 @@
 </script>
 
 <svelte:head>
-    <title>Explore - Riven</title>
+    <title>Explore - CineFlow</title>
 </svelte:head>
 
 <div class="relative min-h-screen w-full overflow-x-hidden">
@@ -412,9 +412,9 @@
                                 {#each (data.searchExamples ?? []).slice(currentExampleIndex, currentExampleIndex + 6) as example (example)}
                                     <button
                                         onclick={() => {
-                                            // Dispatch event for header search input
+                                            // Dispatch event for the CineFlow header search input.
                                             window.dispatchEvent(
-                                                new CustomEvent("riven:search", {
+                                                new CustomEvent("cineflow:search", {
                                                     detail: { query: example }
                                                 })
                                             );

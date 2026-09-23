@@ -93,7 +93,7 @@
 </script>
 
 <svelte:head>
-    <title>Logs - Riven</title>
+    <title>Logs - CineFlow</title>
 </svelte:head>
 
 {#snippet logEntry(log: LogEntry)}

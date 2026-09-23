@@ -526,7 +526,7 @@
 {/snippet}
 
 <svelte:head>
-    <title>{data.mediaDetails?.details.title} ({data.mediaDetails?.details.year}) - Riven</title>
+    <title>{data.mediaDetails?.details.title} ({data.mediaDetails?.details.year}) - CineFlow</title>
 </svelte:head>
 
 {#key data.mediaDetails?.details.id}
