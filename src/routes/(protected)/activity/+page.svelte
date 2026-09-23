@@ -7,6 +7,8 @@
     import { Input } from "$lib/components/ui/input/index.js";
     import { toast } from "svelte-sonner";
     import { operationsStore, type OperationItem } from "$lib/stores/operations.svelte";
+    import { playbackTelemetryStore } from "$lib/stores/playback-telemetry.svelte";
+    import PlaybackHUD from "$lib/components/telemetry/PlaybackHUD.svelte";
     import Activity from "@lucide/svelte/icons/activity";
     import RefreshCw from "@lucide/svelte/icons/refresh-cw";
     import Copy from "@lucide/svelte/icons/copy";
@@ -47,10 +49,13 @@
     onMount(() => {
         void operationsStore.fetchOperations();
         operationsStore.connect();
+        void playbackTelemetryStore.fetchSnapshot();
+        playbackTelemetryStore.connect();
     });
 
     onDestroy(() => {
         operationsStore.disconnect();
+        playbackTelemetryStore.disconnect();
     });
 
     function toggleRow(id: string) {
@@ -203,6 +208,11 @@
                 </Button>
             </div>
         </div>
+
+        <!-- Playback Telemetry HUD: live ephemeral stream, cache, and CDN observability. -->
+        <section aria-label="Playback telemetry observability" class="shrink-0">
+            <PlaybackHUD />
+        </section>
 
         <!-- Filter Controls Bar -->
         <div
