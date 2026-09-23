@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.25.0...riven-frontend-v1.26.0) (2026-09-23)
+
+
+### Features
+
+* **branding:** modernize frontend UI branding and web app manifest metadata (REBRAND-002) ([30e5606](https://github.com/S0lidByte/CineFlow-frontend/commit/30e56062b17c7a36936fce797fb897fd095583a2))
+
 ## [1.25.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.24.0...riven-frontend-v1.25.0) (2026-09-23)
 
 
