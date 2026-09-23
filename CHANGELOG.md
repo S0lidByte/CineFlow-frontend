@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.25.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.24.0...riven-frontend-v1.25.0) (2026-09-23)
+
+
+### Features
+
+* **activity:** integrate live playback telemetry HUD into activity dashboard ([8c50a02](https://github.com/S0lidByte/CineFlow-frontend/commit/8c50a02ac051dfd87f15e3277541993c082c8fa8))
+* **settings:** enhance SJSF schema transforms ([b17feec](https://github.com/S0lidByte/CineFlow-frontend/commit/b17feecc996c80ff78991da42d0f692ddaa6c053))
+* **ui:** franchise collection sheet with adaptive drawer and request all ([e724643](https://github.com/S0lidByte/CineFlow-frontend/commit/e7246431c8eac8cc4b0c02b904474d314f494b9f))
+
 ## [1.24.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.23.3...riven-frontend-v1.24.0) (2026-09-22)
 
 
