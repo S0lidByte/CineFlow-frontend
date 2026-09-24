@@ -19,7 +19,8 @@ const testModules = [
     "../src/lib/components/auth/auth-components.test.ts",
     "../src/lib/services/ratings-matcher.test.ts",
     "../src/lib/server/admin-functions.test.ts",
-    "../tests/routes/branding-consistency.test.ts"
+    "../tests/routes/branding-consistency.test.ts",
+    "../src/lib/server/db-resolution.test.ts"
 ];
 
 for (const testModule of testModules) {

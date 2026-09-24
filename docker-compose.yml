@@ -1,13 +1,14 @@
 volumes:
-    riven-frontend-data:
+    cineflow-frontend-data:
+        name: ${CINEFLOW_FRONTEND_VOLUME:-cineflow-frontend-data}
 
 services:
-    riven-frontend:
-        image: spoked/riven-frontend:dev # Tags: latest/dev/x.x.x
+    cineflow-frontend:
+        image: coldspirit/cineflow-frontend:dev # Tags: latest/dev/x.x.x
         build:
             context: .
             dockerfile: Dockerfile
-        container_name: riven-frontend
+        container_name: cineflow-frontend
         restart: unless-stopped
         env_file:
             - .env # Load environment variables from .env file. Read .env.example
@@ -24,4 +25,5 @@ services:
         # ports:
         #   - 3000:3000
         volumes:
-            - riven-frontend-data:/riven/data # Persistent data storage
+            # Set CINEFLOW_FRONTEND_VOLUME=riven-frontend-data to reuse the legacy volume.
+            - cineflow-frontend-data:/riven/data # Persistent data storage

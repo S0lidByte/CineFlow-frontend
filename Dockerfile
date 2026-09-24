@@ -10,9 +10,9 @@ RUN corepack pnpm run build && corepack pnpm prune --prod
 
 # Final Image
 FROM node:24-alpine
-LABEL name="Riven" \
-    description="Riven Media Server: Frontend" \
-    url="https://github.com/rivenmedia/riven-frontend"
+LABEL name="CineFlow" \
+    description="CineFlow Media Server: Frontend" \
+    url="https://github.com/S0lidByte/CineFlow-frontend"
 
 # Set working directory
 WORKDIR /riven
