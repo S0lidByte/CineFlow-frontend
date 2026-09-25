@@ -39,6 +39,7 @@
         type EpisodeItemData
     } from "$lib/components/media/episode-details-sheet.svelte";
     import VideoPlayer from "$lib/components/media/video-player.svelte";
+    import HeroCanvas from "$lib/components/ambient/HeroCanvas.svelte";
     import { toast } from "svelte-sonner";
     import X from "@lucide/svelte/icons/x";
 
@@ -552,24 +553,11 @@
         <div class="z-10 mx-auto flex h-full w-full max-w-[2400px] flex-col">
             <!-- Hero Banner - extends behind search bar -->
             {#if data.mediaDetails?.details.backdrop_path || data.mediaDetails?.details.trailer}
-                <div class="px-2 md:px-4">
-                    <div
-                        class={cn(
-                            "relative mb-6 flex h-[40vh] max-h-[600px] min-h-[350px] items-end justify-between overflow-hidden rounded-3xl bg-cover bg-center shadow-2xl transition-all duration-500 md:mb-10",
-                            !showTrailer && "p-6 md:p-12"
-                        )}
-                        style="background-image: url('{data.mediaDetails?.details
-                            .backdrop_path}');">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-                        </div>
-                        <!-- Border Overlay to prevent bright edge glitch -->
-                        <div
-                            class="border-border/10 pointer-events-none absolute inset-0 rounded-2xl border">
-                        </div>
-
+                <div class="mb-6 px-2 md:mb-10 md:px-4">
+                    <HeroCanvas item={data.mediaDetails.details} showTitle={false}>
                         {#if !showTrailer}
-                            <div class="relative z-10 flex w-full items-end justify-between">
+                            <div
+                                class="relative z-10 flex h-full w-full items-end justify-between p-6 md:p-12">
                                 {#if data.mediaDetails?.details.logo}
                                     <img
                                         alt="Logo"
@@ -602,7 +590,7 @@
                             </div>
                         {:else}
                             <iframe
-                                class="absolute inset-0 h-full w-full"
+                                class="absolute inset-0 z-20 h-full w-full"
                                 src="https://www.youtube-nocookie.com/embed/{data.mediaDetails
                                     ?.details.trailer
                                     ?.key}?autoplay=1&controls=1&mute=0&rel=0&modestbranding=1&playsinline=1"
@@ -612,12 +600,12 @@
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                class="bg-background/60 text-foreground hover:bg-background/80 absolute top-4 right-4 z-20"
+                                class="bg-background/60 text-foreground hover:bg-background/80 absolute top-4 right-4 z-30"
                                 onclick={() => (showTrailerOverride = false)}>
                                 <X class="h-6 w-6" />
                             </Button>
                         {/if}
-                    </div>
+                    </HeroCanvas>
                 </div>
             {/if}
 

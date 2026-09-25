@@ -16,8 +16,9 @@ import {
     DEFAULT_AMBIENT_PALETTE,
     type AmbientPalette
 } from "./palette-extractor";
+import { resolveHeroImage, type HeroItem } from "./hero-canvas";
 
-console.log("Running Ambient Obsidian (VIS-001) Test Suite...");
+console.log("Running Ambient Obsidian (VIS-001 & VIS-002) Test Suite...");
 
 // =========================================================================
 // 1. Palette Extractor: Quantization, Saturation Weighting & Luminance Filtering
@@ -220,4 +221,82 @@ console.log("Running Ambient Obsidian (VIS-001) Test Suite...");
     }
 }
 
-console.log("All Ambient Obsidian (VIS-001) unit tests passed successfully.");
+// =========================================================================
+// 6. HeroCanvas: 21:9 Ultra-Wide Artwork Resolution & Visual Fallbacks (VIS-002)
+// =========================================================================
+{
+    // Test 6.1: Null / undefined / empty item returns null
+    assert.equal(resolveHeroImage(null), null);
+    assert.equal(resolveHeroImage(undefined), null);
+    assert.equal(resolveHeroImage({}), null);
+
+    // Test 6.2: Relative TMDB backdrop path normalizes to original CDN
+    const tmdbRelative: HeroItem = {
+        title: "Interstellar",
+        backdrop_path: "/8sNiAPPYU14PUepFNeSNGUTiHW.jpg"
+    };
+    assert.equal(
+        resolveHeroImage(tmdbRelative),
+        "https://image.tmdb.org/t/p/original/8sNiAPPYU14PUepFNeSNGUTiHW.jpg",
+        "Relative TMDB backdrop path must normalize to original CDN format"
+    );
+
+    // Test 6.3: Absolute backdrop URL preserved
+    const absoluteBackdrop: HeroItem = {
+        title: "Custom Stream",
+        backdrop_path: "https://custom-cdn.example/art/backdrop.jpg"
+    };
+    assert.equal(
+        resolveHeroImage(absoluteBackdrop),
+        "https://custom-cdn.example/art/backdrop.jpg",
+        "Absolute backdrop URL must be preserved without modification"
+    );
+
+    // Test 6.4: Fallback to poster_path when backdrop_path is null or empty
+    const posterOnlyRelative: HeroItem = {
+        title: "Indie Film",
+        backdrop_path: null,
+        poster_path: "/poster123.jpg"
+    };
+    assert.equal(
+        resolveHeroImage(posterOnlyRelative),
+        "https://image.tmdb.org/t/p/original/poster123.jpg",
+        "Should fall back to relative poster_path normalized to original CDN"
+    );
+
+    const posterOnlyAbsolute: HeroItem = {
+        title: "Direct Poster",
+        backdrop_path: "",
+        poster_path: "http://poster-cdn.example/image.png"
+    };
+    assert.equal(
+        resolveHeroImage(posterOnlyAbsolute),
+        "http://poster-cdn.example/image.png",
+        "Should fall back to absolute poster_path"
+    );
+
+    // Test 6.5: Both backdrop and poster missing or whitespace
+    const blankItem: HeroItem = {
+        title: "Missing Art",
+        backdrop_path: "   ",
+        poster_path: null
+    };
+    assert.equal(
+        resolveHeroImage(blankItem),
+        null,
+        "Blank or whitespace backdrop without poster must return null"
+    );
+
+    // Test 6.6: Path without leading slash is normalized properly
+    const unslashedItem: HeroItem = {
+        title: "Unslashed",
+        backdrop_path: "unslashed_path.jpg"
+    };
+    assert.equal(
+        resolveHeroImage(unslashedItem),
+        "https://image.tmdb.org/t/p/original/unslashed_path.jpg",
+        "Backdrop path missing leading slash must have slash prepended"
+    );
+}
+
+console.log("All Ambient Obsidian (VIS-001 & VIS-002) unit tests passed successfully.");
