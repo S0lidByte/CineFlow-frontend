@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.27.0] (2026-09-24)
+
+### Features
+
+* **visuals:** ambient obsidian visual primitives, dynamic canvas palette extractor, glowing spec badges, and debrid status rings (VIS-001)
+
 ## [1.26.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.25.0...riven-frontend-v1.26.0) (2026-09-23)
 
 
