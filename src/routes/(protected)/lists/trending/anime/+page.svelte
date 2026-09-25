@@ -11,6 +11,8 @@
         "/api/anilist/trending"
     );
     let loadMoreTrigger: HTMLDivElement;
+    const SKELETON_MORE = [0, 1, 2, 3, 4, 5];
+    const SKELETON_INITIAL = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
     onMount(() => {
         const observer = new IntersectionObserver(
@@ -62,7 +64,7 @@
         {#if Array.isArray(anilistTrendingStore.items) && anilistTrendingStore.items.length > 0}
             <div
                 class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9">
-                {#each anilistTrendingStore.items as item (item.id)}
+                {#each anilistTrendingStore.items as item, index (`${item.id}-${index}`)}
                     <div class="aspect-[2/3] w-full">
                         <ListItem
                             data={item}
@@ -71,7 +73,7 @@
                     </div>
                 {/each}
                 {#if anilistTrendingStore.loading}
-                    {#each Array(6) as i (i)}
+                    {#each SKELETON_MORE as i (i)}
                         <div class="aspect-[2/3] w-full">
                             <PortraitCardSkeleton />
                         </div>
@@ -81,7 +83,7 @@
         {:else if anilistTrendingStore.loading || !anilistTrendingStore.initialized}
             <div
                 class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9">
-                {#each Array(12) as i (i)}
+                {#each SKELETON_INITIAL as i (i)}
                     <div class="aspect-[2/3] w-full">
                         <PortraitCardSkeleton />
                     </div>

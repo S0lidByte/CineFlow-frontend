@@ -6,6 +6,7 @@ const testModules = [
     "../src/routes/(protected)/api/[...backendProxy]/backend-proxy.security.test.ts",
     "../src/routes/(protected)/api/operations/timeline/operations-timeline.security.test.ts",
     "../src/lib/stores/operations.test.ts",
+    "../src/lib/stores/playback-telemetry.test.ts",
     "../tests/routes/settings-test-connection.security.test.ts",
     "../src/lib/schemas/auth.test.ts",
     "../src/lib/providers/anilist.test.ts",
@@ -18,6 +19,7 @@ const testModules = [
     "../src/lib/components/settings/ranking-presets.clone.test.ts",
     "../src/lib/components/auth/auth-components.test.ts",
     "../src/lib/services/ratings-matcher.test.ts",
+    "../src/routes/(protected)/streams/stream-monitor.test.ts",
     "../src/lib/server/admin-functions.test.ts",
     "../tests/routes/branding-consistency.test.ts",
     "../src/lib/server/db-resolution.test.ts"

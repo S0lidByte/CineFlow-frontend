@@ -11,6 +11,7 @@
     import CalendarDays from "@lucide/svelte/icons/calendar-days";
     import FileClock from "@lucide/svelte/icons/file-clock";
     import Activity from "@lucide/svelte/icons/activity";
+    import Radio from "@lucide/svelte/icons/radio";
     import Home from "@lucide/svelte/icons/home";
     import LayoutDashboard from "@lucide/svelte/icons/layout-dashboard";
     import LogOut from "@lucide/svelte/icons/log-out";
@@ -32,9 +33,10 @@
         { href: "/library", icon: Library, label: "Library" },
         { href: "/explore", icon: Search, label: "Explore" },
         { href: "/calendar", icon: CalendarDays, label: "Calendar" },
-        { href: "/auth", icon: User, label: "Profile" },
+        { href: "/streams", icon: Radio, label: "Streams" },
         { href: "/activity", icon: Activity, label: "Activity" },
         { href: "/settings", icon: Settings, label: "Settings" },
+        { href: "/auth", icon: User, label: "Profile" },
         { href: "/logs", icon: FileClock, label: "Logs" }
     ] as const;
 

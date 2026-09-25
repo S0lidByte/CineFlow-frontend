@@ -116,12 +116,21 @@ export class LogStore {
             }
         });
 
-        const logValue = this.#connection.select("log").json<LogEntry>(({ error, previous }) => {
-            if (error) {
-                logger.warn("Failed to parse log entry:", error);
-            }
-            return previous;
-        });
+        const logValue = this.#connection
+            .select("log")
+            .json<LogEntry>(({ error, raw, previous }) => {
+                if (error) {
+                    if (
+                        (raw && !raw.trim()) ||
+                        (error instanceof SyntaxError &&
+                            error.message.includes("Unexpected end of JSON input"))
+                    ) {
+                        return previous;
+                    }
+                    logger.warn("Failed to parse log entry:", error);
+                }
+                return previous;
+            });
 
         this.#connectionStatus = "connected";
 
