@@ -13,6 +13,7 @@
     import type { SearchStore } from "$lib/services/search-store.svelte";
     import { parseSearchQuery } from "$lib/search-parser";
     import { endPerfMark, perfCount, startPerfMark } from "$lib/perf";
+    import { commandCenterStore } from "$lib/stores/command-center.svelte";
 
     const SidebarStore = getContext<createSidebarStore>("sidebarStore");
     const searchStore = getContext<SearchStore>("searchStore");
@@ -128,15 +129,6 @@
         };
     });
 
-    function onKeydown(e: KeyboardEvent) {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-            e.preventDefault();
-            // Settings has its own Cmd/Ctrl+K palette — don't steal focus to media search.
-            if (page.url.pathname.startsWith("/settings")) return;
-            inputRef?.focus();
-        }
-    }
-
     /**
      * Explore search is useless on Settings (own palette) and overlays Ranking Studio.
      * #82 limited pointer-events to the search cluster; #87 hid this header on Settings.
@@ -174,10 +166,16 @@
                         }}
                         autocomplete="off" />
                     {#if modifierKey}
-                        <InputGroup.Addon align="inline-end" class="pr-4">
-                            <Kbd.Root
-                                class="h-5 min-h-0 border-white/10 bg-white/5 px-1.5 text-[10px] text-white/50"
-                                >{modifierKey}K</Kbd.Root>
+                        <InputGroup.Addon align="inline-end" class="pr-3">
+                            <button
+                                type="button"
+                                class="cursor-pointer transition-transform active:scale-95"
+                                onclick={() => commandCenterStore.open(inputValue)}
+                                aria-label="Open Universal Command Center">
+                                <Kbd.Root
+                                    class="h-5 min-h-0 border-white/10 bg-white/5 px-1.5 text-[10px] text-white/50 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                                    >{modifierKey}K</Kbd.Root>
+                            </button>
                         </InputGroup.Addon>
                     {/if}
                 </InputGroup.Root>
@@ -198,4 +196,3 @@
         </div>
     </header>
 {/if}
-<svelte:document onkeydown={onKeydown} />

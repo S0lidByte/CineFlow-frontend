@@ -18,6 +18,7 @@
     import { setContext } from "svelte";
     import Header from "$lib/components/header.svelte";
     import MobileNav from "$lib/components/mobile-nav.svelte";
+    import CommandCenter from "$lib/components/navigation/CommandCenter.svelte";
     import { SearchStore } from "$lib/services/search-store.svelte";
     import { FilterStore } from "$lib/services/filter-store.svelte";
     import { page } from "$app/state";
@@ -65,6 +66,7 @@
 
 <ModeWatcher defaultMode="dark" defaultTheme="darkmatter" />
 <Toaster richColors closeButton />
+<CommandCenter />
 
 <div
     class="bg-background relative grid h-screen w-screen grid-cols-1 overflow-hidden md:grid-cols-[auto_1fr]">

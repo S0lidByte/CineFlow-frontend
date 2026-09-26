@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.28.0] (2026-09-26)
+
+### Features
+
+* **navigation:** universal Cmd+K command center with multi-provider search aggregation, obsidian glassmorphism design, and diagnostic action execution (VIS-003)
+
 ## [1.27.0] (2026-09-24)
 
 ### Features

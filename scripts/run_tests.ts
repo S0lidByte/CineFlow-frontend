@@ -23,7 +23,8 @@ const testModules = [
     "../src/lib/server/admin-functions.test.ts",
     "../tests/routes/branding-consistency.test.ts",
     "../src/lib/server/db-resolution.test.ts",
-    "../src/lib/components/ambient/ambient.test.ts"
+    "../src/lib/components/ambient/ambient.test.ts",
+    "../src/lib/components/navigation/command-center.test.ts"
 ];
 
 for (const testModule of testModules) {
