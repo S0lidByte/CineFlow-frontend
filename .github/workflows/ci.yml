@@ -48,6 +48,8 @@ jobs:
 
             - name: Run tests
               run: pnpm test
+              env:
+                  DATABASE_URL: ":memory:"
 
     lint:
         runs-on: ubuntu-latest

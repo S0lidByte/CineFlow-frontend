@@ -108,4 +108,18 @@ console.log("Running SQLite database path resolution & fallback tests...");
     assert.equal(ensureSqliteDirectory(":memory:"), ":memory:");
 }
 
+// 10. ensureSqliteDirectory gracefully falls back to :memory: on permission denied (EACCES/EPERM)
+{
+    const mockPermissionError = () => {
+        const err = new Error("EACCES: permission denied, mkdir '/riven/data'") as Error & {
+            code?: string;
+        };
+        err.code = "EACCES";
+        throw err;
+    };
+
+    const path = ensureSqliteDirectory("/riven/data/cineflow.db", mockPermissionError);
+    assert.equal(path, ":memory:", "Should fall back to :memory: on EACCES permission denied");
+}
+
 console.log("All SQLite database path resolution & fallback tests passed!");

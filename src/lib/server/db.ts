@@ -93,7 +93,10 @@ export function resolveSqliteDatabasePath(
     return targetPath;
 }
 
-export function ensureSqliteDirectory(databasePath: string | undefined): string | undefined {
+export function ensureSqliteDirectory(
+    databasePath: string | undefined,
+    mkdirFn: (dir: string, opts: { recursive: boolean }) => void = mkdirSync
+): string | undefined {
     if (!databasePath) {
         return databasePath;
     }
@@ -101,7 +104,18 @@ export function ensureSqliteDirectory(databasePath: string | undefined): string 
     if (databasePath !== ":memory:") {
         const databaseDir = dirname(databasePath);
         if (databaseDir && databaseDir !== ".") {
-            mkdirSync(databaseDir, { recursive: true });
+            try {
+                mkdirFn(databaseDir, { recursive: true });
+            } catch (err: unknown) {
+                const error = err as { code?: string };
+                if (error?.code === "EACCES" || error?.code === "EPERM") {
+                    console.warn(
+                        `[CineFlow DB] Cannot create directory ${databaseDir} (${error.code}). Falling back to :memory: database.`
+                    );
+                    return ":memory:";
+                }
+                throw err;
+            }
         }
     }
 
