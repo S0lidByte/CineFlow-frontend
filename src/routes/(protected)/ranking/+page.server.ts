@@ -163,6 +163,9 @@ export const actions = {
         const rawTitle = formData.get("raw_title");
         const correctTitle = formData.get("correct_title");
         const rankingJson = formData.get("ranking");
+        const evaluateTrash = formData.get("evaluate_trash") === "true";
+        const trashProfile = formData.get("trash_profile");
+        const mediaType = formData.get("media_type");
 
         if (!rawTitle || typeof rawTitle !== "string" || !rawTitle.trim()) {
             return fail(400, { error: "Release title is required" });
@@ -192,7 +195,14 @@ export const actions = {
                             ? correctTitle.trim()
                             : null,
                     ranking: ranking ?? null,
-                    remove_trash: true
+                    remove_trash: true,
+                    evaluate_trash: evaluateTrash,
+                    trash_profile:
+                        typeof trashProfile === "string" && trashProfile.trim()
+                            ? trashProfile.trim()
+                            : null,
+                    media_type:
+                        typeof mediaType === "string" && mediaType.trim() ? mediaType.trim() : null
                 })
             });
 
@@ -217,7 +227,8 @@ export const actions = {
                         data.title_similarity_threshold != null
                             ? Number(data.title_similarity_threshold)
                             : null,
-                    message: (data.message as string) ?? ""
+                    message: (data.message as string) ?? "",
+                    trash_summary: (data.trash_summary as Record<string, unknown> | null) ?? null
                 }
             };
         } catch (e) {

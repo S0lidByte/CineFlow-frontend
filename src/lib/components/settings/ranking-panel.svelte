@@ -23,6 +23,8 @@
     import Copy from "@lucide/svelte/icons/copy";
     import FlaskConical from "@lucide/svelte/icons/flask-conical";
     import ExternalLink from "@lucide/svelte/icons/external-link";
+    import Sparkles from "@lucide/svelte/icons/sparkles";
+    import TrashRankingStudio from "./trash/trash-ranking-studio.svelte";
     import {
         RANKING_PRESETS,
         TITLE_MATCHING_MODES,
@@ -64,6 +66,7 @@
         scraping_hint?: string | null;
         title_similarity_threshold?: number | null;
         message?: string;
+        trash_summary?: import("$lib/services/trash-ranking").TrashEvaluationSummary | null;
     }
 
     interface FunnelSummary {
@@ -688,11 +691,15 @@
     {/if}
 
     <Tabs.Root bind:value={panelTab} class="w-full">
-        <Tabs.List class="grid w-full max-w-3xl grid-cols-2 sm:grid-cols-5">
+        <Tabs.List class="grid w-full max-w-3xl grid-cols-2 sm:grid-cols-6">
             <Tabs.Trigger value="filters">Filters</Tabs.Trigger>
             <Tabs.Trigger value="languages">Languages</Tabs.Trigger>
             <Tabs.Trigger value="patterns">Patterns</Tabs.Trigger>
             <Tabs.Trigger value="options">Options</Tabs.Trigger>
+            <Tabs.Trigger value="trash">
+                <Sparkles class="text-primary mr-1.5 size-3.5" />
+                TRaSH
+            </Tabs.Trigger>
             <Tabs.Trigger value="tester">
                 <FlaskConical class="mr-1.5 size-3.5" />
                 Tester
@@ -1111,6 +1118,13 @@
             {/if}
         </Tabs.Content>
 
+        <Tabs.Content value="trash" class="mt-3">
+            <TrashRankingStudio
+                initialProfileId={activePack === "ranking_anime"
+                    ? "trash_anime"
+                    : "trash_balanced"} />
+        </Tabs.Content>
+
         <Tabs.Content value="tester" class="mt-3 space-y-3">
             <div class="border-border/60 bg-card/40 space-y-3 rounded-xl border p-4">
                 <div class="space-y-1.5">
@@ -1225,6 +1239,31 @@
                             {/if}
                             {#if testResult.scraping_hint}
                                 <p class="text-xs">{testResult.scraping_hint}</p>
+                            {/if}
+                            {#if testResult.trash_summary}
+                                <div
+                                    class="mt-2 space-y-1.5 rounded-lg border border-purple-500/20 bg-purple-950/20 p-2.5 text-xs">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-medium text-purple-300"
+                                            >TRaSH Score: {testResult.trash_summary.total_score > 0
+                                                ? `+${testResult.trash_summary.total_score}`
+                                                : testResult.trash_summary.total_score}</span>
+                                        <span class="text-muted-foreground text-[11px]"
+                                            >{testResult.trash_summary.active_profile_id ??
+                                                "Default"}</span>
+                                    </div>
+                                    {#if testResult.trash_summary.matched_formats && testResult.trash_summary.matched_formats.length > 0}
+                                        <div class="flex flex-wrap gap-1">
+                                            {#each testResult.trash_summary.matched_formats as format (format.name)}
+                                                <span
+                                                    class="rounded bg-purple-900/40 px-1.5 py-0.5 text-[10px] text-purple-200"
+                                                    >{format.name} ({format.score > 0
+                                                        ? `+${format.score}`
+                                                        : format.score})</span>
+                                            {/each}
+                                        </div>
+                                    {/if}
+                                </div>
                             {/if}
                             {#if scrapeLink}
                                 <Button
