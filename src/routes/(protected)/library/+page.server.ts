@@ -27,6 +27,8 @@ interface RivenLibraryItem {
     } | null;
     poster_path?: string | null;
     aired_at?: string | null;
+    media_metadata?: Record<string, unknown> | null;
+    filesystem_entry?: Record<string, unknown> | null;
 }
 
 function getStateBadge(state: string | null | undefined): {
@@ -103,7 +105,9 @@ function transformItems(items: RivenLibraryItem[]) {
                 type: getItemType(item.type),
                 riven_id: item.id,
                 state: item.state ?? null,
-                badge: getStateBadge(item.state)
+                badge: getStateBadge(item.state),
+                media_metadata: item.media_metadata ?? null,
+                filesystem_entry: item.filesystem_entry ?? null
             };
         })
         .filter((item): item is NonNullable<typeof item> => item !== null);

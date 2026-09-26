@@ -92,6 +92,10 @@
         title={data.title}
         {subtitle}
         image={data.poster_path}
+        itemState={data.state}
+        mediaMetadata={data.media_metadata}
+        filesystemEntry={data.filesystem_entry}
+        showQualityBadges={true}
         {isSelectable}
         isSelected={isSelectable && !!data.riven_id && selectStore?.has(data.riven_id!)}
         onSelectToggle={() => data.riven_id && selectStore?.toggle(data.riven_id!)}>

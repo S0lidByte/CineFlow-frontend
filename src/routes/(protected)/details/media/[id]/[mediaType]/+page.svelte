@@ -35,6 +35,7 @@
     import CollectionSheet from "$lib/components/media/collection-sheet.svelte";
     import LandscapeCard from "$lib/components/media/landscape-card.svelte";
     import StatusBadge from "$lib/components/media/status-badge.svelte";
+    import AvailabilityMatrix from "$lib/components/media/availability-matrix.svelte";
     import EpisodeDetailsSheet, {
         type EpisodeItemData
     } from "$lib/components/media/episode-details-sheet.svelte";
@@ -507,6 +508,10 @@
         episodeNumber={episode.number ?? undefined}
         image={episode.image ?? null}
         overview={episode.overview ?? ""}
+        itemState={rivenEpisode?.state}
+        mediaMetadata={rivenEpisode?.media_metadata}
+        filesystemEntry={rivenEpisode?.filesystem_entry}
+        showQualityBadges={true}
         class="h-full transition-transform duration-300 group-hover:scale-[1.01] group-hover:shadow-lg">
         {#snippet topRight()}
             {#if rivenEpisode?.state}
@@ -640,6 +645,26 @@
                                     state={data.riven.state} />
                             {/if}
                         </div>
+
+                        {#if data.riven?.state || data.riven?.media_metadata || data.riven?.filesystem_entry}
+                            <div
+                                class="flex items-center gap-2"
+                                in:fly|global={{
+                                    y: 20,
+                                    duration: 400,
+                                    delay: 125,
+                                    easing: cubicOut
+                                }}>
+                                <AvailabilityMatrix
+                                    metadata={data.riven.media_metadata}
+                                    filesystemEntry={data.riven.filesystem_entry}
+                                    state={data.riven.state}
+                                    compact={false}
+                                    showHealth={true}
+                                    showDebridRing={true}
+                                    size="sm" />
+                            </div>
+                        {/if}
 
                         <!-- Actions - Right under title -->
                         <div

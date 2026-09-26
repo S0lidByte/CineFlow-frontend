@@ -177,9 +177,9 @@
         {/if}
 
         <!-- File / VFS Details & Media Metadata -->
-        {#if rivenEp?.filesystem_entry || rivenEp?.media_metadata}
-            {@const meta = rivenEp.media_metadata}
-            {@const fs = rivenEp.filesystem_entry}
+        {#if rivenEp?.filesystem_entry || rivenEp?.media_metadata || rivenEp?.state}
+            {@const meta = rivenEp?.media_metadata}
+            {@const fs = rivenEp?.filesystem_entry}
             {@const video = meta?.video}
             <div class="flex flex-col gap-6">
                 {@render sectionHeading("File & Stream Details")}

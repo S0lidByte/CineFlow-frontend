@@ -43,7 +43,7 @@
         mediaMetadata = null,
         filesystemEntry = null,
         itemState = null,
-        showQualityBadges = false
+        showQualityBadges = true
     }: Props = $props();
 
     let ratingsPromise = $state<Promise<RatingsData> | null>(null);

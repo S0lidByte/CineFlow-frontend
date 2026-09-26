@@ -38,7 +38,7 @@
         mediaMetadata = null,
         filesystemEntry = null,
         itemState = null,
-        showQualityBadges = false
+        showQualityBadges = true
     }: Props = $props();
 </script>
 
