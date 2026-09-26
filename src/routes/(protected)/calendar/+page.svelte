@@ -7,6 +7,9 @@
     import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
     import Film from "@lucide/svelte/icons/film";
     import Tv from "@lucide/svelte/icons/tv";
+    import Download from "@lucide/svelte/icons/download";
+    import Loader2 from "@lucide/svelte/icons/loader-2";
+    import Check from "@lucide/svelte/icons/check";
     import type { PageData } from "./$types";
     import { cn } from "$lib/utils";
     import { IsMobile } from "$lib/hooks/is-mobile.svelte";
@@ -15,12 +18,19 @@
     import { CalendarDate } from "@internationalized/date";
     import PageShell from "$lib/components/page-shell.svelte";
     import { resolve } from "$app/paths";
+    import { toast } from "svelte-sonner";
+    import { SvelteSet } from "svelte/reactivity";
+    import {
+        getAirDateCountdown,
+        getLibraryStatusBadge,
+        executeQuickRequest
+    } from "$lib/services/calendar";
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     import { fly } from "svelte/transition";
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     import { cubicOut } from "svelte/easing";
 
-    import { goto } from "$app/navigation";
+    import { goto, invalidateAll } from "$app/navigation";
     import { page } from "$app/stores";
 
     let { data }: { data: PageData } = $props();
@@ -90,6 +100,30 @@
     let showEpisodes = $state(true);
     let showShows = $state(true);
     let showSeasons = $state(true);
+
+    const requestingIds = new SvelteSet<number>();
+
+    async function handleQuickRequest(item: EntertainmentItem, event: MouseEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (requestingIds.has(item.item_id)) return;
+        requestingIds.add(item.item_id);
+
+        try {
+            const res = await executeQuickRequest(item);
+            if (res.success) {
+                toast.success(res.toastMessage);
+                await invalidateAll();
+            } else {
+                toast.error(res.toastMessage);
+            }
+        } catch {
+            toast.error("Failed to request media item.");
+        } finally {
+            requestingIds.delete(item.item_id);
+        }
+    }
 
     function resolveCalendarDate(item: EntertainmentItem) {
         const aired = dateUtils.parseISODate(item.aired_at);
@@ -424,14 +458,16 @@
 
 {#snippet entertainmentItem(item: EntertainmentItem, compact = false)}
     {@const itemDate = resolveCalendarDate(item)}
-    {@const diffDays = itemDate ? dateUtils.differenceInDays(itemDate, todayDate) : null}
-    {@const isPastUncompleted =
-        diffDays !== null && diffDays < 0 && item.last_state !== "Completed"}
+    {@const countdown = itemDate ? getAirDateCountdown(itemDate, todayDate) : null}
+    {@const libStatus = getLibraryStatusBadge(item.last_state)}
+    {@const diffDays = countdown ? countdown.diffDays : null}
+    {@const isPastUncompleted = diffDays !== null && diffDays < 0 && !libStatus.inLibrary}
     {@const isSeriesPremiere =
         item.item_type === "episode" && item.episode === 1 && item.season === 1}
     {@const isSeasonPremiere =
         item.item_type === "episode" && item.episode === 1 && item.season && item.season > 1}
     {@const itemUrl = getItemUrl(item)}
+    {@const isRequesting = requestingIds.has(item.item_id)}
     <svelte:element
         this={itemUrl ? "a" : "div"}
         href={itemUrl}
@@ -439,7 +475,7 @@
         class={cn(
             itemUrl && "text-foreground hover:text-foreground block cursor-pointer no-underline",
             "relative flex items-center rounded transition-colors",
-            compact ? "gap-1 truncate p-1" : "gap-3 p-2",
+            compact ? "gap-1 truncate p-1" : "gap-3 p-2.5",
             item.item_type === "episode"
                 ? [
                       "border border-blue-500/30 bg-blue-500/20 hover:bg-blue-500/30",
@@ -462,12 +498,12 @@
             item.last_state === "Completed" && "line-through opacity-60"
         )}
         title={compact
-            ? `${item.show_title}${item.season ? ` S${item.season}E${item.episode}` : ""}${!itemUrl ? " (no metadata — not clickable)" : ""}`
+            ? `${item.show_title}${item.season ? ` S${item.season}E${item.episode}` : ""} [${libStatus.label}]${!itemUrl ? " (no metadata — not clickable)" : ""}`
             : !itemUrl
               ? "No metadata available — item is not clickable"
               : undefined}
         onclick={() => {
-            // Add preventative logic here if inner buttons are added later
+            // Inner interactive elements stop propagation
         }}>
         {#if isPastUncompleted}
             <TriangleAlert class="absolute top-1 right-1 h-3 w-3 text-red-500 opacity-80" />
@@ -475,13 +511,28 @@
         {@render itemIcon(item, compact ? 3 : 4)}
 
         <div class="min-w-0 flex-1">
-            <div class={cn(compact && "truncate", `text-${compact ? "xs" : "xs font-medium"}`)}>
-                {item.show_title}
+            <div
+                class={cn(
+                    compact && "flex items-center gap-1.5 truncate",
+                    `text-${compact ? "xs" : "xs font-medium"}`
+                )}>
+                <span class={cn(compact && "truncate")}>{item.show_title}</span>
                 {#if item.season && compact}
-                    S{item.season}
-                    {#if item.episode}
-                        E{item.episode}
-                    {/if}
+                    <span class="text-muted-foreground shrink-0 text-[10px]">
+                        S{item.season}{#if item.episode}E{item.episode}{/if}
+                    </span>
+                {/if}
+                {#if compact}
+                    <span
+                        class={cn(
+                            "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
+                            libStatus.variant === "success" && "bg-emerald-400",
+                            libStatus.variant === "warning" && "bg-amber-400",
+                            libStatus.variant === "info" && "bg-blue-400",
+                            libStatus.variant === "destructive" && "bg-rose-400",
+                            libStatus.variant === "neutral" && "bg-slate-400"
+                        )}
+                        title={libStatus.label}></span>
                 {/if}
             </div>
 
@@ -497,7 +548,70 @@
                     Season {item.season}, Episode {item.episode}
                 </div>
             {/if}
+
+            {#if !compact}
+                <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    {#if countdown}
+                        <span
+                            class={cn(
+                                "rounded px-1.5 py-0.5 text-[10px] font-semibold",
+                                countdown.urgency === "today" &&
+                                    "bg-primary/20 text-primary border-primary/30 border",
+                                countdown.urgency === "tomorrow" &&
+                                    "border border-sky-500/30 bg-sky-500/20 text-sky-300",
+                                countdown.urgency === "upcoming" &&
+                                    "bg-muted text-muted-foreground border-border/50 border",
+                                countdown.urgency === "past" &&
+                                    "bg-muted/50 text-muted-foreground/80 border-border/40 border"
+                            )}>
+                            {countdown.label}
+                        </span>
+                    {/if}
+                    <span
+                        class={cn(
+                            "rounded border px-1.5 py-0.5 text-[10px] font-semibold",
+                            libStatus.variant === "success" &&
+                                "border-emerald-500/30 bg-emerald-500/20 text-emerald-300",
+                            libStatus.variant === "warning" &&
+                                "border-amber-500/30 bg-amber-500/20 text-amber-300",
+                            libStatus.variant === "info" &&
+                                "border-blue-500/30 bg-blue-500/20 text-blue-300",
+                            libStatus.variant === "destructive" &&
+                                "border-rose-500/30 bg-rose-500/20 text-rose-300",
+                            libStatus.variant === "neutral" &&
+                                "border-slate-500/30 bg-slate-500/20 text-slate-300"
+                        )}>
+                        {libStatus.label}
+                    </span>
+                </div>
+            {/if}
         </div>
+
+        {#if !compact}
+            <div class="ml-2 flex shrink-0 items-center">
+                {#if libStatus.canRequest}
+                    <button
+                        type="button"
+                        title="1-Click Request"
+                        aria-label={`Request ${item.show_title}`}
+                        class="hover:bg-primary/20 hover:text-primary text-muted-foreground border-border/60 flex h-7 w-7 items-center justify-center rounded border transition-colors"
+                        disabled={isRequesting}
+                        onclick={(e) => handleQuickRequest(item, e)}>
+                        {#if isRequesting}
+                            <Loader2 class="text-primary h-3.5 w-3.5 animate-spin" />
+                        {:else}
+                            <Download class="h-3.5 w-3.5" />
+                        {/if}
+                    </button>
+                {:else if libStatus.inLibrary}
+                    <span
+                        class="flex h-7 w-7 items-center justify-center text-emerald-400"
+                        title="In Library">
+                        <Check class="h-4 w-4" />
+                    </span>
+                {/if}
+            </div>
+        {/if}
     </svelte:element>
 {/snippet}
 
