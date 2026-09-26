@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.28.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.27.0...riven-frontend-v1.28.0) (2026-09-26)
+
+
+### Features
+
+* **calendar:** interactive media release calendar with air date countdowns and 1-click requests (CAL-001) ([d6d6553](https://github.com/S0lidByte/CineFlow-frontend/commit/d6d6553d8f9eadeb6bfaca4b3e4f34757cd19f1d))
+* **ranking:** TRaSH Guides Ranking Studio & Settings Integration (TRASH-002) ([864e4dd](https://github.com/S0lidByte/CineFlow-frontend/commit/864e4dd56e57821e72d13b46f33efd316b9c33fc))
+* **ui:** stream availability & media quality badge matrix (AVAIL-001) ([f2f47ff](https://github.com/S0lidByte/CineFlow-frontend/commit/f2f47ff8e2dc46336adf0ae3b772d09829ec98fe))
+
+
+### Bug Fixes
+
+* **ui:** wire AvailabilityMatrix into media cards, details hero, and library list (AVAIL-001) ([3afd292](https://github.com/S0lidByte/CineFlow-frontend/commit/3afd29258e81bc7eb37727ac38ba7a53eb46ab07))
+
 ## [1.27.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.26.0...riven-frontend-v1.27.0) (2026-09-26)
 
 
