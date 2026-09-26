@@ -19,6 +19,7 @@
         formatBitrate,
         getVfsBadgeStatus
     } from "./episode-details";
+    import AvailabilityMatrix from "./availability-matrix.svelte";
 
     export interface EpisodeItemData {
         id?: number | null;
@@ -182,6 +183,18 @@
             {@const video = meta?.video}
             <div class="flex flex-col gap-6">
                 {@render sectionHeading("File & Stream Details")}
+                <!-- Ambient Quality & Availability Matrix -->
+                <div
+                    class="rounded-xl border border-white/10 bg-zinc-950/60 p-3.5 shadow-inner backdrop-blur-md">
+                    <AvailabilityMatrix
+                        metadata={meta}
+                        filesystemEntry={fs}
+                        state={rivenEp.state}
+                        size="sm"
+                        showHealth={true}
+                        showDebridRing={true}
+                        ringSize="sm" />
+                </div>
                 <div class="flex flex-col gap-4 text-sm">
                     <!-- Canonical Filename -->
                     {#if meta?.filename || fs?.original_filename}

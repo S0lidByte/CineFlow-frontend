@@ -26,7 +26,8 @@ const testModules = [
     "../src/lib/components/ambient/ambient.test.ts",
     "../src/lib/components/navigation/command-center.test.ts",
     "../src/lib/services/trash-ranking.test.ts",
-    "../src/lib/services/calendar.test.ts"
+    "../src/lib/services/calendar.test.ts",
+    "../src/lib/services/availability-matrix.test.ts"
 ];
 
 for (const testModule of testModules) {

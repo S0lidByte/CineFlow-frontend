@@ -3,6 +3,9 @@
     import Check from "@lucide/svelte/icons/check";
     import { cn } from "$lib/utils";
     import type { Snippet } from "svelte";
+    import AvailabilityMatrix from "./availability-matrix.svelte";
+    import type { MediaQualityMatrix } from "$lib/services/availability-matrix";
+    import type { MediaMetadata, FilesystemEntry } from "$lib/types/riven";
 
     interface Props {
         title: string;
@@ -14,6 +17,11 @@
         class?: string;
         topRight?: Snippet;
         showContent?: boolean;
+        qualityMatrix?: MediaQualityMatrix | null;
+        mediaMetadata?: MediaMetadata | null;
+        filesystemEntry?: FilesystemEntry | null;
+        itemState?: string | null;
+        showQualityBadges?: boolean;
     }
 
     let {
@@ -25,7 +33,12 @@
         onSelectToggle,
         class: className,
         topRight,
-        showContent = true
+        showContent = true,
+        qualityMatrix = null,
+        mediaMetadata = null,
+        filesystemEntry = null,
+        itemState = null,
+        showQualityBadges = false
     }: Props = $props();
 </script>
 
@@ -92,6 +105,18 @@
     {#if showContent}
         <div
             class="absolute inset-x-0 bottom-0 z-20 p-4 transition-transform duration-300 group-hover:-translate-y-1">
+            {#if showQualityBadges && (qualityMatrix || mediaMetadata || filesystemEntry || itemState)}
+                <div class="mb-2">
+                    <AvailabilityMatrix
+                        matrix={qualityMatrix}
+                        metadata={mediaMetadata}
+                        {filesystemEntry}
+                        state={itemState}
+                        compact={true}
+                        showHealth={false}
+                        size="xs" />
+                </div>
+            {/if}
             <h3 class="line-clamp-2 leading-tight font-bold text-balance text-white drop-shadow-md">
                 {title}
             </h3>

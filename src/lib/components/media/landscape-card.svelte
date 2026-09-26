@@ -4,6 +4,9 @@
     import { browser } from "$app/environment";
     import { cn } from "$lib/utils";
     import type { Snippet } from "svelte";
+    import AvailabilityMatrix from "./availability-matrix.svelte";
+    import type { MediaQualityMatrix } from "$lib/services/availability-matrix";
+    import type { MediaMetadata, FilesystemEntry } from "$lib/types/riven";
 
     import { getRatings, type RatingsData } from "$lib/stores/ratings";
 
@@ -18,6 +21,11 @@
         mediaType?: "movie" | "tv";
         initialRating?: number;
         episodeNumber?: number;
+        qualityMatrix?: MediaQualityMatrix | null;
+        mediaMetadata?: MediaMetadata | null;
+        filesystemEntry?: FilesystemEntry | null;
+        itemState?: string | null;
+        showQualityBadges?: boolean;
     }
 
     let {
@@ -30,7 +38,12 @@
         tmdbId,
         mediaType = "movie",
         initialRating,
-        episodeNumber
+        episodeNumber,
+        qualityMatrix = null,
+        mediaMetadata = null,
+        filesystemEntry = null,
+        itemState = null,
+        showQualityBadges = false
     }: Props = $props();
 
     let ratingsPromise = $state<Promise<RatingsData> | null>(null);
@@ -100,6 +113,19 @@
                     {/if}
                     {title}
                 </h3>
+
+                {#if showQualityBadges && (qualityMatrix || mediaMetadata || filesystemEntry || itemState)}
+                    <div class="relative z-20">
+                        <AvailabilityMatrix
+                            matrix={qualityMatrix}
+                            metadata={mediaMetadata}
+                            {filesystemEntry}
+                            state={itemState}
+                            compact={true}
+                            showHealth={false}
+                            size="xs" />
+                    </div>
+                {/if}
 
                 {#if meta}
                     <div class="relative z-20 flex flex-wrap items-center gap-2">
