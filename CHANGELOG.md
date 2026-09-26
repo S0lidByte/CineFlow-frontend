@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.27.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.26.0...riven-frontend-v1.27.0) (2026-09-26)
+
+
+### Features
+
+* **navigation:** universal Cmd+K command center with multi-provider search aggregation (VIS-003) ([5d46142](https://github.com/S0lidByte/CineFlow-frontend/commit/5d46142b182c811805d1a95f18780649a40d1f83))
+* **rebrand:** sqlite path resolution, volume aliases and container defaults (REBRAND-003) ([760cffd](https://github.com/S0lidByte/CineFlow-frontend/commit/760cffdb0197a8bdedddf98cba0b18846ea1ac88))
+* **telemetry:** stream monitor view, playback telemetry cards, and perf instrumentation ([acf9773](https://github.com/S0lidByte/CineFlow-frontend/commit/acf977378a1180f59db034ad9173d7b68944358b))
+* **ui:** 21:9 ultra-wide cinematic hero canvas with ambient obsidian lighting (VIS-002) ([7ddee72](https://github.com/S0lidByte/CineFlow-frontend/commit/7ddee727c7c7b6865f884cc9036b97f1898adc24))
+* **visuals:** ambient obsidian visual primitives, palette extractor, and status rings (VIS-001) ([10e8160](https://github.com/S0lidByte/CineFlow-frontend/commit/10e8160d55b1ef706c8ba4a919e47836d36b1681))
+
+
+### Bug Fixes
+
+* **db:** gracefully fallback to memory sqlite on permission denied and configure CI test environment ([075147d](https://github.com/S0lidByte/CineFlow-frontend/commit/075147d9fd50a209116db59e57151d81eb6c08d5))
+
 ## [1.28.0] (2026-09-26)
 
 ### Features
