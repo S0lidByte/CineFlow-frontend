@@ -75,26 +75,10 @@
         }
     }
 
-    function autoFillRedirectUri() {
-        const input = document.querySelector<HTMLInputElement>(
-            'input[name*="oauth_redirect_uri"], input[id*="oauth_redirect_uri"]'
-        );
-        if (input) {
-            // Expand any collapsed ancestor fieldset so the user can see it
-            const parentFieldset = input.closest<HTMLFieldSetElement>("fieldset[data-collapsed]");
-            if (parentFieldset) {
-                delete parentFieldset.dataset.collapsed;
-                const legend = parentFieldset.querySelector<HTMLLegendElement>("legend");
-                if (legend) legend.dataset.settingsOpen = "1";
-            }
-            input.value = expectedRedirect;
-            input.dispatchEvent(new Event("input", { bubbles: true }));
-            input.dispatchEvent(new Event("change", { bubbles: true }));
-            toast.success("Redirect URI entered into form. Click 'Save changes' to persist.");
-        } else {
-            void copyRedirectUri();
-        }
-    }
+    // The page remains mounted after enhanced saves; refresh persisted connection readiness.
+    $effect(() => {
+        if ($page.form) void refreshStatus();
+    });
 
     onMount(() => {
         origin = window.location.origin;
@@ -176,48 +160,12 @@
     {#if status && (!status.has_client_id || !status.has_client_secret || !status.redirect_uri || !redirectMatches)}
         <div
             class="space-y-1.5 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
-            <p class="text-foreground font-medium">Steps to configure Trakt below:</p>
-            <ul class="text-muted-foreground list-disc space-y-1 pl-4 text-xs">
-                {#if !status.has_client_id}
-                    <li>
-                        Enter your Trakt <span class="text-foreground font-medium">Client ID</span>
-                        into the <span class="text-foreground font-mono text-[11px]">Api Key</span>
-                        field (or expand <span class="text-foreground font-medium">▾ OAuth</span> below).
-                    </li>
-                {/if}
-                {#if !status.has_client_secret}
-                    <li>
-                        Expand <span class="text-foreground font-medium">▾ OAuth</span> below and
-                        enter your Trakt
-                        <span class="text-foreground font-medium">Client Secret</span>.
-                    </li>
-                {/if}
-                {#if !status.redirect_uri}
-                    <li class="flex flex-wrap items-center gap-1.5">
-                        <span
-                            >Expand <span class="text-foreground font-medium">▾ OAuth</span> below
-                            and set
-                            <span class="text-foreground font-mono text-[11px]">Redirect URI</span
-                            >:</span>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            class="h-5 px-2 text-[10px]"
-                            onclick={autoFillRedirectUri}>Insert Redirect URI into form</Button>
-                    </li>
-                {:else if !redirectMatches}
-                    <li class="flex flex-wrap items-center gap-1.5">
-                        <span>Saved Redirect URI does not match:</span>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            class="h-5 px-2 text-[10px]"
-                            onclick={autoFillRedirectUri}>Update Redirect URI in form</Button>
-                    </li>
-                {/if}
-            </ul>
+            <p class="text-foreground font-medium">Configure Trakt below:</p>
+            <p class="text-muted-foreground">
+                Enter your Client ID and Client Secret. Leave the secret blank to keep an existing
+                saved secret. The callback shown above is set automatically when you save; register
+                the same URL in your Trakt application.
+            </p>
             <p class="text-muted-foreground pt-0.5 text-[11px]">
                 After updating fields, click <strong class="text-foreground">Save changes</strong>
                 before clicking <strong class="text-foreground">Connect Trakt</strong>.

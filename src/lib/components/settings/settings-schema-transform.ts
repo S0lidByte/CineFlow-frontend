@@ -269,5 +269,14 @@ export function buildSettingsUiSchema(
         }
     }
 
+    if (validProps.content !== undefined) {
+        ui.content = {
+            trakt: {
+                "ui:order": ["enabled", "api_key", "client_secret", "*", "proxy_url"],
+                client_secret: { "ui:components": { textWidget: "apiKeyWidget" } }
+            }
+        };
+    }
+
     return ui as UiSchemaRoot;
 }

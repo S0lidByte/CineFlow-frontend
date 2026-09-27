@@ -33,6 +33,12 @@ import { perfCount, startPerfMark, endPerfMark } from "$lib/perf";
 import { createScopedLogger } from "$lib/logger";
 import { getActorHeadersForUser } from "$lib/server/permissions";
 
+import {
+    projectTraktSchema,
+    projectTraktValue,
+    mergeTraktSubmission
+} from "$lib/components/settings/trakt-settings";
+
 const logger = createScopedLogger("settings-page-server");
 
 const FULL_SCHEMA_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -82,7 +88,7 @@ function buildSearchIndex(fullSchema: Record<string, unknown> | null): SettingsS
         buildSectionSearchEntries(),
         buildRankingShortcutEntries(),
         buildLibraryProfilesShortcutEntries(),
-        buildFieldIndexFromSchema(fullSchema)
+        buildFieldIndexFromSchema(fullSchema ? projectTraktSchema(fullSchema) : null)
     );
 }
 
@@ -544,8 +550,8 @@ export const load: PageServerLoad = async ({
     }
 
     // Transform cloned data so backend responses and cached references remain pristine.
-    let workingSchema = pruneLibraryProfilesFromSchema(structuredClone(schema));
-    initialValue = pruneLibraryProfilesFromValue(initialValue);
+    let workingSchema = projectTraktSchema(pruneLibraryProfilesFromSchema(schema));
+    initialValue = projectTraktValue(pruneLibraryProfilesFromValue(initialValue));
     workingSchema = sanitizeSettingsSchemaTitles(workingSchema);
     labelNullablePathOptions(workingSchema);
 
@@ -625,7 +631,7 @@ export const actions = {
                 fetch
             );
             // Transform a clone so the raw backend response stays pristine.
-            schema = pruneLibraryProfilesFromSchema(structuredClone(rawSchema));
+            schema = projectTraktSchema(pruneLibraryProfilesFromSchema(rawSchema));
             schema = sanitizeSettingsSchemaTitles(schema);
             labelNullablePathOptions(schema);
             setCachedSettingsSchema(schemaCacheKey, schema);
@@ -668,7 +674,7 @@ export const actions = {
             return fail(400, { form });
         }
 
-        const payload = form.data as Record<string, unknown>;
+        let payload = structuredClone(form.data) as Record<string, unknown>;
 
         // Ensure all requested keys in `paths` exist in `payload` by populating missing keys
         // from backend current settings (e.g. read-only fields like `version` or un-edited fields).
@@ -680,6 +686,7 @@ export const actions = {
                 paths,
                 fetch
             );
+            payload = mergeTraktSubmission(payload, currentSettings, url.origin);
             for (const key of paths.split(",")) {
                 const k = key.trim();
                 if (k && payload[k] === undefined && currentSettings[k] !== undefined) {
@@ -690,6 +697,8 @@ export const actions = {
             logger.warn("Failed to fetch current settings fallback during payload completion", {
                 error: e
             });
+            // Fail closed: never replace Trakt settings without recovering saved credentials.
+            if (tab.id === "content") return fail(503, { form });
         }
 
         // If saving the filesystem tab, we must salvage the existing library_profiles

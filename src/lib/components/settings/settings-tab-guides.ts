@@ -129,7 +129,7 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         howToUse: [
             "Enable content providers (Mdblist, Trakt, etc.) that should feed new requests.",
             "Map watchlist IDs and API keys from each provider’s dashboard.",
-            "For Trakt OAuth: save Client ID/Secret + redirect URI ({ORIGIN}/api/trakt/oauth/callback), then use Connect Trakt.",
+            "For Trakt OAuth: save Client ID and Client Secret, then use Connect Trakt. The callback is derived automatically from the frontend origin; register that URL in your Trakt app.",
             "Tune polling so new items are picked up without exceeding rate limits."
         ],
         tips: [
