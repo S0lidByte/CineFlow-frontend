@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.29.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.28.0...riven-frontend-v1.29.0) (2026-09-27)
+
+
+### Features
+
+* **settings:** streamline Trakt configuration and credentials ([6785d88](https://github.com/S0lidByte/CineFlow-frontend/commit/6785d880949866b33561a99d5a3d7f5877c6dc39))
+
+
+### Bug Fixes
+
+* **trakt:** allow loopback origin equivalence in OAuth redirect URI matching ([1088935](https://github.com/S0lidByte/CineFlow-frontend/commit/1088935b9b0930e8d4eb3674cad3454785c9b029))
+* **trakt:** enhance Trakt connect panel UX with copy, auto-fill, and safe client ID fallback ([d62e285](https://github.com/S0lidByte/CineFlow-frontend/commit/d62e28562424be1a5d370fd4bf008bcd2979936a))
+
 ## [1.28.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.27.0...riven-frontend-v1.28.0) (2026-09-26)
 
 
