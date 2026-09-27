@@ -96,11 +96,20 @@
         origin ? `${origin}/api/trakt/oauth/callback` : "{ORIGIN}/api/trakt/oauth/callback"
     );
 
+    function normalizeLoopbackUrl(url: string): string {
+        return url
+            .trim()
+            .replace(/\/$/, "")
+            .replace(/^http:\/\/(?:localhost|127\.0\.0\.1)(?::(\d+))?/, "http://local-dev:$1");
+    }
+
     const redirectMatches = $derived(
         !!status?.redirect_uri &&
             !!origin &&
-            status.redirect_uri.trim().replace(/\/$/, "") ===
-                `${origin}/api/trakt/oauth/callback`.replace(/\/$/, "")
+            (status.redirect_uri.trim().replace(/\/$/, "") ===
+                `${origin}/api/trakt/oauth/callback`.replace(/\/$/, "") ||
+                normalizeLoopbackUrl(status.redirect_uri) ===
+                    normalizeLoopbackUrl(`${origin}/api/trakt/oauth/callback`))
     );
 
     const canConnect = $derived(
