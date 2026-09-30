@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.29.0...riven-frontend-v1.29.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* **settings:** prevent concurrent settings save submissions and debounce state (D76) ([199d7a1](https://github.com/S0lidByte/CineFlow-frontend/commit/199d7a11b8c109dbd4a7cb049c20fbed054afb60))
+
 ## [1.29.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.28.0...riven-frontend-v1.29.0) (2026-09-27)
 
 
