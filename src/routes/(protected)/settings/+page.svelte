@@ -143,6 +143,7 @@
     let tabSwitchFocus: string | null = null;
     let showDiscardConfirm = $state(false);
     let pendingFocusPath = $state<string | null>(null);
+    let isSubmitting = $state(false);
 
     /**
      * Tracks which sidebar groups are expanded.
@@ -200,21 +201,27 @@
 
     /** Programmatically submits the SJSF-managed `<form>` inside `.settings-form-host`. */
     function submitSettingsForm(): void {
-        if ($navigating) return;
+        if ($navigating || isSubmitting) return;
         const formEl =
             document.querySelector<HTMLFormElement>("form.settings-form") ??
             document.querySelector<HTMLFormElement>(".settings-form-host form") ??
             document.querySelector<HTMLFormElement>(".settings-form form") ??
             document.querySelector<HTMLFormElement>("form[action]");
         if (formEl) {
+            isSubmitting = true;
             formEl.requestSubmit();
+            // Fallback timeout to reset submitting state if form submission completes without navigation
+            setTimeout(() => {
+                isSubmitting = false;
+            }, 1200);
         }
     }
 
     /** Save the active tab — SJSF form or custom panel submit button. */
     function submitActiveSettings(): void {
-        if ($navigating) return;
+        if ($navigating || isSubmitting) return;
         if (activeTab?.custom) {
+            isSubmitting = true;
             const submitId =
                 $page.data.activeTabId === RANKING_TAB_ID
                     ? "ranking-save-submit"
@@ -222,6 +229,9 @@
                       ? "library-profiles-save-submit"
                       : null;
             if (submitId) document.getElementById(submitId)?.click();
+            setTimeout(() => {
+                isSubmitting = false;
+            }, 1200);
             return;
         }
         submitSettingsForm();
@@ -229,6 +239,7 @@
 
     /** Discard unsaved edits for the active tab. */
     function discardActiveSettings(): void {
+        if (isSubmitting) return;
         if (activeTab?.custom) {
             customDirty?.discard();
             return;
@@ -375,7 +386,7 @@
     function handleKeydown(e: KeyboardEvent): void {
         if ((e.ctrlKey || e.metaKey) && e.key === "s") {
             e.preventDefault();
-            if (isDirty && !isNavigating) {
+            if (isDirty && !isNavigating && !isSubmitting) {
                 submitActiveSettings();
             }
         }
@@ -466,9 +477,14 @@
                                         size="sm"
                                         class="h-8 gap-1.5 px-3 text-xs"
                                         onclick={submitActiveSettings}
-                                        disabled={isNavigating}
+                                        disabled={isNavigating || isSubmitting}
                                         aria-live="polite">
-                                        Save changes
+                                        {#if isSubmitting}
+                                            <Loader2 class="size-3.5 animate-spin" />
+                                            Saving…
+                                        {:else}
+                                            Save changes
+                                        {/if}
                                     </Button>
                                 {/snippet}
                             </Tooltip.Trigger>
@@ -688,11 +704,17 @@
                             variant="outline"
                             size="sm"
                             onclick={discardActiveSettings}
-                            disabled={isNavigating}>
+                            disabled={isNavigating || isSubmitting}>
                             Discard
                         </Button>
-                        <Button size="sm" onclick={submitActiveSettings} disabled={isNavigating}>
-                            {#if isNavigating}
+                        <Button
+                            size="sm"
+                            onclick={submitActiveSettings}
+                            disabled={isNavigating || isSubmitting}>
+                            {#if isSubmitting}
+                                <Loader2 class="size-3.5 animate-spin" />
+                                Saving…
+                            {:else if isNavigating}
                                 <Loader2 class="size-3.5 animate-spin" />
                                 Loading…
                             {:else}
