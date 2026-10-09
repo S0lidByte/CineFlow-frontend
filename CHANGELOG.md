@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.29.1...riven-frontend-v1.30.0) (2026-10-09)
+
+
+### Features
+
+* **settings:** add interactive connection test panel with E2E and vitest suites ([787bec5](https://github.com/S0lidByte/CineFlow-frontend/commit/787bec552aa007318fbb0d0d9d36ffe272060211))
+
 ## [1.29.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.29.0...riven-frontend-v1.29.1) (2026-09-30)
 
 
