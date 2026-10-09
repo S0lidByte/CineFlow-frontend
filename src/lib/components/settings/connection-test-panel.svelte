@@ -7,6 +7,7 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import { Badge } from "$lib/components/ui/badge/index.js";
     import { toast } from "svelte-sonner";
+    import { onMount } from "svelte";
     import Loader2 from "@lucide/svelte/icons/loader-2";
     import PlugZap from "@lucide/svelte/icons/plug-zap";
 
@@ -39,6 +40,11 @@
 
     let states = $state<Record<string, ProbeState>>({});
     let results = $state<Record<string, ProbeResult | null>>({});
+    // SSR controls must not accept clicks before their handlers are attached.
+    let mounted = $state(false);
+    onMount(() => {
+        mounted = true;
+    });
     // Generation counter guards against stale responses from concurrent test invocations.
     let generations: Record<string, number> = {};
 
@@ -137,7 +143,7 @@
                         type="button"
                         size="sm"
                         variant="outline"
-                        disabled={state === "loading"}
+                        disabled={!mounted || state === "loading"}
                         onclick={() => void testOne(svc.id)}>
                         {#if state === "loading"}
                             <Loader2 class="size-3.5 animate-spin" />

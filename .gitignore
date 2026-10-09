@@ -26,3 +26,13 @@ vite.config.ts.timestamp-*
 *.db
 
 config/server.json
+
+# Playwright
+tests/e2e/.auth/
+test-results/
+playwright-report/
+blob-report/
+
+# Local diagnostic logs
+/current-broken-backend.log
+/current-broken-frontend.log
