@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.30.0...riven-frontend-v1.30.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* **deps:** remediate brace-expansion and fast-uri vulnerabilities via minimal pnpm overrides ([#129](https://github.com/S0lidByte/CineFlow-frontend/issues/129)) ([c335ed0](https://github.com/S0lidByte/CineFlow-frontend/commit/c335ed02e9a1ed2350ab4e164e795c5e77025e74))
+
 ## [1.30.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.29.1...riven-frontend-v1.30.0) (2026-10-09)
 
 
