@@ -1317,6 +1317,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings/autotune/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Cache Autotune
+         * @description Start an isolated synthetic cache microbenchmark and optimization job.
+         */
+        post: operations["run_cache_autotune"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/autotune/status/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Cache Autotune Status
+         * @description Get the progress status and recommendation of an auto-tune job.
+         */
+        get: operations["get_cache_autotune_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/autotune/cancel/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Cache Autotune
+         * @description Cancel a running auto-tune job.
+         */
+        post: operations["cancel_cache_autotune"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/autotune/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply Cache Autotune
+         * @description Apply recommendations from a completed auto-tune job to live settings.
+         */
+        post: operations["apply_cache_autotune"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/webhook/overseerr": {
         parameters: {
             query?: never;
@@ -1410,7 +1490,7 @@ export interface paths {
          *         request: The FastAPI request object.
          *
          *     Returns:
-         *         A StreamingResponse for the file content.
+         *         A StreamingResponse for the file content, or Response on 416 range error.
          */
         get: operations["stream_file_api_v1_stream_file__item_id__get"];
         put?: never;
@@ -1794,6 +1874,113 @@ export interface components {
             min_filesize_override?: number | null;
             /** Max Filesize Override */
             max_filesize_override?: number | null;
+        };
+        /** AutoTuneApplyRequest */
+        AutoTuneApplyRequest: {
+            /**
+             * Run Id
+             * @description Run ID of the completed auto-tune job
+             */
+            run_id: string;
+            /**
+             * Force
+             * @description Apply even if open VFS media handles are detected
+             * @default false
+             */
+            force: boolean;
+        };
+        /** AutoTuneJobSnapshot */
+        AutoTuneJobSnapshot: {
+            /** Run Id */
+            run_id: string;
+            /**
+             * Profile
+             * @enum {string}
+             */
+            profile: "conservative" | "balanced" | "aggressive";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "running" | "completed" | "failed" | "cancelled";
+            /** Progress Pct */
+            progress_pct: number;
+            /** Current Step */
+            current_step: string;
+            /** Error */
+            error?: string | null;
+            /** Created At */
+            created_at: number;
+            /** Completed At */
+            completed_at?: number | null;
+            recommendation?: components["schemas"]["AutoTuneRecommendation"] | null;
+        };
+        /** AutoTuneRecommendation */
+        AutoTuneRecommendation: {
+            /**
+             * Profile
+             * @enum {string}
+             */
+            profile: "conservative" | "balanced" | "aggressive";
+            /** System Memory Mb */
+            system_memory_mb: number;
+            /** Cgroup Limit Mb */
+            cgroup_limit_mb?: number | null;
+            /** Effective Memory Ceiling Mb */
+            effective_memory_ceiling_mb: number;
+            /** Disk Free Mb */
+            disk_free_mb: number;
+            /** Hot Tier Throughput Mb S */
+            hot_tier_throughput_mb_s: number;
+            /** Warm Tier Throughput Mb S */
+            warm_tier_throughput_mb_s: number;
+            /** Recommended Hot Cache Max Mb */
+            recommended_hot_cache_max_mb: number;
+            /** Recommended Warm Cache Max Mb */
+            recommended_warm_cache_max_mb: number;
+            /** Physical Hot Storage Ceiling Mb */
+            physical_hot_storage_ceiling_mb?: number | null;
+            /** @default HIGH */
+            performance_confidence: components["schemas"]["TopologyConfidence"];
+            /** Effective Safe Hot Capacity Mb */
+            effective_safe_hot_capacity_mb: number;
+            /** Minimum Operational Hot Mb */
+            minimum_operational_hot_mb: number;
+            operational_status: components["schemas"]["OperationalStatus"];
+            topology_confidence: components["schemas"]["TopologyConfidence"];
+            /** Recommended Hot Reserve Pct */
+            recommended_hot_reserve_pct: number;
+            /** Recommended Hot Watermark High Pct */
+            recommended_hot_watermark_high_pct: number;
+            /** Recommended Hot Watermark Low Pct */
+            recommended_hot_watermark_low_pct: number;
+            /** Recommended Warm Reserve Pct */
+            recommended_warm_reserve_pct: number;
+            /** Recommended Warm Watermark High Pct */
+            recommended_warm_watermark_high_pct: number;
+            /** Recommended Warm Watermark Low Pct */
+            recommended_warm_watermark_low_pct: number;
+            /** Recommended Warm Min Free Mb */
+            recommended_warm_min_free_mb: number;
+            /** Reasons */
+            reasons?: string[];
+            policy_metadata?: components["schemas"]["PolicyMetadata"] | null;
+        };
+        /** AutoTuneRunRequest */
+        AutoTuneRunRequest: {
+            /**
+             * Profile
+             * @description Target optimization profile
+             * @default balanced
+             * @enum {string}
+             */
+            profile: "conservative" | "balanced" | "aggressive";
+            /**
+             * Bench Bytes
+             * @description Benchmark payload size in bytes
+             * @default 8388608
+             */
+            bench_bytes: number;
         };
         /** BackupResponse */
         BackupResponse: {
@@ -2245,6 +2432,55 @@ export interface components {
              * @default true
              */
             cache_metrics: boolean;
+            /**
+             * Autotune Mode
+             * @description Cache auto-tune operational mode
+             * @default disabled
+             * @enum {string}
+             */
+            autotune_mode: "disabled" | "conservative" | "balanced" | "aggressive";
+            /**
+             * Hot Cache Reserve Pct
+             * @description Hot cache headroom reserve percentage
+             * @default 10
+             */
+            hot_cache_reserve_pct: number;
+            /**
+             * Hot Cache Watermark High Pct
+             * @description Hot cache high watermark trigger percentage
+             * @default 85
+             */
+            hot_cache_watermark_high_pct: number;
+            /**
+             * Hot Cache Watermark Low Pct
+             * @description Hot cache low watermark target percentage
+             * @default 70
+             */
+            hot_cache_watermark_low_pct: number;
+            /**
+             * Warm Cache Reserve Pct
+             * @description Warm cache headroom reserve percentage
+             * @default 10
+             */
+            warm_cache_reserve_pct: number;
+            /**
+             * Warm Cache Watermark High Pct
+             * @description Warm cache high watermark trigger percentage
+             * @default 85
+             */
+            warm_cache_watermark_high_pct: number;
+            /**
+             * Warm Cache Watermark Low Pct
+             * @description Warm cache low watermark target percentage
+             * @default 70
+             */
+            warm_cache_watermark_low_pct: number;
+            /**
+             * Warm Cache Min Free Mb
+             * @description Minimum free space in MB to maintain on the warm cache disk volume
+             * @default 1024
+             */
+            warm_cache_min_free_mb: number;
             /**
              * Movie Dir Template
              * @description Template for movie directory names. Available variables: title, year, tmdb_id, imdb_id, resolution, codec, hdr, audio, quality, is_remux, is_proper, is_repack, is_extended, is_directors_cut, container. Example: '{title} ({year})' or '{title} ({year}) [{resolution}]'
@@ -3011,6 +3247,11 @@ export interface components {
             offset: number;
         };
         /**
+         * OperationalStatus
+         * @enum {string}
+         */
+        OperationalStatus: "NORMAL" | "CONSTRAINED" | "INSUFFICIENT_CAPACITY";
+        /**
          * OptionsConfig
          * @description Configuration for various options.
          */
@@ -3381,6 +3622,34 @@ export interface components {
             guids?: string[] | null;
             /** Message */
             message?: string | null;
+        };
+        /**
+         * PolicyMetadata
+         * @description Structured, explainable policy metadata attached to recommendations.
+         */
+        PolicyMetadata: {
+            /** Policy Id */
+            policy_id: string;
+            /** Policy Version */
+            policy_version: string;
+            /** Parameters */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /** Reason */
+            reason: string;
+            /** Confidence */
+            confidence: number;
+            /**
+             * Origin
+             * @default FALLBACK_POLICY
+             */
+            origin: string;
+            /**
+             * Semantics
+             * @default POLICY_TARGET
+             */
+            semantics: string;
         };
         /** PostProcessing */
         PostProcessing: {
@@ -4069,6 +4338,13 @@ export interface components {
              */
             prefetch_chunks: number;
             /**
+             * Parallel Prefetch Workers
+             * @description Maximum simultaneous per-stream body transfers including the foreground connection (1, 2, or 4).
+             * @default 1
+             * @enum {integer}
+             */
+            parallel_prefetch_workers: 1 | 2 | 4;
+            /**
              * Connect Timeout Seconds
              * @description Timeout in seconds for establishing a connection to the streaming service (10 seconds default)
              * @default 10
@@ -4147,6 +4423,54 @@ export interface components {
              * @default 0
              */
             cache_hit_rate_pct: number;
+            /**
+             * Upstream Bytes
+             * @description Total raw payload bytes fetched from the upstream provider
+             * @default 0
+             */
+            upstream_bytes: number;
+            /**
+             * Upstream Transfer Seconds
+             * @description Summed transport service seconds across body responses
+             * @default 0
+             */
+            upstream_transfer_seconds: number;
+            /**
+             * Total Session Connections
+             * @description Total HTTP response connections established in this session
+             * @default 0
+             */
+            total_session_connections: number;
+            /**
+             * Active Body Responses
+             * @description Currently open upstream HTTP body responses
+             * @default 0
+             */
+            active_body_responses: number;
+            /**
+             * Peak Body Responses
+             * @description Peak concurrent upstream HTTP body responses observed
+             * @default 0
+             */
+            peak_body_responses: number;
+            /**
+             * Speculative Bytes
+             * @description Raw payload bytes fetched by parallel prefetch workers
+             * @default 0
+             */
+            speculative_bytes: number;
+            /**
+             * Speculative Failures
+             * @description Count of failed or abandoned speculative prefetch attempts
+             * @default 0
+             */
+            speculative_failures: number;
+            /**
+             * Parallel Prefetch Workers
+             * @description Configured parallel prefetch worker count for this stream
+             * @default 1
+             */
+            parallel_prefetch_workers: number;
             /**
              * Current Throughput Mbps
              * @description Instantaneous network transfer rate in megabytes per second (MB/s) over rolling window
@@ -4339,6 +4663,11 @@ export interface components {
             subdl?: components["schemas"]["SubDLProviderConfig"];
         };
         /**
+         * TopologyConfidence
+         * @enum {string}
+         */
+        TopologyConfidence: "HIGH" | "MEDIUM" | "LOW";
+        /**
          * TorrentContainer
          * @description Represents a collection of files from an infohash from a debrid service
          */
@@ -4463,7 +4792,7 @@ export interface components {
             enabled: boolean;
             /**
              * Api Key
-             * @description Trakt Client ID (from trakt.tv/oauth/applications — not the Client Secret)
+             * @description Trakt Client ID (from trakt.tv/oauth/applications — acts as both API Key and OAuth Client ID. Do not enter the Client Secret here).
              * @default
              */
             api_key: string;
@@ -4555,13 +4884,13 @@ export interface components {
         TraktOauthModel: {
             /**
              * Oauth Client Id
-             * @description Trakt OAuth client ID
+             * @description Trakt OAuth client ID (optional if Api Key is configured above)
              * @default
              */
             oauth_client_id: string;
             /**
              * Oauth Client Secret
-             * @description Trakt OAuth client secret
+             * @description Trakt OAuth client secret (from trakt.tv/oauth/applications)
              * @default
              */
             oauth_client_secret: string;
@@ -4573,16 +4902,16 @@ export interface components {
             oauth_redirect_uri: string;
             /**
              * Access Token
-             * @description Trakt OAuth access token
+             * @description Trakt OAuth access token (managed automatically upon connection)
              * @default
              */
-            access_token: string;
+            readonly access_token: string;
             /**
              * Refresh Token
-             * @description Trakt OAuth refresh token
+             * @description Trakt OAuth refresh token (managed automatically upon connection)
              * @default
              */
-            refresh_token: string;
+            readonly refresh_token: string;
         };
         /**
          * TrashCondition
@@ -8005,6 +8334,188 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConnectionTestResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_cache_autotune: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutoTuneRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutoTuneJobSnapshot"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_cache_autotune_status: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path: {
+                /** @description Auto-tune run ID */
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutoTuneJobSnapshot"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_cache_autotune: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path: {
+                /** @description Auto-tune run ID */
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_cache_autotune: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutoTuneApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Not found */
