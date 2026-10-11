@@ -25,6 +25,14 @@ function makeMockStream(overrides: Partial<StreamSessionMetric> = {}): StreamSes
         playback_state: "playing",
         decision: "direct_play",
         quality_profile: "4K",
+        upstream_bytes: 52428800,
+        upstream_transfer_seconds: 2.1,
+        total_session_connections: 1,
+        active_body_responses: 0,
+        peak_body_responses: 1,
+        speculative_bytes: 0,
+        speculative_failures: 0,
+        parallel_prefetch_workers: 1,
         ...overrides
     };
 }
@@ -170,7 +178,15 @@ function makeMockSnapshot(
         player_device: null,
         playback_state: "playing",
         decision: null,
-        quality_profile: null
+        quality_profile: null,
+        upstream_bytes: 2048,
+        upstream_transfer_seconds: 1.2,
+        total_session_connections: 1,
+        active_body_responses: 0,
+        peak_body_responses: 1,
+        speculative_bytes: 0,
+        speculative_failures: 0,
+        parallel_prefetch_workers: 1
     };
 
     store.updateSnapshot(makeMockSnapshot([anonymousStream]));
