@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.30.1...riven-frontend-v1.31.0) (2026-10-11)
+
+
+### Features
+
+* **api:** synchronize openapi schema and expand playback telemetry metrics ([#131](https://github.com/S0lidByte/CineFlow-frontend/issues/131)) ([e78c96d](https://github.com/S0lidByte/CineFlow-frontend/commit/e78c96d8e1dfeca6cc32eb0957b62f4bdc17682c))
+
 ## [1.30.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.30.0...riven-frontend-v1.30.1) (2026-10-10)
 
 
