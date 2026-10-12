@@ -36,6 +36,7 @@
     import type { ConnectionService } from "$lib/components/settings/connection-test-panel.svelte";
     import SettingsTabGuide from "$lib/components/settings/settings-tab-guide.svelte";
     import VfsStatisticsPanel from "$lib/components/settings/vfs-statistics-panel.svelte";
+    import BlacklistMaintenancePanel from "$lib/components/settings/blacklist-maintenance-panel.svelte";
     import LibraryProfilesPanel from "$lib/components/settings/library-profiles-panel.svelte";
     import RankingPanel from "$lib/components/settings/ranking-panel.svelte";
     import UsersPanel from "$lib/components/settings/users-panel.svelte";
@@ -678,6 +679,9 @@
                                 activeTabId={$page.data.activeTabId} />
                             {#if $page.data.activeTabId === "filesystem"}
                                 <VfsStatisticsPanel />
+                            {/if}
+                            {#if $page.data.activeTabId === "scraping"}
+                                <BlacklistMaintenancePanel />
                             {/if}
                         {:else}
                             <!-- Render nothing while SvelteKit finishes transitioning to /settings -->
