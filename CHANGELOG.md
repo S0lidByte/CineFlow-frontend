@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.32.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.31.0...riven-frontend-v1.32.0) (2026-10-12)
+
+
+### Features
+
+* **settings:** add global clear all blacklisted streams modal and button ([#133](https://github.com/S0lidByte/CineFlow-frontend/issues/133)) ([1725d99](https://github.com/S0lidByte/CineFlow-frontend/commit/1725d9916abf4cb9599b043367bc515115eca23c))
+
 ## [1.31.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.30.1...riven-frontend-v1.31.0) (2026-10-11)
 
 
