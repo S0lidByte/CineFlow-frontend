@@ -4,6 +4,48 @@
  */
 
 export interface paths {
+    "/api/v1/settings/maintenance/blacklisted-streams/clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear All Blacklisted Stream Candidates
+         * @description Globally clear all blacklisted stream candidate relations across all media items, restoring their candidate availability for future evaluation without triggering downloads or rescraping.
+         */
+        post: operations["clear_all_blacklisted_streams"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+
+    "/api/v1/settings/maintenance/blacklisted-streams/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count Blacklisted Stream Candidates
+         * @description Get the total count of blacklisted stream candidates across all media items.
+         */
+        get: operations["get_blacklisted_streams_count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+
     "/api/v1/": {
         parameters: {
             query?: never;
@@ -1556,6 +1598,26 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ClearBlacklistedStreamsResponse: {
+            /**
+             * Cleared Count
+             * @description Number of blacklisted stream candidate relations cleared and restored
+             */
+            cleared_count: number;
+            /** Message */
+            message: string;
+        };
+
+        BlacklistedStreamsCountResponse: {
+            /**
+             * Count
+             * @description Total number of currently blacklisted stream candidate relations
+             */
+            count: number;
+            /** Message */
+            message: string;
+        };
+
         /** AIOStreamsConfig */
         AIOStreamsConfig: {
             /**
@@ -5357,6 +5419,92 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    clear_all_blacklisted_streams: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClearBlacklistedStreamsResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+
+    get_blacklisted_streams_count: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-actor-id"?: string | null;
+                "x-actor-roles"?: string | null;
+                "x-actor-client"?: string | null;
+                "x-actor-timestamp"?: string | null;
+                "x-actor-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlacklistedStreamsCountResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+
     root: {
         parameters: {
             query?: never;
