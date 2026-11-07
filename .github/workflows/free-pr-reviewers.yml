@@ -13,90 +13,99 @@ concurrency:
 
 jobs:
     actionlint:
-        name: reviewdog / GitHub Actions
+        name: Actionlint (Scan)
         if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         runs-on: ubuntu-latest
         permissions:
             contents: read
-            pull-requests: write
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-            - uses: reviewdog/action-actionlint@v1
+            - name: Download actionlint
+              run: |
+                  curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz | tar -xz actionlint
+            - name: Run actionlint
+              run: |
+                  set +e
+                  ./actionlint -format '{{json .}}' > actionlint.json
+                  EXIT_CODE=$?
+                  set -e
+                  if [ "$EXIT_CODE" -ge 2 ]; then
+                    echo "actionlint encountered fatal error with exit code $EXIT_CODE"
+                    exit "$EXIT_CODE"
+                  fi
+                  if [ ! -s actionlint.json ]; then
+                    echo '[]' > actionlint.json
+                  fi
+            - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               with:
-                  reporter: github-pr-review
-                  filter_mode: added
-                  fail_level: none
+                  name: actionlint-report
+                  path: actionlint.json
+                  retention-days: 1
 
     security:
-        name: reviewdog / Semgrep OSS
+        name: Semgrep OSS (Scan)
         if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         runs-on: ubuntu-latest
         permissions:
             contents: read
-            pull-requests: write
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-            - uses: actions/setup-python@v6
+            - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
               with:
                   python-version: "3.12"
-            - name: Install free Semgrep CLI
+            - name: Install Semgrep CLI
               run: python -m pip install "semgrep>=1.160,<2"
-            - name: Scan locally using public security rules (no source upload)
-              run: semgrep scan --config p/security-audit --metrics=off --sarif --output semgrep.sarif .
-            - uses: reviewdog/action-setup@v1
-            - name: Add inline PR security findings
-              env:
-                  REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: reviewdog -f=sarif -name=semgrep -reporter=github-pr-review -filter-mode=added -fail-level=none < semgrep.sarif
+            - name: Scan using public security rules
+              run: |
+                  set +e
+                  semgrep scan --config p/security-audit --metrics=off --sarif --output semgrep.sarif .
+                  SEMGREP_EXIT=$?
+                  set -e
+                  if [ "$SEMGREP_EXIT" -ge 2 ]; then
+                    echo "Semgrep fatal error with exit code $SEMGREP_EXIT"
+                    exit "$SEMGREP_EXIT"
+                  fi
+            - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              with:
+                  name: semgrep-report
+                  path: semgrep.sarif
+                  retention-days: 1
 
     eslint:
-        name: ESLint (Run)
+        name: ESLint (Scan)
         if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         runs-on: ubuntu-latest
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-            - uses: pnpm/action-setup@v4
-            - uses: actions/setup-node@v5
+            - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+            - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version: "22"
                   cache: pnpm
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
-            - name: Run ESLint and output report
+            - name: Preserve SvelteKit sync
+              run: pnpm exec svelte-kit sync || true
+            - name: Run ESLint
               run: |
-                  pnpm exec eslint -f json --output-file eslint.json . || true
-                  node -e 'const fs = require("fs"); const path = require("path"); const results = JSON.parse(fs.readFileSync("eslint.json", "utf8")); const rdjson = { source: { name: "eslint", url: "https://eslint.org/" }, diagnostics: [] }; for (const res of results) { const relPath = path.relative(process.cwd(), res.filePath).replace(/\\/g, "/"); for (const msg of res.messages || []) { rdjson.diagnostics.push({ message: msg.message, location: { path: relPath, range: { start: { line: msg.line || 1, column: msg.column || 1 }, end: { line: msg.endLine || msg.line || 1, column: msg.endColumn || msg.column || 1 } } }, severity: msg.severity === 2 ? "ERROR" : msg.severity === 1 ? "WARNING" : "INFO", code: { value: msg.ruleId || "eslint" } }); } } fs.writeFileSync("eslint-rdjson.json", JSON.stringify(rdjson));'
-            - uses: actions/upload-artifact@v4
+                  set +e
+                  pnpm exec eslint -f json --output-file eslint.json .
+                  ESLINT_EXIT=$?
+                  set -e
+                  if [ "$ESLINT_EXIT" -ge 2 ]; then
+                    echo "ESLint crashed or fatal error with exit code $ESLINT_EXIT"
+                    exit "$ESLINT_EXIT"
+                  fi
+            - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               with:
-                  name: eslint-rdjson
-                  path: eslint-rdjson.json
+                  name: eslint-report
+                  path: eslint.json
                   retention-days: 1
-
-    eslint-report:
-        name: reviewdog / ESLint
-        needs: eslint
-        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            pull-requests: write
-        steps:
-            - uses: actions/checkout@v5
-              with:
-                  persist-credentials: false
-            - uses: actions/download-artifact@v4
-              with:
-                  name: eslint-rdjson
-            - uses: reviewdog/action-setup@v1
-            - name: Add inline PR ESLint findings
-              env:
-                  REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: reviewdog -f=rdjson -name=eslint -reporter=github-pr-review -filter-mode=added -fail-level=none < eslint-rdjson.json
