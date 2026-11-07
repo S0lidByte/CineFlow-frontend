@@ -96,7 +96,7 @@
             {
                 id: "plex",
                 label: "Plex",
-                hint: "Checks the saved server URL and token via /identity."
+                hint: "Checks the saved server URL and token via /account."
             }
         ],
         scraping: [

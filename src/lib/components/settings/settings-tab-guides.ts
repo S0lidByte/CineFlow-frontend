@@ -64,7 +64,8 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
     updaters: {
         headline: "Connect Plex, Emby, or Jellyfin and control library sync cadence.",
         howToUse: [
-            "Add your media server URL and credentials for the updater you use.",
+            "For Plex, enter the server URL and Plex authentication token here; this is an outbound backend-to-Plex connection, separate from the inbound Plex webhook.",
+            "The URL must resolve and be reachable from the backend container. On a shared Docker Compose network use Plex's service DNS name (for example http://plex:32400 when the service is named plex); container localhost points back to the backend container.",
             "Set sync intervals so library state refreshes without hammering the server.",
             "Enable only the updaters you actually run — unused providers add noise."
         ],
@@ -130,6 +131,8 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
             "Enable content providers (Mdblist, Trakt, etc.) that should feed new requests.",
             "Map watchlist IDs and API keys from each provider’s dashboard.",
             "For Trakt OAuth: save Client ID and Client Secret, then use Connect Trakt. The callback is derived automatically from the frontend origin; register that URL in your Trakt app.",
+            "Plex Webhook Secret is a shared value you generate and set here; configure the identical value in the Plex webhook sender. It is not your Plex account token and does not configure the library updater.",
+            "The receiver route is POST /api/v1/webhook/plex. It also requires backend API authentication; URL-only senders use the legacy API key as api_key plus webhook_secret. Prefer HTTPS, encode query values, and redact query strings in reverse-proxy access logs. If the shared secret is blank, API authentication is still required but the additional shared-secret check is disabled.",
             "Tune polling so new items are picked up without exceeding rate limits."
         ],
         tips: [

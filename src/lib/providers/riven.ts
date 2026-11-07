@@ -3663,7 +3663,7 @@ export interface components {
         PlexWebhookModel: {
             /**
              * Webhook Secret
-             * @description Optional shared secret for POST /webhook/plex. When set, requests must include matching X-Webhook-Secret header or webhook_secret query param (in addition to API auth). Put the secret in the Plex webhook URL.
+             * @description Optional user-generated shared secret for POST /api/v1/webhook/plex. When configured, the sender must provide X-Webhook-Secret or the webhook_secret query parameter, in addition to backend API auth. The secret is not a Plex-issued token and is separate from the Plex library updater token.
              * @default
              */
             webhook_secret: string;
@@ -5437,6 +5437,7 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
+                    "Cache-Control"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -8726,12 +8727,27 @@ export interface operations {
         parameters: {
             query?: {
                 api_key?: string | null;
+                /** @description Optional additional secret configured under content.plex_webhook.webhook_secret. When set, send X-Webhook-Secret or the webhook_secret query parameter. */
+                webhook_secret?: string;
             };
-            header?: never;
+            header?: {
+                /** @description Optional additional secret configured under content.plex_webhook.webhook_secret. When set, send X-Webhook-Secret or the webhook_secret query parameter. */
+                "x-webhook-secret"?: string;
+            };
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+                "application/x-www-form-urlencoded": {
+                    payload: string;
+                };
+                "multipart/form-data": {
+                    payload: string;
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
