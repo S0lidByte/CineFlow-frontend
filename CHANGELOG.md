@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.34.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.33.0...riven-frontend-v1.34.0) (2026-11-07)
+
+
+### Features
+
+* **plex:** update settings guides and expose webhook contract in client ([cb58228](https://github.com/S0lidByte/CineFlow-frontend/commit/cb58228a3fcb44654e0ebe4c584b09520649c134))
+* **settings:** protect sensitive credentials in settings form ([8e2e421](https://github.com/S0lidByte/CineFlow-frontend/commit/8e2e4210671789dd8f89203b725f6dfa8d6b66f5))
+
+
+### Bug Fixes
+
+* **auth:** validate Plex OAuth PIN expiration before exchange ([b6e06e5](https://github.com/S0lidByte/CineFlow-frontend/commit/b6e06e591db8971b161aa68b75038a1c816faf27))
+
 ## [1.33.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.32.0...riven-frontend-v1.33.0) (2026-10-26)
 
 
