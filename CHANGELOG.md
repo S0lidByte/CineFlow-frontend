@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.34.0...riven-frontend-v1.35.0) (2026-11-07)
+
+
+### Features
+
+* **activity:** integrate Real-Debrid transfers monitoring and controls ([b8fbb06](https://github.com/S0lidByte/CineFlow-frontend/commit/b8fbb063d5164b29f1a2e757434e717ebfeba8a6))
+
 ## [1.34.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.33.0...riven-frontend-v1.34.0) (2026-11-07)
 
 
