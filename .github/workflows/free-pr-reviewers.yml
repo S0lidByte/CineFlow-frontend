@@ -109,4 +109,3 @@ jobs:
                   name: eslint-report
                   path: eslint.json
                   retention-days: 1
-

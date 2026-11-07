@@ -13,29 +13,32 @@
  * 7. Reports findings non-blocking via Octokit createReview.
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
+const fs = require("node:fs");
+const path = require("node:path");
 
 const MAX_ARTIFACT_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 const MAX_FINDINGS_PER_TOOL = 25;
 const MAX_TOTAL_INLINE_COMMENTS = 30;
-const REVIEW_MARKER = '<!-- cineflow-free-pr-reviewers -->';
+const REVIEW_MARKER = "<!-- cineflow-free-pr-reviewers -->";
 
 /**
  * Validates workflow_run context and PR state.
  */
 function validateWorkflowRunContext({ context, pr }) {
     if (!context || !context.payload || !context.payload.workflow_run) {
-        return { valid: false, reason: 'Missing workflow_run payload in context' };
+        return { valid: false, reason: "Missing workflow_run payload in context" };
     }
 
     const run = context.payload.workflow_run;
 
-    if (run.event !== 'pull_request') {
-        return { valid: false, reason: `Invalid trigger event: ${run.event} (expected pull_request)` };
+    if (run.event !== "pull_request") {
+        return {
+            valid: false,
+            reason: `Invalid trigger event: ${run.event} (expected pull_request)`
+        };
     }
 
-    if (run.name !== 'Free PR Reviewers') {
+    if (run.name !== "Free PR Reviewers") {
         return { valid: false, reason: `Unexpected workflow name: ${run.name}` };
     }
 
@@ -43,14 +46,17 @@ function validateWorkflowRunContext({ context, pr }) {
     const runRepo = run.head_repository ? run.head_repository.full_name : null;
 
     if (!currentRepo || runRepo !== currentRepo) {
-        return { valid: false, reason: `Repository mismatch: run from ${runRepo}, current is ${currentRepo}` };
+        return {
+            valid: false,
+            reason: `Repository mismatch: run from ${runRepo}, current is ${currentRepo}`
+        };
     }
 
     if (!pr) {
-        return { valid: false, reason: 'Missing PR object for validation' };
+        return { valid: false, reason: "Missing PR object for validation" };
     }
 
-    if (pr.state !== 'open') {
+    if (pr.state !== "open") {
         return { valid: false, reason: `PR #${pr.number} is ${pr.state}, not open` };
     }
 
@@ -70,10 +76,10 @@ function validateWorkflowRunContext({ context, pr }) {
  */
 function safeResolvePath(baseDir, relativePath) {
     if (!baseDir || !relativePath) {
-        throw new Error('baseDir and relativePath are required');
+        throw new Error("baseDir and relativePath are required");
     }
-    if (relativePath.includes('\0')) {
-        throw new Error('Null byte in path');
+    if (relativePath.includes("\0")) {
+        throw new Error("Null byte in path");
     }
     const resolvedBase = path.resolve(baseDir);
     const resolvedTarget = path.resolve(baseDir, relativePath);
@@ -90,22 +96,22 @@ function safeResolvePath(baseDir, relativePath) {
  * Rejects absolute paths, drive letters, path traversals, or null bytes.
  */
 function safeNormalizeFilePath(rawPath) {
-    if (typeof rawPath !== 'string' || !rawPath.trim()) {
+    if (typeof rawPath !== "string" || !rawPath.trim()) {
         return null;
     }
-    if (rawPath.includes('\0')) {
+    if (rawPath.includes("\0")) {
         return null;
     }
 
-    let normalized = rawPath.replace(/\\/g, '/').trim();
+    let normalized = rawPath.replace(/\\/g, "/").trim();
 
     // Strip leading ./
-    while (normalized.startsWith('./')) {
+    while (normalized.startsWith("./")) {
         normalized = normalized.slice(2);
     }
 
     // Reject absolute paths (UNIX or Windows drive letter) or traversal
-    if (normalized.startsWith('/') || /^[a-zA-Z]:/.test(normalized) || normalized.includes('..')) {
+    if (normalized.startsWith("/") || /^[a-zA-Z]:/.test(normalized) || normalized.includes("..")) {
         return null;
     }
 
@@ -123,7 +129,7 @@ function readSafeJsonFile(filePath, maxSize = MAX_ARTIFACT_SIZE_BYTES) {
     if (stat.size > maxSize) {
         throw new Error(`File size ${stat.size} exceeds maximum allowed size ${maxSize}`);
     }
-    const content = fs.readFileSync(filePath, 'utf8');
+    const content = fs.readFileSync(filePath, "utf8");
     if (!content.trim()) {
         return null;
     }
@@ -160,12 +166,12 @@ function findReportFile(reportsDir, subDir, fileName) {
 function parseActionlintJson(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
     if (!data) return [];
     if (!Array.isArray(data)) {
-        throw new Error('Actionlint report must be a JSON array');
+        throw new Error("Actionlint report must be a JSON array");
     }
 
     const findings = [];
     for (const item of data) {
-        if (!item || typeof item !== 'object') continue;
+        if (!item || typeof item !== "object") continue;
         const normPath = safeNormalizeFilePath(item.filepath);
         if (!normPath) continue;
 
@@ -173,13 +179,14 @@ function parseActionlintJson(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
         if (Number.isNaN(line) || line < 1) continue;
 
         findings.push({
-            tool: 'actionlint',
+            tool: "actionlint",
             path: normPath,
             line,
             column: Number.parseInt(item.column, 10) || 1,
-            ruleId: typeof item.kind === 'string' && item.kind ? item.kind : 'actionlint',
-            message: typeof item.message === 'string' ? item.message.trim() : 'Workflow syntax issue',
-            severity: 'error'
+            ruleId: typeof item.kind === "string" && item.kind ? item.kind : "actionlint",
+            message:
+                typeof item.message === "string" ? item.message.trim() : "Workflow syntax issue",
+            severity: "error"
         });
 
         if (findings.length >= maxFindings) break;
@@ -193,38 +200,49 @@ function parseActionlintJson(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
  * Format: { runs: [ { results: [ { ruleId, message: { text }, locations: [ ... ] } ] } ] }
  */
 function parseSemgrepSarif(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
-    if (!data || typeof data !== 'object') return [];
+    if (!data || typeof data !== "object") return [];
     if (!Array.isArray(data.runs)) {
-        throw new Error('Semgrep SARIF must contain runs array');
+        throw new Error("Semgrep SARIF must contain runs array");
     }
 
     const findings = [];
     for (const run of data.runs) {
         if (!run || !Array.isArray(run.results)) continue;
         for (const res of run.results) {
-            if (!res || typeof res !== 'object') continue;
+            if (!res || typeof res !== "object") continue;
 
-            const ruleId = typeof res.ruleId === 'string' ? res.ruleId : 'semgrep-finding';
-            const message = res.message && typeof res.message.text === 'string' ? res.message.text.trim() : 'Security finding';
+            const ruleId = typeof res.ruleId === "string" ? res.ruleId : "semgrep-finding";
+            const message =
+                res.message && typeof res.message.text === "string"
+                    ? res.message.text.trim()
+                    : "Security finding";
 
-            const loc = Array.isArray(res.locations) && res.locations[0] ? res.locations[0].physicalLocation : null;
+            const loc =
+                Array.isArray(res.locations) && res.locations[0]
+                    ? res.locations[0].physicalLocation
+                    : null;
             if (!loc) continue;
 
-            const uri = loc.artifactLocation && typeof loc.artifactLocation.uri === 'string' ? loc.artifactLocation.uri : null;
+            const uri =
+                loc.artifactLocation && typeof loc.artifactLocation.uri === "string"
+                    ? loc.artifactLocation.uri
+                    : null;
             const normPath = safeNormalizeFilePath(uri);
             if (!normPath) continue;
 
-            const line = loc.region && Number.isInteger(loc.region.startLine) ? loc.region.startLine : 1;
-            const column = loc.region && Number.isInteger(loc.region.startColumn) ? loc.region.startColumn : 1;
+            const line =
+                loc.region && Number.isInteger(loc.region.startLine) ? loc.region.startLine : 1;
+            const column =
+                loc.region && Number.isInteger(loc.region.startColumn) ? loc.region.startColumn : 1;
 
             findings.push({
-                tool: 'semgrep',
+                tool: "semgrep",
                 path: normPath,
                 line: Math.max(1, line),
                 column: Math.max(1, column),
                 ruleId,
                 message,
-                severity: 'warning'
+                severity: "warning"
             });
 
             if (findings.length >= maxFindings) break;
@@ -239,25 +257,25 @@ function parseSemgrepSarif(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
  * Parses ESLint JSON output.
  * Format: array of { filePath, messages: [ { ruleId, message, line, column, severity } ] }
  */
-function parseEslintJson(data, repoRoot = '', maxFindings = MAX_FINDINGS_PER_TOOL) {
+function parseEslintJson(data, repoRoot = "", maxFindings = MAX_FINDINGS_PER_TOOL) {
     if (!data) return [];
     if (!Array.isArray(data)) {
-        throw new Error('ESLint report must be a JSON array');
+        throw new Error("ESLint report must be a JSON array");
     }
 
     const findings = [];
-    const normalizedRepoRoot = repoRoot ? repoRoot.replace(/\\/g, '/').replace(/\/+$/, '') : '';
+    const normalizedRepoRoot = repoRoot ? repoRoot.replace(/\\/g, "/").replace(/\/+$/, "") : "";
 
     for (const fileResult of data) {
-        if (!fileResult || typeof fileResult !== 'object' || !Array.isArray(fileResult.messages)) {
+        if (!fileResult || typeof fileResult !== "object" || !Array.isArray(fileResult.messages)) {
             continue;
         }
 
-        let relPath = fileResult.filePath ? String(fileResult.filePath).replace(/\\/g, '/') : '';
+        let relPath = fileResult.filePath ? String(fileResult.filePath).replace(/\\/g, "/") : "";
         if (normalizedRepoRoot && relPath.startsWith(normalizedRepoRoot)) {
             relPath = relPath.slice(normalizedRepoRoot.length);
         }
-        while (relPath.startsWith('/')) {
+        while (relPath.startsWith("/")) {
             relPath = relPath.slice(1);
         }
 
@@ -265,18 +283,19 @@ function parseEslintJson(data, repoRoot = '', maxFindings = MAX_FINDINGS_PER_TOO
         if (!normPath) continue;
 
         for (const msg of fileResult.messages) {
-            if (!msg || typeof msg !== 'object') continue;
+            if (!msg || typeof msg !== "object") continue;
 
             const line = Number.parseInt(msg.line, 10);
             if (Number.isNaN(line) || line < 1) continue;
 
             const column = Number.parseInt(msg.column, 10) || 1;
-            const ruleId = msg.ruleId || 'eslint';
-            const message = typeof msg.message === 'string' ? msg.message.trim() : 'ESLint warning/error';
-            const severity = msg.severity === 2 ? 'error' : 'warning';
+            const ruleId = msg.ruleId || "eslint";
+            const message =
+                typeof msg.message === "string" ? msg.message.trim() : "ESLint warning/error";
+            const severity = msg.severity === 2 ? "error" : "warning";
 
             findings.push({
-                tool: 'eslint',
+                tool: "eslint",
                 path: normPath,
                 line,
                 column,
@@ -298,24 +317,24 @@ function parseEslintJson(data, repoRoot = '', maxFindings = MAX_FINDINGS_PER_TOO
  */
 function parseChangedLinesFromPatch(patch) {
     const changed = new Set();
-    if (typeof patch !== 'string' || !patch.trim()) {
+    if (typeof patch !== "string" || !patch.trim()) {
         return changed;
     }
 
-    const lines = patch.split('\n');
+    const lines = patch.split("\n");
     let currentLine = 0;
 
     for (const line of lines) {
-        if (line.startsWith('@@')) {
+        if (line.startsWith("@@")) {
             // @@ -from,len +to,len @@
             const match = line.match(/\+([0-9]+)(?:,([0-9]+))?/);
             if (match) {
                 currentLine = Number.parseInt(match[1], 10);
             }
-        } else if (line.startsWith('+')) {
+        } else if (line.startsWith("+")) {
             changed.add(currentLine);
             currentLine++;
-        } else if (line.startsWith('-')) {
+        } else if (line.startsWith("-")) {
             // Deleted line, does not advance target line number
         } else {
             // Context line
@@ -371,9 +390,9 @@ function buildReviewPayload({
     summary += `| Tool | Total Findings | Inline on Diff | Status |\n`;
     summary += `| :--- | :--- | :--- | :--- |\n`;
 
-    for (const tool of ['actionlint', 'semgrep', 'eslint']) {
+    for (const tool of ["actionlint", "semgrep", "eslint"]) {
         const s = stats[tool] || { total: 0, inDiff: 0 };
-        const status = s.total === 0 ? '✅ Clean' : `⚠️ ${s.total} finding(s)`;
+        const status = s.total === 0 ? "✅ Clean" : `⚠️ ${s.total} finding(s)`;
         summary += `| **${tool}** | ${s.total} | ${s.inDiff} | ${status} |\n`;
     }
 
@@ -394,16 +413,16 @@ function buildReviewPayload({
 /**
  * Main runner function intended for actions/github-script execution.
  */
-async function runReporter({ github, context, core, reportsDir = 'pr-reports' }) {
+async function runReporter({ github, context, core, reportsDir = "pr-reports" }) {
     const run = context.payload && context.payload.workflow_run;
     if (!run) {
-        core.setFailed('Missing workflow_run payload in context');
+        core.setFailed("Missing workflow_run payload in context");
         return;
     }
 
     const prNumber = run.pull_requests && run.pull_requests[0] ? run.pull_requests[0].number : null;
     if (!prNumber) {
-        core.info('No pull request associated with workflow_run; skipping report.');
+        core.info("No pull request associated with workflow_run; skipping report.");
         return;
     }
 
@@ -438,7 +457,9 @@ async function runReporter({ github, context, core, reportsDir = 'pr-reports' })
         (rev) => rev.commit_id === run.head_sha && rev.body && rev.body.includes(REVIEW_MARKER)
     );
     if (alreadyReviewed) {
-        core.info(`PR #${prNumber} already has static analysis review for ${run.head_sha}; skipping.`);
+        core.info(
+            `PR #${prNumber} already has static analysis review for ${run.head_sha}; skipping.`
+        );
         return;
     }
 
@@ -460,7 +481,7 @@ async function runReporter({ github, context, core, reportsDir = 'pr-reports' })
 
     // 1. Actionlint
     try {
-        const p = findReportFile(reportsDir, 'actionlint-report', 'actionlint.json');
+        const p = findReportFile(reportsDir, "actionlint-report", "actionlint.json");
         const data = readSafeJsonFile(p);
         if (data) {
             allFindings.push(...parseActionlintJson(data));
@@ -471,7 +492,7 @@ async function runReporter({ github, context, core, reportsDir = 'pr-reports' })
 
     // 2. Semgrep
     try {
-        const p = findReportFile(reportsDir, 'semgrep-report', 'semgrep.sarif');
+        const p = findReportFile(reportsDir, "semgrep-report", "semgrep.sarif");
         const data = readSafeJsonFile(p);
         if (data) {
             allFindings.push(...parseSemgrepSarif(data));
@@ -482,7 +503,7 @@ async function runReporter({ github, context, core, reportsDir = 'pr-reports' })
 
     // 3. ESLint
     try {
-        const p = findReportFile(reportsDir, 'eslint-report', 'eslint.json');
+        const p = findReportFile(reportsDir, "eslint-report", "eslint.json");
         const data = readSafeJsonFile(p);
         if (data) {
             allFindings.push(...parseEslintJson(data, process.cwd()));
@@ -504,20 +525,24 @@ async function runReporter({ github, context, core, reportsDir = 'pr-reports' })
             repo,
             pull_number: prNumber,
             commit_id: run.head_sha,
-            event: 'COMMENT',
+            event: "COMMENT",
             body: reviewBody,
             comments: inlineComments.length > 0 ? inlineComments : undefined
         });
-        core.info(`Posted review on PR #${prNumber} with ${inlineComments.length} inline comments.`);
+        core.info(
+            `Posted review on PR #${prNumber} with ${inlineComments.length} inline comments.`
+        );
     } catch (postErr) {
-        core.warning(`Failed to post inline review comments: ${postErr.message}. Retrying with summary body only.`);
+        core.warning(
+            `Failed to post inline review comments: ${postErr.message}. Retrying with summary body only.`
+        );
         try {
             await github.rest.pulls.createReview({
                 owner,
                 repo,
                 pull_number: prNumber,
                 commit_id: run.head_sha,
-                event: 'COMMENT',
+                event: "COMMENT",
                 body: reviewBody
             });
         } catch (retryErr) {
