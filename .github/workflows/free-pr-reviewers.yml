@@ -1,0 +1,111 @@
+name: Free PR Reviewers
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened]
+
+permissions:
+    contents: read
+
+concurrency:
+    group: free-pr-reviewers-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+
+jobs:
+    actionlint:
+        name: Actionlint (Scan)
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - name: Download actionlint
+              run: |
+                  curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz | tar -xz actionlint
+            - name: Run actionlint
+              run: |
+                  set +e
+                  ./actionlint -format '{{json .}}' > actionlint.json
+                  EXIT_CODE=$?
+                  set -e
+                  if [ "$EXIT_CODE" -ge 2 ]; then
+                    echo "actionlint encountered fatal error with exit code $EXIT_CODE"
+                    exit "$EXIT_CODE"
+                  fi
+                  if [ ! -s actionlint.json ]; then
+                    echo '[]' > actionlint.json
+                  fi
+            - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              with:
+                  name: actionlint-report
+                  path: actionlint.json
+                  retention-days: 1
+
+    security:
+        name: Semgrep OSS (Scan)
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+              with:
+                  python-version: "3.12"
+            - name: Install Semgrep CLI
+              run: python -m pip install "semgrep>=1.160,<2"
+            - name: Scan using public security rules
+              run: |
+                  set +e
+                  semgrep scan --config p/security-audit --metrics=off --sarif --output semgrep.sarif .
+                  SEMGREP_EXIT=$?
+                  set -e
+                  if [ "$SEMGREP_EXIT" -ge 2 ]; then
+                    echo "Semgrep fatal error with exit code $SEMGREP_EXIT"
+                    exit "$SEMGREP_EXIT"
+                  fi
+            - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              with:
+                  name: semgrep-report
+                  path: semgrep.sarif
+                  retention-days: 1
+
+    eslint:
+        name: ESLint (Scan)
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+            - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+              with:
+                  node-version: "22"
+                  cache: pnpm
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+            - name: Preserve SvelteKit sync
+              run: pnpm exec svelte-kit sync || true
+            - name: Run ESLint
+              run: |
+                  set +e
+                  pnpm exec eslint -f json --output-file eslint.json .
+                  ESLINT_EXIT=$?
+                  set -e
+                  if [ "$ESLINT_EXIT" -ge 2 ]; then
+                    echo "ESLint crashed or fatal error with exit code $ESLINT_EXIT"
+                    exit "$ESLINT_EXIT"
+                  fi
+            - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              with:
+                  name: eslint-report
+                  path: eslint.json
+                  retention-days: 1

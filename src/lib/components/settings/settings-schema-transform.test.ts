@@ -347,4 +347,53 @@ assert(
     "fields without overrides should not receive unnecessary UI schema"
 );
 
+const contentUi = buildSettingsUiSchema(
+    {
+        content: {
+            properties: {
+                plex_webhook: {
+                    properties: { webhook_secret: { type: "string" } }
+                },
+                trakt: {
+                    properties: { client_secret: { type: "string" } }
+                }
+            }
+        }
+    },
+    ["content"]
+) as Record<string, unknown>;
+const nestedContentUi = contentUi.content as Record<string, unknown>;
+const webhookUi = nestedContentUi.plex_webhook as Record<string, unknown>;
+assert(
+    JSON.stringify(webhookUi.webhook_secret) ===
+        JSON.stringify({ "ui:components": { textWidget: "apiKeyWidget" } }),
+    "Plex webhook secret must use the masked secret widget"
+);
+assert(
+    JSON.stringify((nestedContentUi.trakt as Record<string, unknown>).client_secret) ===
+        JSON.stringify({ "ui:components": { textWidget: "apiKeyWidget" } }),
+    "Trakt client secret widget must remain configured"
+);
+
+const updaterUi = buildSettingsUiSchema(
+    {
+        updaters: {
+            properties: {
+                plex: { properties: { token: { type: "string" } } },
+                jellyfin: { properties: { api_key: { type: "string" } } }
+            }
+        }
+    },
+    ["updaters"]
+) as Record<string, unknown>;
+const plexUpdaterUi = (updaterUi.updaters as Record<string, unknown>).plex as Record<
+    string,
+    unknown
+>;
+assert(
+    JSON.stringify(plexUpdaterUi.token) ===
+        JSON.stringify({ "ui:components": { textWidget: "apiKeyWidget" } }),
+    "Plex updater token must use the masked secret widget"
+);
+
 console.log("settings-schema-transform.test.ts: ok");

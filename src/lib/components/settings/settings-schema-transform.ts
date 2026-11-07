@@ -4,7 +4,13 @@ export type SjsfUiSchema = UiSchemaRoot;
 export type SjsfUiSchemaRecord = Record<string, unknown>;
 
 export const WIDGET_OVERRIDES: Record<string, Record<string, unknown>> = {
-    api_key: { "ui:components": { textWidget: "apiKeyWidget" } }
+    api_key: { "ui:components": { textWidget: "apiKeyWidget" } },
+    "updaters.plex.token": { "ui:components": { textWidget: "apiKeyWidget" } },
+    "updaters.jellyfin.api_key": { "ui:components": { textWidget: "apiKeyWidget" } },
+    "updaters.emby.api_key": { "ui:components": { textWidget: "apiKeyWidget" } },
+    "content.plex_webhook.webhook_secret": {
+        "ui:components": { textWidget: "apiKeyWidget" }
+    }
 };
 
 const NOISE_TITLE_PATTERNS = [
@@ -262,19 +268,68 @@ export function buildSettingsUiSchema(
         "ui:options": { title: false, description: false }
     };
 
-    // Merge any widget overrides whose key is present in the current tab's schema.
-    for (const [key, override] of Object.entries(widgetOverrides)) {
-        if (validProps[key] !== undefined) {
-            ui[key] = override;
+    const applyOverride = (
+        target: Record<string, unknown>,
+        path: string[],
+        override: Record<string, unknown>
+    ) => {
+        const [head, ...tail] = path;
+        if (!head) return;
+        if (tail.length === 0) {
+            target[head] = override;
+            return;
+        }
+        let child = target[head] as Record<string, unknown> | undefined;
+        if (!child || typeof child !== "object" || Array.isArray(child)) {
+            child = {};
+            target[head] = child;
+        }
+        applyOverride(child, tail, override);
+    };
+
+    // Merge overrides whose full nested path exists in this tab's schema.
+    for (const [path, override] of Object.entries(widgetOverrides)) {
+        const segments = path.split(".");
+        let node: Record<string, unknown> | undefined = validProps;
+        let fieldExists = false;
+        for (const [index, segment] of segments.entries()) {
+            const child = node?.[segment];
+            if (!child || typeof child !== "object" || Array.isArray(child)) {
+                node = undefined;
+                break;
+            }
+            if (index === segments.length - 1) {
+                const fieldNode = child as Record<string, unknown>;
+                fieldExists = "type" in fieldNode || "enum" in fieldNode || "const" in fieldNode;
+                break;
+            }
+            const childNode = child as Record<string, unknown>;
+            node = (childNode.properties ?? childNode) as Record<string, unknown>;
+        }
+        if (fieldExists && segments.length > 0) {
+            applyOverride(ui, segments, override);
         }
     }
 
     if (validProps.content !== undefined) {
-        ui.content = {
-            trakt: {
-                "ui:order": ["enabled", "api_key", "client_secret", "*", "proxy_url"],
-                client_secret: { "ui:components": { textWidget: "apiKeyWidget" } }
+        const contentSchema = validProps.content as Record<string, unknown>;
+        const contentProperties = contentSchema.properties as Record<string, unknown> | undefined;
+        const traktSchema = contentProperties?.trakt as Record<string, unknown> | undefined;
+        const traktProperties = traktSchema?.properties as Record<string, unknown> | undefined;
+        const traktUi: Record<string, unknown> = {
+            "ui:order": ["enabled", "api_key", "client_secret", "*", "proxy_url"]
+        };
+        if (traktProperties?.client_secret !== undefined) {
+            traktUi.client_secret = { "ui:components": { textWidget: "apiKeyWidget" } };
+        }
+        for (const [path, override] of Object.entries(widgetOverrides)) {
+            if (path.startsWith("content.trakt.")) {
+                applyOverride(traktUi, path.split(".").slice(2), override);
             }
+        }
+        ui.content = {
+            ...((ui.content as Record<string, unknown> | undefined) ?? {}),
+            trakt: traktUi
         };
     }
 

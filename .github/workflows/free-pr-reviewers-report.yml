@@ -1,0 +1,48 @@
+name: Free PR Reviewers Reporter
+
+on:
+    workflow_run:
+        workflows: ["Free PR Reviewers"]
+        types: [completed]
+
+permissions: {}
+
+concurrency:
+    group: free-pr-reviewers-report-${{ github.event.workflow_run.id }}
+    cancel-in-progress: true
+
+jobs:
+    report:
+        name: Post PR Review Findings
+        if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pull-requests: write
+            actions: read
+        steps:
+            - name: Checkout trusted default branch
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  ref: ${{ github.event.repository.default_branch }}
+                  persist-credentials: false
+
+            - name: Download scan artifacts
+              uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+              with:
+                  run-id: ${{ github.event.workflow_run.id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  path: pr-reports
+
+            - name: Process review artifacts and post comments
+              uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  script: |
+                      const { runReporter } = await import('${{ github.workspace }}/scripts/process-pr-reviews.js');
+                      await runReporter({
+                          github,
+                          context,
+                          core,
+                          reportsDir: 'pr-reports'
+                      });

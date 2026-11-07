@@ -38,6 +38,10 @@ import {
     projectTraktValue,
     mergeTraktSubmission
 } from "$lib/components/settings/trakt-settings";
+import {
+    projectSensitiveSettingsValue,
+    preserveSensitiveSettingsSubmission
+} from "$lib/components/settings/sensitive-settings";
 
 const logger = createScopedLogger("settings-page-server");
 
@@ -552,6 +556,7 @@ export const load: PageServerLoad = async ({
     // Transform cloned data so backend responses and cached references remain pristine.
     let workingSchema = projectTraktSchema(pruneLibraryProfilesFromSchema(schema));
     initialValue = projectTraktValue(pruneLibraryProfilesFromValue(initialValue));
+    initialValue = projectSensitiveSettingsValue(initialValue);
     workingSchema = sanitizeSettingsSchemaTitles(workingSchema);
     labelNullablePathOptions(workingSchema);
 
@@ -687,6 +692,7 @@ export const actions = {
                 fetch
             );
             payload = mergeTraktSubmission(payload, currentSettings, url.origin);
+            payload = preserveSensitiveSettingsSubmission(payload, currentSettings);
             for (const key of paths.split(",")) {
                 const k = key.trim();
                 if (k && payload[k] === undefined && currentSettings[k] !== undefined) {

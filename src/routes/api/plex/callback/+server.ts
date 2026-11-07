@@ -17,7 +17,7 @@ const logger = createScopedLogger("plex-callback");
  * This "fakes" the OAuth code exchange by passing our PIN info as the code,
  * which our custom getToken function will then process.
  */
-export const GET: RequestHandler = async ({ cookies }) => {
+export const GET: RequestHandler = async ({ url, cookies }) => {
     const storedDataStr = cookies.get("plex_auth_state");
 
     if (!storedDataStr) {
@@ -42,6 +42,14 @@ export const GET: RequestHandler = async ({ cookies }) => {
         cookies.delete("plex_auth_state", { path: "/" });
     }
 
+    if (storedData.expiresAt) {
+        const expiresAtMs = new Date(storedData.expiresAt).getTime();
+        if (!Number.isNaN(expiresAtMs) && expiresAtMs <= Date.now()) {
+            logger.warn("Plex callback: PIN has already expired");
+            redirect(302, "/auth/login?error=pin_expired");
+        }
+    }
+
     const options = getDefaultPlexOptions(env);
 
     try {
@@ -59,7 +67,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 
         // Forward to Better Auth's generic OAuth callback
         // The "code" is our PIN in format "pinId:pinCode" which getToken will process
-        const origin = env.ORIGIN || "http://localhost:5173";
+        const origin = env.ORIGIN || url.origin;
         const oauthCallbackUrl = new URL("/api/auth/oauth2/callback/plex", origin);
         oauthCallbackUrl.searchParams.set("code", `${storedData.pinId}:${storedData.pinCode}`);
         oauthCallbackUrl.searchParams.set("state", storedData.state);
