@@ -1,80 +1,80 @@
 name: Free PR Reviewers
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+    pull_request:
+        types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
+    contents: read
 
 concurrency:
-  group: free-pr-reviewers-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+    group: free-pr-reviewers-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
 
 jobs:
-  actionlint:
-    name: reviewdog / GitHub Actions
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: reviewdog/action-actionlint@v1
-        with:
-          reporter: github-pr-review
-          filter_mode: added
-          fail_level: none
+    actionlint:
+        name: reviewdog / GitHub Actions
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pull-requests: write
+        steps:
+            - uses: actions/checkout@v4
+                with:
+                    persist-credentials: false
+            - uses: reviewdog/action-actionlint@v1
+                with:
+                    reporter: github-pr-review
+                    filter_mode: added
+                    fail_level: none
 
-  security:
-    name: reviewdog / Semgrep OSS
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Install free Semgrep CLI
-        run: python -m pip install "semgrep>=1.160,<2"
-      - name: Scan locally using public security rules (no source upload)
-        run: semgrep scan --config p/security-audit --metrics=off --sarif --output semgrep.sarif .
-      - uses: reviewdog/action-setup@v1
-      - name: Add inline PR security findings
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: reviewdog -f=sarif -name=semgrep -reporter=github-pr-review -filter-mode=added -fail-level=none < semgrep.sarif
+    security:
+        name: reviewdog / Semgrep OSS
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pull-requests: write
+        steps:
+            - uses: actions/checkout@v4
+                with:
+                    persist-credentials: false
+            - uses: actions/setup-python@v6
+                with:
+                    python-version: "3.12"
+            - name: Install free Semgrep CLI
+                run: python -m pip install "semgrep>=1.160,<2"
+            - name: Scan locally using public security rules (no source upload)
+                run: semgrep scan --config p/security-audit --metrics=off --sarif --output semgrep.sarif .
+            - uses: reviewdog/action-setup@v1
+            - name: Add inline PR security findings
+                env:
+                    REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                run: reviewdog -f=sarif -name=semgrep -reporter=github-pr-review -filter-mode=added -fail-level=none < semgrep.sarif
 
-  eslint:
-    name: reviewdog / ESLint
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - uses: reviewdog/action-eslint@v1
-        with:
-          reporter: github-pr-review
-          filter_mode: added
-          only_changed: true
-          fail_level: none
-          eslint_flags: "."
+    eslint:
+        name: reviewdog / ESLint
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pull-requests: write
+        steps:
+            - uses: actions/checkout@v4
+                with:
+                    persist-credentials: false
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+                with:
+                    node-version: "22"
+                    cache: pnpm
+            - name: Install dependencies
+                run: pnpm install --frozen-lockfile
+            - uses: reviewdog/action-eslint@v1
+                with:
+                    reporter: github-pr-review
+                    filter_mode: added
+                    only_changed: true
+                    fail_level: none
+                    eslint_flags: "."
