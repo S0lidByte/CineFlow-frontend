@@ -6,6 +6,7 @@ const testModules = [
     "../src/routes/(protected)/api/[...backendProxy]/backend-proxy.security.test.ts",
     "../src/routes/(protected)/api/operations/timeline/operations-timeline.security.test.ts",
     "../src/lib/stores/operations.test.ts",
+    "../src/lib/stores/realdebrid-transfers.test.ts",
     "../src/lib/stores/playback-telemetry.test.ts",
     "../tests/routes/settings-test-connection.security.test.ts",
     "../src/lib/schemas/auth.test.ts",
