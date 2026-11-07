@@ -39,7 +39,7 @@ jobs:
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   script: |
-                      const { runReporter } = require('./scripts/process-pr-reviews.cjs');
+                      const { runReporter } = await import('${{ github.workspace }}/scripts/process-pr-reviews.js');
                       await runReporter({
                           github,
                           context,

@@ -13,18 +13,18 @@
  * 7. Reports findings non-blocking via Octokit createReview.
  */
 
-const fs = require("node:fs");
-const path = require("node:path");
+import fs from "node:fs";
+import path from "node:path";
 
-const MAX_ARTIFACT_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-const MAX_FINDINGS_PER_TOOL = 25;
-const MAX_TOTAL_INLINE_COMMENTS = 30;
-const REVIEW_MARKER = "<!-- cineflow-free-pr-reviewers -->";
+export const MAX_ARTIFACT_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+export const MAX_FINDINGS_PER_TOOL = 25;
+export const MAX_TOTAL_INLINE_COMMENTS = 30;
+export const REVIEW_MARKER = "<!-- cineflow-free-pr-reviewers -->";
 
 /**
  * Validates workflow_run context and PR state.
  */
-function validateWorkflowRunContext({ context, pr }) {
+export function validateWorkflowRunContext({ context, pr }) {
     if (!context || !context.payload || !context.payload.workflow_run) {
         return { valid: false, reason: "Missing workflow_run payload in context" };
     }
@@ -74,7 +74,7 @@ function validateWorkflowRunContext({ context, pr }) {
 /**
  * Resolves a file safely inside a base directory, rejecting path traversal.
  */
-function safeResolvePath(baseDir, relativePath) {
+export function safeResolvePath(baseDir, relativePath) {
     if (!baseDir || !relativePath) {
         throw new Error("baseDir and relativePath are required");
     }
@@ -95,7 +95,7 @@ function safeResolvePath(baseDir, relativePath) {
  * Sanitizes and normalizes a relative file path from linter output.
  * Rejects absolute paths, drive letters, path traversals, or null bytes.
  */
-function safeNormalizeFilePath(rawPath) {
+export function safeNormalizeFilePath(rawPath) {
     if (typeof rawPath !== "string" || !rawPath.trim()) {
         return null;
     }
@@ -121,7 +121,7 @@ function safeNormalizeFilePath(rawPath) {
 /**
  * Checks file size before reading.
  */
-function readSafeJsonFile(filePath, maxSize = MAX_ARTIFACT_SIZE_BYTES) {
+export function readSafeJsonFile(filePath, maxSize = MAX_ARTIFACT_SIZE_BYTES) {
     if (!filePath || !fs.existsSync(filePath)) {
         return null;
     }
@@ -139,7 +139,7 @@ function readSafeJsonFile(filePath, maxSize = MAX_ARTIFACT_SIZE_BYTES) {
 /**
  * Searches for a report file either within an artifact subfolder or at root of reportsDir.
  */
-function findReportFile(reportsDir, subDir, fileName) {
+export function findReportFile(reportsDir, subDir, fileName) {
     try {
         const candidateSub = safeResolvePath(reportsDir, path.join(subDir, fileName));
         if (fs.existsSync(candidateSub)) {
@@ -163,7 +163,7 @@ function findReportFile(reportsDir, subDir, fileName) {
  * Parses actionlint JSON output.
  * Format: array of { message, filepath, line, column, kind, snippet }
  */
-function parseActionlintJson(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
+export function parseActionlintJson(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
     if (!data) return [];
     if (!Array.isArray(data)) {
         throw new Error("Actionlint report must be a JSON array");
@@ -199,7 +199,7 @@ function parseActionlintJson(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
  * Parses Semgrep SARIF 2.1.0 output.
  * Format: { runs: [ { results: [ { ruleId, message: { text }, locations: [ ... ] } ] } ] }
  */
-function parseSemgrepSarif(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
+export function parseSemgrepSarif(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
     if (!data || typeof data !== "object") return [];
     if (!Array.isArray(data.runs)) {
         throw new Error("Semgrep SARIF must contain runs array");
@@ -257,7 +257,7 @@ function parseSemgrepSarif(data, maxFindings = MAX_FINDINGS_PER_TOOL) {
  * Parses ESLint JSON output.
  * Format: array of { filePath, messages: [ { ruleId, message, line, column, severity } ] }
  */
-function parseEslintJson(data, repoRoot = "", maxFindings = MAX_FINDINGS_PER_TOOL) {
+export function parseEslintJson(data, repoRoot = "", maxFindings = MAX_FINDINGS_PER_TOOL) {
     if (!data) return [];
     if (!Array.isArray(data)) {
         throw new Error("ESLint report must be a JSON array");
@@ -315,7 +315,7 @@ function parseEslintJson(data, repoRoot = "", maxFindings = MAX_FINDINGS_PER_TOO
 /**
  * Parses a unified diff patch string into a Set of 1-based changed line numbers (additions/modifications) in the new file.
  */
-function parseChangedLinesFromPatch(patch) {
+export function parseChangedLinesFromPatch(patch) {
     const changed = new Set();
     if (typeof patch !== "string" || !patch.trim()) {
         return changed;
@@ -348,7 +348,7 @@ function parseChangedLinesFromPatch(patch) {
 /**
  * Builds the PR review payload with inline comments for changed lines and a summary table.
  */
-function buildReviewPayload({
+export function buildReviewPayload({
     findings,
     changedFilesMap,
     headSha,
@@ -413,7 +413,7 @@ function buildReviewPayload({
 /**
  * Main runner function intended for actions/github-script execution.
  */
-async function runReporter({ github, context, core, reportsDir = "pr-reports" }) {
+export async function runReporter({ github, context, core, reportsDir = "pr-reports" }) {
     const run = context.payload && context.payload.workflow_run;
     if (!run) {
         core.setFailed("Missing workflow_run payload in context");
@@ -551,20 +551,4 @@ async function runReporter({ github, context, core, reportsDir = "pr-reports" })
     }
 }
 
-module.exports = {
-    validateWorkflowRunContext,
-    safeResolvePath,
-    safeNormalizeFilePath,
-    findReportFile,
-    readSafeJsonFile,
-    parseActionlintJson,
-    parseSemgrepSarif,
-    parseEslintJson,
-    parseChangedLinesFromPatch,
-    buildReviewPayload,
-    runReporter,
-    REVIEW_MARKER,
-    MAX_ARTIFACT_SIZE_BYTES,
-    MAX_FINDINGS_PER_TOOL,
-    MAX_TOTAL_INLINE_COMMENTS
-};
+export default runReporter;

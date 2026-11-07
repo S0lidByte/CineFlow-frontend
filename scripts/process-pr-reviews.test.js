@@ -3,13 +3,13 @@
  * Runs with Node.js built-in test runner: node --test
  */
 
-const { describe, it } = require("node:test");
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const os = require("node:os");
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
 
-const {
+import {
     validateWorkflowRunContext,
     safeResolvePath,
     safeNormalizeFilePath,
@@ -20,9 +20,8 @@ const {
     parseEslintJson,
     parseChangedLinesFromPatch,
     buildReviewPayload,
-    MAX_ARTIFACT_SIZE_BYTES,
     REVIEW_MARKER
-} = require("./process-pr-reviews.cjs");
+} from "./process-pr-reviews.js";
 
 describe("Security: Path Traversal & Sanitization", () => {
     it("safeResolvePath prevents directory traversal outside baseDir", () => {
