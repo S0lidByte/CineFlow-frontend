@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.36.0...riven-frontend-v1.37.0) (2026-11-08)
+
+
+### Features
+
+* **activity:** add Attach to Media workflow for Real-Debrid transfers ([0beb127](https://github.com/S0lidByte/CineFlow-frontend/commit/0beb1271cc590f54479818206a8cd86dc6a955cf))
+
 ## [1.36.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.35.0...riven-frontend-v1.36.0) (2026-11-08)
 
 
