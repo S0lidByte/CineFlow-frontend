@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.36.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.35.0...riven-frontend-v1.36.0) (2026-11-08)
+
+
+### Features
+
+* **scrape:** add user-controlled cloud caching action for uncached streams ([0c4962d](https://github.com/S0lidByte/CineFlow-frontend/commit/0c4962d2b9240b1e9d08108931ee05f0e4c26528))
+
 ## [1.35.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.34.0...riven-frontend-v1.35.0) (2026-11-07)
 
 
