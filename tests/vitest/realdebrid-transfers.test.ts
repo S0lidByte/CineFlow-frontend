@@ -76,3 +76,38 @@ test("RealDebridTransfersStore correctly distinguishes RD Downloaded from Ready 
     expect(store.transfers[0].ready_in_cineflow).toBe(true);
     expect(store.transfers[1].ready_in_cineflow).toBe(false);
 });
+
+test("StreamItem renders Uncached badge and Cache on Real-Debrid action when stream is not cached", async () => {
+    const StreamItemModule =
+        await import("../../src/lib/components/media/riven/stream-item.svelte");
+    const StreamItem = StreamItemModule.default;
+
+    const uncachedStream = {
+        raw_title: "Test.Movie.2024.1080p.Uncached.mkv",
+        parsed_title: "Test Movie",
+        rank: 500,
+        lev_ratio: 1.0,
+        is_cached: false,
+        magnet: "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567",
+        size: 1048576000,
+        parsed_data: {
+            resolution: "1080p",
+            quality: "WEBRip"
+        }
+    };
+
+    const { body } = render(StreamItem, {
+        props: {
+            stream: uncachedStream,
+            magnet: "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567",
+            isSelected: false,
+            onSelect: () => {},
+            onScrape: () => {},
+            onCacheOnDebrid: () => {}
+        }
+    });
+
+    expect(body).toContain("Uncached");
+    expect(body).toContain("Cache on Real-Debrid");
+    expect(body).not.toContain('bg-chart-1 text-primary-foreground">Cached<');
+});

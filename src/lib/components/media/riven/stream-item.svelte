@@ -1,7 +1,9 @@
 <script lang="ts">
     import * as Card from "$lib/components/ui/card/index.js";
     import { Badge } from "$lib/components/ui/badge/index.js";
+    import { Button } from "$lib/components/ui/button/index.js";
     import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+    import Cloud from "@lucide/svelte/icons/cloud";
     import type { Stream } from "$lib/types";
 
     interface Props {
@@ -10,10 +12,19 @@
         isSelected: boolean;
         onSelect: (magnet: string) => void;
         onScrape: (magnet: string) => void;
+        onCacheOnDebrid?: (magnet: string) => void;
         showCheckbox?: boolean;
     }
 
-    let { stream, magnet, isSelected, onSelect, onScrape, showCheckbox = true }: Props = $props();
+    let {
+        stream,
+        magnet,
+        isSelected,
+        onSelect,
+        onScrape,
+        onCacheOnDebrid,
+        showCheckbox = true
+    }: Props = $props();
 
     function getResolutionColor(resolution?: string): string {
         if (!resolution) return "bg-primary text-primary-foreground";
@@ -77,8 +88,28 @@
                     {/if}
                     {#if stream.is_cached}
                         <Badge class="bg-chart-1 text-primary-foreground">Cached</Badge>
+                    {:else}
+                        <Badge variant="outline" class="border-amber-500/40 text-amber-400"
+                            >Uncached</Badge>
                     {/if}
                 </div>
+
+                {#if !stream.is_cached && onCacheOnDebrid}
+                    <div class="flex items-center justify-end pt-1">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            class="h-7 border-amber-500/50 px-2.5 text-xs text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                onCacheOnDebrid(magnet);
+                            }}>
+                            <Cloud class="mr-1.5 h-3.5 w-3.5" />
+                            Cache on Real-Debrid
+                        </Button>
+                    </div>
+                {/if}
             </div>
         </Card.Content>
     </Card.Root>
