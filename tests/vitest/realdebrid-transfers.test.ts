@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { render } from "svelte/server";
 import RealDebridTransfersPanel from "../../src/lib/components/activity/realdebrid-transfers-panel.svelte";
 import {
+    realDebridTransfersStore,
     RealDebridTransfersStore,
     type RealDebridTransferItem
 } from "../../src/lib/stores/realdebrid-transfers.svelte";
@@ -46,6 +47,7 @@ test("RealDebridTransfersStore correctly distinguishes RD Downloaded from Ready 
         added: "2026-11-07T12:00:00Z",
         links: [],
         is_cineflow_managed: true,
+        is_attached: false,
         media_item_id: 1,
         media_title: "Ready Movie",
         media_state: "Completed",
@@ -64,6 +66,7 @@ test("RealDebridTransfersStore correctly distinguishes RD Downloaded from Ready 
         added: "2026-11-07T12:00:00Z",
         links: [],
         is_cineflow_managed: true,
+        is_attached: false,
         media_item_id: 2,
         media_title: "Pending Movie",
         media_state: "Scraped",
@@ -110,4 +113,65 @@ test("StreamItem renders Uncached badge and Cache on Real-Debrid action when str
     expect(body).toContain("Uncached");
     expect(body).toContain("Cache on Real-Debrid");
     expect(body).not.toContain('bg-chart-1 text-primary-foreground">Cached<');
+});
+
+test("RealDebridTransfersPanel renders Attach action and Attached badge correctly", () => {
+    const attachedItem: RealDebridTransferItem = {
+        id: "rd-att-1",
+        filename: "External.Movie.2024.mkv",
+        hash: "hash-att-1",
+        bytes: 5000000000,
+        progress: 100.0,
+        status: "downloaded",
+        added: "2026-11-08T01:00:00Z",
+        links: [],
+        is_cineflow_managed: false,
+        is_attached: true,
+        media_item_id: 101,
+        media_title: "External Movie",
+        media_type: "movie",
+        media_state: "Symlinked",
+        media_external_id: "tmdb-101",
+        ready_in_cineflow: false,
+        can_cancel: false,
+        can_retry: false
+    };
+
+    realDebridTransfersStore.setTransfers([attachedItem]);
+    const { body } = render(RealDebridTransfersPanel);
+
+    expect(body).toContain("Attached");
+    expect(body).toContain("Attach");
+    expect(body).toContain("External.Movie.2024.mkv");
+    expect(body).toContain('href="/details/media/tmdb-101/movie"');
+});
+
+test("RealDebridTransfersPanel does not link to external-ID route when media_external_id is missing", () => {
+    const noExtIdItem: RealDebridTransferItem = {
+        id: "rd-noext-1",
+        filename: "NoExtId.Movie.2024.mkv",
+        hash: "hash-noext-1",
+        bytes: 5000000000,
+        progress: 100.0,
+        status: "downloaded",
+        added: "2026-11-08T01:00:00Z",
+        links: [],
+        is_cineflow_managed: false,
+        is_attached: true,
+        media_item_id: 81,
+        media_title: "Night of the Living Dead",
+        media_type: "movie",
+        media_state: "Scraped",
+        media_external_id: null,
+        ready_in_cineflow: false,
+        can_cancel: false,
+        can_retry: false
+    };
+
+    realDebridTransfersStore.setTransfers([noExtIdItem]);
+    const { body } = render(RealDebridTransfersPanel);
+
+    expect(body).toContain("Night of the Living Dead");
+    // Verify it NEVER falls back to /details/media/81/movie
+    expect(body).not.toContain('href="/details/media/81/movie"');
 });

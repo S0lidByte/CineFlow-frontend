@@ -34,6 +34,14 @@
     import Film from "@lucide/svelte/icons/film";
     import CheckCircle2 from "@lucide/svelte/icons/check-circle-2";
     import Plus from "@lucide/svelte/icons/plus";
+    import Link2 from "@lucide/svelte/icons/link-2";
+    import Search from "@lucide/svelte/icons/search";
+    import LoaderCircle from "@lucide/svelte/icons/loader-circle";
+    import providers from "$lib/providers";
+    import { createScopedLogger } from "$lib/logger";
+    import { calculateSimilarity } from "$lib/utils/string";
+
+    const logger = createScopedLogger("rd-transfers-panel");
 
     let expandedRows = $state<Record<string, boolean>>({});
     let copiedHash = $state<string | null>(null);
@@ -43,6 +51,35 @@
     let submitMagnet = $state("");
     let submitMediaId = $state("");
     let isSubmitting = $state(false);
+
+    let attachModalOpen = $state(false);
+    let pendingAttachItem = $state<RealDebridTransferItem | null>(null);
+    let attachSearchQuery = $state("");
+    let searchingMedia = $state(false);
+    let isAttaching = $state(false);
+    let parsedTorrent = $state<{
+        parsed_title?: string;
+        year?: number;
+        seasons?: number[];
+        episodes?: number[];
+        resolution?: string;
+    } | null>(null);
+    let searchResults = $state<
+        Array<{
+            id: number;
+            title: string;
+            year?: number;
+            type: string;
+            state: string;
+        }>
+    >([]);
+    let selectedMediaItem = $state<{
+        id: number;
+        title: string;
+        year?: number;
+        type: string;
+        state: string;
+    } | null>(null);
 
     const {
         transfers,
@@ -172,6 +209,128 @@
             toast.error(msg);
         } finally {
             isSubmitting = false;
+        }
+    }
+
+    async function promptAttach(item: RealDebridTransferItem) {
+        pendingAttachItem = item;
+        selectedMediaItem = null;
+        attachModalOpen = true;
+        searchingMedia = true;
+        searchResults = [];
+        parsedTorrent = null;
+
+        try {
+            const parseRes = await providers.riven.POST("/api/v1/scrape/parse", {
+                body: [item.filename]
+            });
+            const parsed = parseRes.data?.data?.[0];
+            if (parsed) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                parsedTorrent = parsed as any;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const rawTitle = (parsed as any).parsed_title || item.filename;
+                const query = String(rawTitle).trim();
+                attachSearchQuery = query;
+                await searchMediaItems(query, parsed);
+            } else {
+                attachSearchQuery = item.filename;
+                await searchMediaItems(item.filename);
+            }
+        } catch (e) {
+            logger.error("Failed to parse torrent filename for attach:", e);
+            attachSearchQuery = item.filename;
+            await searchMediaItems(item.filename);
+        } finally {
+            searchingMedia = false;
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async function searchMediaItems(query: string, parsedInfo?: any) {
+        if (!query.trim()) return;
+        searchingMedia = true;
+        try {
+            const res = await providers.riven.GET("/api/v1/items", {
+                params: {
+                    query: {
+                        search: query.trim(),
+                        limit: 20
+                    }
+                }
+            });
+            const rawItems = res.data?.items ?? [];
+            const pYear = parsedInfo?.year ?? parsedTorrent?.year;
+            const pEpisodes = parsedInfo?.episodes ?? parsedTorrent?.episodes;
+            const pSeasons = parsedInfo?.seasons ?? parsedTorrent?.seasons;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const scored = rawItems.map((item: any) => {
+                let score = 0;
+                const sim = calculateSimilarity(
+                    query.toLowerCase(),
+                    (item.title || "").toLowerCase()
+                );
+                score += sim * 50;
+
+                if (pYear && item.year) {
+                    if (Math.abs(item.year - pYear) === 0) score += 40;
+                    else if (Math.abs(item.year - pYear) <= 1) score += 20;
+                    else score -= 30;
+                }
+
+                if (pEpisodes || pSeasons) {
+                    if (item.type !== "movie") score += 20;
+                    else score -= 40;
+                } else if (item.type === "movie") {
+                    score += 10;
+                }
+
+                return {
+                    item: {
+                        id: item.id as number,
+                        title: item.title as string,
+                        year: item.year as number | undefined,
+                        type: item.type as string,
+                        state: item.state as string
+                    },
+                    score
+                };
+            });
+
+            scored.sort((a, b) => b.score - a.score);
+            searchResults = scored.map((s) => s.item);
+
+            if (scored.length > 0 && scored[0].score >= 70) {
+                selectedMediaItem = scored[0].item;
+            }
+        } catch (e) {
+            logger.error("Search media items failed:", e);
+            searchResults = [];
+        } finally {
+            searchingMedia = false;
+        }
+    }
+
+    async function handleExecuteAttach() {
+        if (!pendingAttachItem || !selectedMediaItem) return;
+        try {
+            isAttaching = true;
+            await realDebridTransfersStore.attachTransfer(
+                pendingAttachItem.id,
+                selectedMediaItem.id
+            );
+            toast.success(
+                `Attached '${pendingAttachItem.filename}' to '${selectedMediaItem.title}'!`
+            );
+            attachModalOpen = false;
+            pendingAttachItem = null;
+            selectedMediaItem = null;
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : "Failed to attach transfer";
+            toast.error(msg);
+        } finally {
+            isAttaching = false;
         }
     }
 
@@ -522,6 +681,12 @@
                                                 class="h-4 border-indigo-500/30 bg-indigo-500/10 text-[10px] text-indigo-300">
                                                 CineFlow Managed
                                             </Badge>
+                                        {:else if item.is_attached}
+                                            <Badge
+                                                variant="outline"
+                                                class="h-4 border-purple-500/30 bg-purple-500/10 text-[10px] text-purple-300">
+                                                Attached
+                                            </Badge>
                                         {:else}
                                             <Badge
                                                 variant="outline"
@@ -532,16 +697,25 @@
 
                                         <!-- Linked Media Item Link -->
                                         {#if item.media_item_id}
-                                            <a
-                                                href={resolve(
-                                                    `/details/media/${item.media_item_id}/${item.media_type ?? "movie"}` as "/"
-                                                )}
-                                                class="text-primary inline-flex items-center gap-1 text-xs hover:underline"
-                                                title={`View ${item.media_title} in CineFlow`}>
-                                                <Film class="size-3" />
-                                                <span>{item.media_title}</span>
-                                                <ExternalLink class="size-2.5 opacity-70" />
-                                            </a>
+                                            {#if item.media_external_id}
+                                                <a
+                                                    href={resolve(
+                                                        `/details/media/${item.media_external_id}/${item.media_type ?? "movie"}` as "/"
+                                                    )}
+                                                    class="text-primary inline-flex items-center gap-1 text-xs hover:underline"
+                                                    title={`View ${item.media_title} in CineFlow`}>
+                                                    <Film class="size-3" />
+                                                    <span>{item.media_title}</span>
+                                                    <ExternalLink class="size-2.5 opacity-70" />
+                                                </a>
+                                            {:else}
+                                                <span
+                                                    class="text-foreground inline-flex items-center gap-1 text-xs"
+                                                    title={`Media Item #${item.media_item_id}`}>
+                                                    <Film class="text-muted-foreground size-3" />
+                                                    <span>{item.media_title}</span>
+                                                </span>
+                                            {/if}
                                             {#if item.media_state}
                                                 <span class="text-muted-foreground text-[10px]">
                                                     ({item.media_state})
@@ -609,6 +783,21 @@
 
                                 <!-- Safe Action Controls -->
                                 <div class="flex items-center gap-2">
+                                    <!-- Attach Button (for transfers not already ready in CineFlow) -->
+                                    {#if !item.ready_in_cineflow && canManage}
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            class="h-8 gap-1.5 border-purple-500/20 text-xs text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
+                                            onclick={() => promptAttach(item)}
+                                            aria-label={`Attach transfer ${item.filename} to media`}
+                                            title="Attach transfer to CineFlow Media">
+                                            <Link2 class="size-3" />
+                                            <span>Attach</span>
+                                        </Button>
+                                    {/if}
+
                                     <!-- Retry Button (only for CineFlow managed failed items) -->
                                     {#if item.can_retry && canManage}
                                         <Button
@@ -831,6 +1020,182 @@
                 disabled={isSubmitting || !submitMagnet.trim()}
                 onclick={handleManualSubmit}>
                 {isSubmitting ? "Submitting..." : "Cache on Real-Debrid"}
+            </AlertDialog.Action>
+        </AlertDialog.Footer>
+    </AlertDialog.Content>
+</AlertDialog.Root>
+
+<!-- Attach to Media Dialog -->
+<AlertDialog.Root bind:open={attachModalOpen}>
+    <AlertDialog.Content class="max-w-xl border border-white/10 bg-zinc-950/95 backdrop-blur-2xl">
+        <AlertDialog.Header>
+            <AlertDialog.Title class="flex items-center gap-2">
+                <Link2 class="size-4 text-purple-400" />
+                <span>Attach Transfer to Media</span>
+            </AlertDialog.Title>
+            <AlertDialog.Description
+                class="text-muted-foreground space-y-3 text-xs leading-relaxed">
+                <div class="space-y-1 rounded-lg border border-white/5 bg-white/5 p-3 font-mono">
+                    <div class="text-foreground text-xs font-semibold break-all">
+                        {pendingAttachItem?.filename}
+                    </div>
+                    <div
+                        class="text-muted-foreground flex flex-wrap items-center gap-3 text-[11px]">
+                        <span>ID: {pendingAttachItem?.id}</span>
+                        <span
+                            >Size: {pendingAttachItem
+                                ? formatBytes(pendingAttachItem.bytes)
+                                : ""}</span>
+                        <span>Status: {pendingAttachItem?.status}</span>
+                    </div>
+                </div>
+
+                <!-- Search Input for Library Items -->
+                <div class="space-y-1.5 pt-1">
+                    <label
+                        for="attach-media-search"
+                        class="text-foreground text-[11px] font-medium">
+                        Search CineFlow Library
+                    </label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <Search
+                                class="text-muted-foreground absolute top-2.5 left-2.5 size-3.5" />
+                            <Input
+                                id="attach-media-search"
+                                placeholder="Search by movie/show title or ID..."
+                                bind:value={attachSearchQuery}
+                                onkeydown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        searchMediaItems(attachSearchQuery);
+                                    }
+                                }}
+                                class="h-8 pl-8 font-mono text-xs" />
+                        </div>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            class="h-8 text-xs"
+                            disabled={searchingMedia}
+                            onclick={() => searchMediaItems(attachSearchQuery)}>
+                            {#if searchingMedia}
+                                <LoaderCircle class="size-3.5 animate-spin" />
+                            {:else}
+                                Search
+                            {/if}
+                        </Button>
+                    </div>
+                </div>
+
+                <!-- Matching Media Items List -->
+                <div class="space-y-1.5">
+                    <div
+                        class="text-muted-foreground flex items-center justify-between text-[11px] font-medium">
+                        <span>Suggested Matches ({searchResults.length})</span>
+                        {#if parsedTorrent?.parsed_title}
+                            <span class="text-[10px] text-purple-400"
+                                >Parsed: {parsedTorrent.parsed_title}
+                                {parsedTorrent.year ? `(${parsedTorrent.year})` : ""}</span>
+                        {/if}
+                    </div>
+                    <div
+                        class="max-h-52 space-y-1.5 overflow-y-auto rounded-lg border border-white/5 bg-black/40 p-2">
+                        {#if searchingMedia}
+                            <div
+                                class="text-muted-foreground flex items-center justify-center gap-2 py-6">
+                                <LoaderCircle class="text-primary size-4 animate-spin" />
+                                <span>Searching library...</span>
+                            </div>
+                        {:else if searchResults.length === 0}
+                            <div class="text-muted-foreground py-6 text-center text-xs">
+                                No matching media items found in CineFlow library.
+                            </div>
+                        {:else}
+                            {#each searchResults as mItem (mItem.id)}
+                                <button
+                                    type="button"
+                                    class="flex w-full items-center justify-between gap-3 rounded-md border p-2.5 text-left transition-colors {selectedMediaItem?.id ===
+                                    mItem.id
+                                        ? 'border-purple-500/60 bg-purple-500/10'
+                                        : 'border-white/5 hover:bg-white/5'}"
+                                    onclick={() => {
+                                        selectedMediaItem = mItem;
+                                    }}>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="text-foreground truncate text-xs font-medium"
+                                                >{mItem.title}</span>
+                                            {#if mItem.year}
+                                                <span class="text-muted-foreground text-[10px]"
+                                                    >({mItem.year})</span>
+                                            {/if}
+                                        </div>
+                                        <div
+                                            class="text-muted-foreground mt-0.5 flex items-center gap-2 text-[10px]">
+                                            <span class="uppercase">{mItem.type}</span>
+                                            <span>&bull;</span>
+                                            <span>ID: #{mItem.id}</span>
+                                            <span>&bull;</span>
+                                            <span>{mItem.state}</span>
+                                        </div>
+                                    </div>
+                                    {#if selectedMediaItem?.id === mItem.id}
+                                        <Check class="size-4 shrink-0 text-purple-400" />
+                                    {/if}
+                                </button>
+                            {/each}
+                        {/if}
+                    </div>
+                </div>
+
+                <!-- Explicit Confirmation Step -->
+                {#if selectedMediaItem}
+                    <div
+                        class="space-y-2 rounded-lg border border-purple-500/30 bg-purple-500/5 p-3">
+                        <div class="flex items-center gap-2 text-xs font-semibold text-purple-300">
+                            <CheckCircle2 class="size-3.5 text-purple-400" />
+                            <span>Confirm Attachment</span>
+                        </div>
+                        <p class="text-muted-foreground text-xs">
+                            Associate Real-Debrid transfer <strong class="text-foreground"
+                                >{pendingAttachItem?.id}</strong>
+                            with
+                            <strong class="text-foreground"
+                                >{selectedMediaItem.title}
+                                {selectedMediaItem.year
+                                    ? `(${selectedMediaItem.year})`
+                                    : ""}</strong
+                            >?
+                            {#if pendingAttachItem?.status === "downloaded"}
+                                CineFlow will immediately ingest the completed media into your
+                                virtual filesystem.
+                            {:else}
+                                CineFlow will monitor the cloud download until completion and then
+                                ingest it automatically.
+                            {/if}
+                        </p>
+                    </div>
+                {/if}
+            </AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Footer>
+            <AlertDialog.Cancel
+                onclick={() => {
+                    attachModalOpen = false;
+                    pendingAttachItem = null;
+                    selectedMediaItem = null;
+                    searchResults = [];
+                }}>
+                Cancel
+            </AlertDialog.Cancel>
+            <AlertDialog.Action
+                disabled={isAttaching || !selectedMediaItem}
+                class="bg-purple-600 text-white hover:bg-purple-700"
+                onclick={handleExecuteAttach}>
+                {isAttaching ? "Attaching..." : "Confirm & Attach"}
             </AlertDialog.Action>
         </AlertDialog.Footer>
     </AlertDialog.Content>
