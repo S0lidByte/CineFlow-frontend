@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.37.0...riven-frontend-v1.38.0) (2026-11-09)
+
+
+### Features
+
+* **activity:** show normalized transfer titles ([#147](https://github.com/S0lidByte/CineFlow-frontend/issues/147)) ([17e65c1](https://github.com/S0lidByte/CineFlow-frontend/commit/17e65c13b04a3ffc50eb1f46bbe48dd4f9a3d5bc))
+
 ## [1.37.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.36.0...riven-frontend-v1.37.0) (2026-11-08)
 
 
