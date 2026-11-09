@@ -40,6 +40,7 @@
     import providers from "$lib/providers";
     import { createScopedLogger } from "$lib/logger";
     import { calculateSimilarity } from "$lib/utils/string";
+    import { getAttachSearchQuery, type AttachParsedMetadata } from "./attach-search";
 
     const logger = createScopedLogger("rd-transfers-panel");
 
@@ -57,13 +58,7 @@
     let attachSearchQuery = $state("");
     let searchingMedia = $state(false);
     let isAttaching = $state(false);
-    let parsedTorrent = $state<{
-        parsed_title?: string;
-        year?: number;
-        seasons?: number[];
-        episodes?: number[];
-        resolution?: string;
-    } | null>(null);
+    let parsedTorrent = $state<AttachParsedMetadata | null>(null);
     let searchResults = $state<
         Array<{
             id: number;
@@ -226,13 +221,10 @@
             });
             const parsed = parseRes.data?.data?.[0];
             if (parsed) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                parsedTorrent = parsed as any;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const rawTitle = (parsed as any).parsed_title || item.filename;
-                const query = String(rawTitle).trim();
+                parsedTorrent = parsed as AttachParsedMetadata;
+                const query = getAttachSearchQuery(item.filename, parsedTorrent);
                 attachSearchQuery = query;
-                await searchMediaItems(query, parsed);
+                await searchMediaItems(query, parsedTorrent);
             } else {
                 attachSearchQuery = item.filename;
                 await searchMediaItems(item.filename);
@@ -246,8 +238,7 @@
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async function searchMediaItems(query: string, parsedInfo?: any) {
+    async function searchMediaItems(query: string, parsedInfo?: AttachParsedMetadata) {
         if (!query.trim()) return;
         searchingMedia = true;
         try {
@@ -725,9 +716,16 @@
                                     </div>
 
                                     <!-- Filename -->
-                                    <div
-                                        class="text-foreground font-mono text-xs font-medium break-all">
-                                        {item.filename}
+                                    <div class="text-foreground text-xs font-medium break-all">
+                                        {#if item.parsed_title}
+                                            <span title={item.filename}>{item.parsed_title}</span>
+                                            {#if item.year}
+                                                <span class="text-muted-foreground ml-1"
+                                                    >({item.year})</span>
+                                            {/if}
+                                        {:else}
+                                            <span class="font-mono">{item.filename}</span>
+                                        {/if}
                                     </div>
 
                                     <!-- Progress Bar -->
@@ -1037,8 +1035,17 @@
                 class="text-muted-foreground space-y-3 text-xs leading-relaxed">
                 <div class="space-y-1 rounded-lg border border-white/5 bg-white/5 p-3 font-mono">
                     <div class="text-foreground text-xs font-semibold break-all">
-                        {pendingAttachItem?.filename}
+                        {pendingAttachItem?.parsed_title || pendingAttachItem?.filename}
+                        {#if pendingAttachItem?.parsed_title && pendingAttachItem.year}
+                            <span class="text-muted-foreground ml-1"
+                                >({pendingAttachItem.year})</span>
+                        {/if}
                     </div>
+                    {#if pendingAttachItem?.parsed_title}
+                        <div class="text-muted-foreground text-[10px] break-all">
+                            {pendingAttachItem.filename}
+                        </div>
+                    {/if}
                     <div
                         class="text-muted-foreground flex flex-wrap items-center gap-3 text-[11px]">
                         <span>ID: {pendingAttachItem?.id}</span>
@@ -1094,9 +1101,9 @@
                     <div
                         class="text-muted-foreground flex items-center justify-between text-[11px] font-medium">
                         <span>Suggested Matches ({searchResults.length})</span>
-                        {#if parsedTorrent?.parsed_title}
+                        {#if parsedTorrent?.title}
                             <span class="text-[10px] text-purple-400"
-                                >Parsed: {parsedTorrent.parsed_title}
+                                >Parsed: {parsedTorrent.title}
                                 {parsedTorrent.year ? `(${parsedTorrent.year})` : ""}</span>
                         {/if}
                     </div>

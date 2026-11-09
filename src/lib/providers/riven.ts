@@ -4185,6 +4185,10 @@ export interface components {
             id: string;
             /** Filename */
             filename: string;
+            /** Parsed Title */
+            parsed_title?: string | null;
+            /** Year */
+            year?: number | null;
             /** Hash */
             hash: string;
             /** Bytes */
@@ -4270,6 +4274,10 @@ export interface components {
             id: string;
             /** Filename */
             filename: string;
+            /** Parsed Title */
+            parsed_title?: string | null;
+            /** Year */
+            year?: number | null;
             /** Hash */
             hash: string;
             /** Bytes */
