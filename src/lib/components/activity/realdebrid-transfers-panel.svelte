@@ -718,11 +718,14 @@
                                     <!-- Filename -->
                                     <div class="text-foreground text-xs font-medium break-all">
                                         {#if item.parsed_title}
-                                            <span title={item.filename}>{item.parsed_title}</span>
+                                            <span>{item.parsed_title}</span>
                                             {#if item.year}
                                                 <span class="text-muted-foreground ml-1"
                                                     >({item.year})</span>
                                             {/if}
+                                            <span
+                                                class="text-muted-foreground mt-0.5 block font-mono text-[10px] font-normal"
+                                                >{item.filename}</span>
                                         {:else}
                                             <span class="font-mono">{item.filename}</span>
                                         {/if}

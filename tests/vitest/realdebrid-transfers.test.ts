@@ -211,6 +211,7 @@ test("RealDebridTransfersPanel displays normalized transfer title with release y
     expect(body).toContain("The Odyssey");
     expect(body).toContain("(2026)");
     expect(body).toContain(filename);
+    expect(body).toContain('class="text-muted-foreground mt-0.5 block font-mono text-[10px] font-normal"');
 });
 
 test("RealDebridTransfersPanel does not link to external-ID route when media_external_id is missing", () => {
