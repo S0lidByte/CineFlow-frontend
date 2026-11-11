@@ -1,7 +1,8 @@
 <script lang="ts">
     import { untrack } from "svelte";
     import { SvelteSet, SvelteURLSearchParams } from "svelte/reactivity";
-    import { invalidateAll } from "$app/navigation";
+    import { goto, invalidateAll } from "$app/navigation";
+    import { resolve } from "$app/paths";
     import providers from "$lib/providers";
     import type { components, operations } from "$lib/providers/riven";
     import {
@@ -28,6 +29,7 @@
     import { Badge } from "$lib/components/ui/badge/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
+    import { Checkbox } from "$lib/components/ui/checkbox/index.js";
     import LoaderCircle from "@lucide/svelte/icons/loader-circle";
     import AlertCircle from "@lucide/svelte/icons/alert-circle";
     import FileIcon from "@lucide/svelte/icons/file";
@@ -49,8 +51,11 @@
     import Inbox from "@lucide/svelte/icons/inbox";
     import FileQuestion from "@lucide/svelte/icons/file-question";
     import ChevronDown from "@lucide/svelte/icons/chevron-down";
+    import Cloud from "@lucide/svelte/icons/cloud";
+    import ExternalLink from "@lucide/svelte/icons/external-link";
     import StreamItem from "./stream-item.svelte";
     import SeasonSelector, { type SeasonInfo } from "./season-selector.svelte";
+    import { runManualScrapeActions } from "./manual-scrape-actions";
     import { createScopedLogger } from "$lib/logger";
 
     const logger = createScopedLogger("manual-scrape");
@@ -128,18 +133,9 @@
             if (!sessionData?.session_id) {
                 throw new Error("No active session found");
             }
+            const sessionId = sessionData.session_id;
 
             // Action 1: Select Files
-            await providers.riven.POST("/api/v1/scrape/session/{session_id}", {
-                params: {
-                    path: { session_id: sessionData.session_id }
-                },
-                body: {
-                    action: "select_files",
-                    files: container
-                }
-            });
-
             // Action 1.5: Update Attributes (Map files to episodes/movies)
             let fileDataPayload:
                 | components["schemas"]["DebridFile"]
@@ -180,40 +176,46 @@
                 }
             }
 
-            if (fileDataPayload) {
-                await providers.riven.POST("/api/v1/scrape/session/{session_id}", {
-                    params: {
-                        path: { session_id: sessionData.session_id }
-                    },
-                    body: {
-                        action: "update_attributes",
-                        file_data: fileDataPayload
-                    }
-                });
-            }
+            await runManualScrapeActions({
+                selectFiles: () =>
+                    providers.riven.POST("/api/v1/scrape/session/{session_id}", {
+                        params: {
+                            path: { session_id: sessionId }
+                        },
+                        body: {
+                            action: "select_files",
+                            files: container
+                        }
+                    }),
+                updateAttributes: fileDataPayload
+                    ? () =>
+                          providers.riven.POST("/api/v1/scrape/session/{session_id}", {
+                              params: {
+                                  path: { session_id: sessionId }
+                              },
+                              body: {
+                                  action: "update_attributes",
+                                  file_data: fileDataPayload
+                              }
+                          })
+                    : undefined,
+                complete: () =>
+                    providers.riven.POST("/api/v1/scrape/session/{session_id}", {
+                        params: {
+                            path: { session_id: sessionId }
+                        },
+                        body: {
+                            action: "complete"
+                        }
+                    })
+            });
 
-            // Action 2: Complete Session
-            const { data: selectData, error: selectErr } = await providers.riven.POST(
-                "/api/v1/scrape/session/{session_id}",
-                {
-                    params: {
-                        path: { session_id: sessionData.session_id }
-                    },
-                    body: {
-                        action: "complete"
-                    }
-                }
-            );
-
-            if (!selectData) {
-                const errorMsg =
-                    (selectErr as { message?: string; detail?: string })?.message ||
-                    (selectErr as { message?: string; detail?: string })?.detail ||
-                    "Failed to start download";
-                error = errorMsg;
-                toast.error(errorMsg);
-                return;
-            }
+            /*
+             * All required action results were successful. The backend complete
+             * action finalizes its session; it does not itself prove VFS/Plex
+             * registration, so the toast wording is intentionally limited to
+             * the manual download workflow.
+             */
 
             toast.success("Download started successfully!");
             open = false;
@@ -259,6 +261,14 @@
     // eslint-disable-next-line svelte/no-unnecessary-state-wrap -- $state() is required here because selectedSeasons is reassigned in resetFlow()
     let selectedSeasons = $state(new SvelteSet<number>());
     let isManualMagnet = $state(false);
+    let allowUncachedManual = $state(false);
+    let queuedTransferInfo = $state<{
+        torrentId: string;
+        status: string;
+        filename: string;
+        bytes: number;
+        message: string;
+    } | null>(null);
     let batchSessions = $state<BatchSession[]>([]);
     let preparingBatch = $state(false);
     let streamingProgress = $state<{
@@ -512,6 +522,8 @@
         loading = false;
         error = null;
         magnetLink = "";
+        allowUncachedManual = false;
+        queuedTransferInfo = null;
         streams = [];
         currentSessionMagnet = null;
         sessionData = null;
@@ -737,14 +749,15 @@
     }
 
     // Helper to start a session with a given magnet link
-    async function startScrapeSession(magnet: string) {
+    async function startScrapeSession(magnet: string, allowUncached = false) {
         loading = true;
         error = null;
 
         try {
             const queryParams: operations["start_manual_session"]["parameters"]["query"] = {
                 media_type: mediaType as "movie" | "tv",
-                magnet: magnet
+                magnet: magnet,
+                allow_uncached: allowUncached
             };
 
             if (minFilesizeOverride !== null) {
@@ -766,6 +779,29 @@
             );
 
             if (data) {
+                // If the torrent was queued as an uncached transfer for Real-Debrid cloud download
+                if (
+                    !data.containers &&
+                    (!data.parsed_files || data.parsed_files.length === 0) &&
+                    data.torrent_id
+                ) {
+                    queuedTransferInfo = {
+                        torrentId: String(data.torrent_id),
+                        status: data.torrent_info?.status || "queued",
+                        filename:
+                            data.torrent_info?.name ||
+                            data.torrent_info?.alternative_filename ||
+                            title ||
+                            "Torrent",
+                        bytes: data.torrent_info?.bytes || 0,
+                        message:
+                            data.message || "Uncached torrent queued for Real-Debrid cloud download"
+                    };
+                    step = 7;
+                    toast.success(data.message || "Torrent queued on Real-Debrid cloud storage!");
+                    return;
+                }
+
                 const sData = data;
                 let mappings: FileMapping[];
                 currentSessionMagnet = magnet;
@@ -821,12 +857,7 @@
         // If magnet link is provided, use it directly (non-streaming)
         if (magnetLink) {
             isManualMagnet = true;
-            // When manually entering a magnet, we assume the user knows what they are doing,
-            // so we disable the filesize check to allow scraping of any file size.
-            // (Note: manual magnet usually implies skipping normal filters, so we could pass
-            // a very high bitrate or None if the backend treats None as 'use system limit' vs 'unlimited'.
-            // But here we just respect the UI setting or leave it default.)
-            await startScrapeSession(magnetLink);
+            await startScrapeSession(magnetLink, allowUncachedManual);
             return;
         }
 
@@ -1003,7 +1034,12 @@
 
     async function handleSelectStream(infohash: string) {
         isManualMagnet = false;
-        await startScrapeSession(`magnet:?xt=urn:btih:${infohash}`);
+        await startScrapeSession(`magnet:?xt=urn:btih:${infohash}`, false);
+    }
+
+    async function handleCacheOnDebrid(infohash: string) {
+        isManualMagnet = false;
+        await startScrapeSession(`magnet:?xt=urn:btih:${infohash}`, true);
     }
 
     async function handleSelectAllFiles() {
@@ -1177,6 +1213,8 @@
                         Auto Scrape
                     {:else if step === 6}
                         Batch Confirm
+                    {:else if step === 7}
+                        Queued on Real-Debrid
                     {/if}
                 </Dialog.Title>
                 <!-- Step Indicator -->
@@ -1184,7 +1222,7 @@
                     {#each [1, 2, 3] as s (s)}
                         <div class="flex items-center gap-1.5">
                             <div
-                                class={`h-2 w-2 rounded-full transition-colors ${step === s || (step === 4 && s === 1) || (step === 6 && s === 3) ? "bg-primary" : step > s ? "bg-primary/50" : "bg-muted"}`}>
+                                class={`h-2 w-2 rounded-full transition-colors ${step === s || (step === 4 && s === 1) || (step === 6 && s === 3) || (step === 7 && s === 3) ? "bg-primary" : step > s ? "bg-primary/50" : "bg-muted"}`}>
                             </div>
                             {#if s < 3}
                                 <div
@@ -1210,6 +1248,8 @@
                     Configure quality constraints
                 {:else if step === 6}
                     {batchSessions.length} items ready
+                {:else if step === 7}
+                    Torrent has been queued for cloud download on Real-Debrid
                 {/if}
             </Dialog.Description>
         </Dialog.Header>
@@ -1253,6 +1293,20 @@
                                             }}
                                             disabled={loading} />
                                     </div>
+                                    {#if magnetLink.trim()}
+                                        <div class="flex items-center space-x-2 pt-1">
+                                            <Checkbox
+                                                id="allow-uncached-manual"
+                                                checked={allowUncachedManual}
+                                                onCheckedChange={(v) =>
+                                                    (allowUncachedManual = Boolean(v))} />
+                                            <Label
+                                                for="allow-uncached-manual"
+                                                class="text-muted-foreground cursor-pointer text-xs select-none">
+                                                Cache on Real-Debrid if uncached
+                                            </Label>
+                                        </div>
+                                    {/if}
                                 </div>
 
                                 <Accordion.Root type="single" class="w-full">
@@ -1782,6 +1836,7 @@
                                                 isSelected={selectedMagnets.has(magnet)}
                                                 onSelect={toggleMagnetSelection}
                                                 onScrape={handleSelectStream}
+                                                onCacheOnDebrid={handleCacheOnDebrid}
                                                 showCheckbox={mediaType === "tv"} />
                                         {/each}
                                     </div>
@@ -1986,6 +2041,83 @@
                             Confirm All ({batchSessions.length} items)
                         {/if}
                     </Button>
+                </div>
+            {:else if step === 7 && queuedTransferInfo}
+                <div class="flex flex-col gap-4 py-4">
+                    <Card.Root class="border-border bg-card/60 backdrop-blur-sm">
+                        <Card.Content class="p-6">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="rounded-full border border-amber-500/20 bg-amber-500/10 p-3 text-amber-400">
+                                    <Cloud class="h-6 w-6" />
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <h3
+                                            class="text-foreground truncate text-base font-semibold">
+                                            {queuedTransferInfo.filename}
+                                        </h3>
+                                        <Badge
+                                            variant="outline"
+                                            class="shrink-0 border-amber-500/40 text-amber-400">
+                                            {queuedTransferInfo.status}
+                                        </Badge>
+                                    </div>
+                                    <p class="text-muted-foreground mt-1 text-sm">
+                                        {queuedTransferInfo.message}
+                                    </p>
+                                    <div
+                                        class="text-muted-foreground mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                                        <div>
+                                            Transfer ID: <span class="text-foreground font-mono"
+                                                >{queuedTransferInfo.torrentId}</span>
+                                        </div>
+                                        {#if queuedTransferInfo.bytes > 0}
+                                            <div>
+                                                Size: <span class="text-foreground"
+                                                    >{(
+                                                        queuedTransferInfo.bytes /
+                                                        (1024 * 1024 * 1024)
+                                                    ).toFixed(2)} GB</span>
+                                            </div>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
+                        </Card.Content>
+                    </Card.Root>
+
+                    <Alert.Root class="border-blue-500/20 bg-blue-500/5 text-blue-300">
+                        <AlertCircle class="h-4 w-4 text-blue-400" />
+                        <Alert.Title class="text-sm font-medium"
+                            >Real-Debrid Cloud Ingestion</Alert.Title>
+                        <Alert.Description class="text-muted-foreground mt-1 text-xs">
+                            This torrent is currently downloading directly on Real-Debrid servers.
+                            CineFlow will periodically monitor transfer progress and automatically
+                            ingest the media into your library once completed.
+                        </Alert.Description>
+                    </Alert.Root>
+
+                    <div class="flex items-center justify-end gap-3 pt-2">
+                        <Button
+                            variant="secondary"
+                            onclick={() => {
+                                open = false;
+                                resetFlow();
+                            }}>
+                            Close
+                        </Button>
+                        <Button
+                            class="bg-primary text-primary-foreground hover:bg-primary/90"
+                            onclick={async () => {
+                                open = false;
+                                resetFlow();
+                                await goto(resolve("/activity"));
+                            }}>
+                            <ExternalLink class="mr-2 h-4 w-4" />
+                            View in Real-Debrid Transfers
+                        </Button>
+                    </div>
                 </div>
             {/if}
         </div>

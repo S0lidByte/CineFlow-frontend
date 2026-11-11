@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.39.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.38.0...riven-frontend-v1.39.0) (2026-11-11)
+
+
+### Features
+
+* attach search, manual scrape actions, realdebrid transfers panel, settings schema transform, and stream route fixes; add broad audit fixes tests ([b9701c0](https://github.com/S0lidByte/CineFlow-frontend/commit/b9701c06613e728d1e250c6672420c0748de6782))
+
+## [1.38.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.37.0...riven-frontend-v1.38.0) (2026-11-09)
+
+
+### Features
+
+* **activity:** show normalized transfer titles ([#147](https://github.com/S0lidByte/CineFlow-frontend/issues/147)) ([17e65c1](https://github.com/S0lidByte/CineFlow-frontend/commit/17e65c13b04a3ffc50eb1f46bbe48dd4f9a3d5bc))
+
+## [1.37.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.36.0...riven-frontend-v1.37.0) (2026-11-08)
+
+
+### Features
+
+* **activity:** add Attach to Media workflow for Real-Debrid transfers ([0beb127](https://github.com/S0lidByte/CineFlow-frontend/commit/0beb1271cc590f54479818206a8cd86dc6a955cf))
+
+## [1.36.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.35.0...riven-frontend-v1.36.0) (2026-11-08)
+
+
+### Features
+
+* **scrape:** add user-controlled cloud caching action for uncached streams ([0c4962d](https://github.com/S0lidByte/CineFlow-frontend/commit/0c4962d2b9240b1e9d08108931ee05f0e4c26528))
+
 ## [1.35.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.34.0...riven-frontend-v1.35.0) (2026-11-07)
 
 

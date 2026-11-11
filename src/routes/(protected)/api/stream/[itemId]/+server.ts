@@ -2,10 +2,12 @@ import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { getActorHeadersForUser } from "$lib/server/permissions";
 
+const ITEM_ID_PATTERN = /^\d+$/;
+
 export const GET: RequestHandler = async ({ params, locals, request, fetch, url }) => {
     const itemId = params.itemId?.trim();
 
-    if (!itemId) {
+    if (!itemId || !ITEM_ID_PATTERN.test(itemId)) {
         error(400, "Invalid item ID");
     }
 

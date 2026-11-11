@@ -21,6 +21,7 @@ function makeMockTransfer(overrides: Partial<RealDebridTransferItem> = {}): Real
         seeders: null,
         links: ["https://real-debrid.com/d/xyz"],
         is_cineflow_managed: true,
+        is_attached: false,
         media_item_id: 42,
         media_title: "Dune: Part Two",
         media_type: "movie",

@@ -18,7 +18,7 @@ export const POST: RequestHandler = async ({ locals, fetch: fetchFn }) => {
         return json({ error: "Failed to regenerate API key" }, { status: 500 });
     }
     const payload = res.data as { key?: string; warning?: string; message?: string };
-    const newKey = payload.key ?? payload.message;
+    const newKey = typeof payload.key === "string" ? payload.key.trim() : "";
     if (!newKey) {
         return json({ error: "Invalid response" }, { status: 500 });
     }

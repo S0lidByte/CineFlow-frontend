@@ -128,6 +128,9 @@ export class RealDebridTransfersStore {
         try {
             this.#isLoading = true;
             this.#error = null;
+            if (forceRefresh) {
+                this.#detailsMap = {};
+            }
 
             const query: Record<string, string | boolean> = {};
             if (this.#selectedStatus) {
@@ -289,6 +292,38 @@ export class RealDebridTransfersStore {
             return response.data?.transfer_id || "";
         } catch (e) {
             logger.error("Failed to submit transfer to Real-Debrid:", e);
+            throw e;
+        } finally {
+            this.#isLoading = false;
+        }
+    }
+
+    async attachTransfer(transferId: string, mediaItemId: number): Promise<boolean> {
+        try {
+            this.#isLoading = true;
+            const response = await providers.riven.POST(
+                "/api/v1/operations/realdebrid/transfers/{transfer_id}/attach",
+                {
+                    params: {
+                        path: {
+                            transfer_id: transferId
+                        }
+                    },
+                    body: {
+                        media_item_id: mediaItemId
+                    }
+                }
+            );
+
+            if (response.error) {
+                const err = extractErrorMessage(response.error, "Failed to attach transfer");
+                throw new Error(err);
+            }
+
+            await this.fetchTransfers(true);
+            return true;
+        } catch (e) {
+            logger.error(`Failed to attach transfer ${transferId} to media #${mediaItemId}:`, e);
             throw e;
         } finally {
             this.#isLoading = false;

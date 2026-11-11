@@ -6,13 +6,27 @@ const logger = createScopedLogger("client-diag");
 export const POST: RequestHandler = async ({ request, locals }) => {
     try {
         const body = await request.json();
-        const { tag, message, data, userAgent } = body;
+        if (!body || typeof body !== "object" || Array.isArray(body)) {
+            return json({ ok: false, error: "Invalid payload" }, { status: 400 });
+        }
+        const { tag, message, data, userAgent } = body as {
+            tag?: unknown;
+            message?: unknown;
+            data?: unknown;
+            userAgent?: unknown;
+        };
+        const safeTag = typeof tag === "string" && tag.trim() ? tag.trim().slice(0, 64) : "CLIENT";
+        const safeMessage = typeof message === "string" ? message.slice(0, 2000) : "";
+        const safeData =
+            data && typeof data === "object" && !Array.isArray(data)
+                ? (data as Record<string, unknown>)
+                : {};
 
-        logger.info(`[${tag || "CLIENT"}] ${message}`, {
+        logger.info(`[${safeTag}] ${safeMessage}`, {
+            ...safeData,
             userId: locals.user?.id,
             userName: locals.user?.name,
-            userAgent,
-            ...data
+            userAgent: typeof userAgent === "string" ? userAgent.slice(0, 512) : undefined
         });
 
         return json({ ok: true });
