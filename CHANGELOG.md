@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.38.0...riven-frontend-v1.39.0) (2026-11-11)
+
+
+### Features
+
+* attach search, manual scrape actions, realdebrid transfers panel, settings schema transform, and stream route fixes; add broad audit fixes tests ([b9701c0](https://github.com/S0lidByte/CineFlow-frontend/commit/b9701c06613e728d1e250c6672420c0748de6782))
+
 ## [1.38.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.37.0...riven-frontend-v1.38.0) (2026-11-09)
 
 
