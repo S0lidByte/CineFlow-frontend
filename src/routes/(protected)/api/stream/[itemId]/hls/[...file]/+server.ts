@@ -2,10 +2,14 @@ import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { getActorHeadersForUser } from "$lib/server/permissions";
 
-export const GET: RequestHandler = async ({ params, locals, fetch, url }) => {
-    const { itemId, file } = params;
+const ITEM_ID_PATTERN = /^\d+$/;
+const HLS_FILE_PATTERN = /^(?:index\.m3u8|segment\/\d+\.ts)$/;
 
-    if (!itemId || !file) {
+export const GET: RequestHandler = async ({ params, locals, fetch, url }) => {
+    const itemId = params.itemId?.trim();
+    const file = params.file?.trim();
+
+    if (!itemId || !ITEM_ID_PATTERN.test(itemId) || !file || !HLS_FILE_PATTERN.test(file)) {
         error(400, "Invalid parameters");
     }
 

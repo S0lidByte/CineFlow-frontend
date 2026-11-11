@@ -5,6 +5,9 @@ export type SjsfUiSchemaRecord = Record<string, unknown>;
 
 export const WIDGET_OVERRIDES: Record<string, Record<string, unknown>> = {
     api_key: { "ui:components": { textWidget: "apiKeyWidget" } },
+    // Keep the application log level as the SJSF enum/select widget even when
+    // the backend schema is transformed for the settings page.
+    log_level: { "ui:components": { stringField: "enumField" } },
     "updaters.plex.token": { "ui:components": { textWidget: "apiKeyWidget" } },
     "updaters.jellyfin.api_key": { "ui:components": { textWidget: "apiKeyWidget" } },
     "updaters.emby.api_key": { "ui:components": { textWidget: "apiKeyWidget" } },

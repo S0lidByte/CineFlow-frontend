@@ -2,7 +2,6 @@ import { redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
 import { generatePlexPin, buildPlexAuthUrl, getDefaultPlexOptions } from "$lib/server/plex-oauth";
-import { dev } from "$app/environment";
 import { createScopedLogger } from "$lib/logger";
 
 const logger = createScopedLogger("plex-authorize");
@@ -19,7 +18,7 @@ const logger = createScopedLogger("plex-authorize");
  * After the user authorizes, Plex redirects to our callback which then
  * forwards to Better Auth's callback with the PIN as the "code".
  */
-export const GET: RequestHandler = async ({ url, cookies }) => {
+export const GET: RequestHandler = async ({ url, cookies, request }) => {
     const state = url.searchParams.get("state");
     const redirectUri = url.searchParams.get("redirect_uri");
 
@@ -40,10 +39,13 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
             expiresAt: pin.expiresAt
         };
 
+        const isSecure =
+            url.protocol === "https:" || request.headers.get("x-forwarded-proto") === "https";
+
         cookies.set("plex_auth_state", JSON.stringify(authData), {
             path: "/",
             httpOnly: true,
-            secure: !dev,
+            secure: isSecure,
             sameSite: "lax",
             maxAge: 60 * 10 // 10 minutes
         });

@@ -3303,6 +3303,13 @@ export interface components {
              */
             ratelimit: boolean;
         };
+        /** ApiKeyRegenerateResponse */
+        ApiKeyRegenerateResponse: {
+            /** Message */
+            message: string;
+            /** Key */
+            key: string;
+        };
         /** MessageResponse */
         MessageResponse: {
             /** Message */
@@ -6140,7 +6147,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["ApiKeyRegenerateResponse"];
                 };
             };
             /** @description Not found */

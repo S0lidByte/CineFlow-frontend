@@ -34,7 +34,6 @@ test("Attach retains the filename fallback when parser metadata or title is abse
     expect(getAttachSearchQuery(filename, {})).toBe(filename);
     expect(getAttachSearchQuery(filename, { title: "   " })).toBe(filename);
 });
-
 import {
     realDebridTransfersStore,
     RealDebridTransfersStore,

@@ -327,14 +327,20 @@ assert(
 
 const uiProperties = {
     backend_url: { type: "string" },
-    api_key: { type: "string" }
+    api_key: { type: "string" },
+    log_level: {
+        type: "string",
+        enum: ["TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    }
 };
-const uiSchema = buildSettingsUiSchema(uiProperties, ["api_key", "backend_url"]) as Record<
-    string,
-    unknown
->;
+const uiSchema = buildSettingsUiSchema(uiProperties, [
+    "api_key",
+    "backend_url",
+    "log_level"
+]) as Record<string, unknown>;
 assert(
-    JSON.stringify(uiSchema["ui:order"]) === JSON.stringify(["api_key", "backend_url"]),
+    JSON.stringify(uiSchema["ui:order"]) ===
+        JSON.stringify(["api_key", "backend_url", "log_level"]),
     "UI schema must preserve selected settings order"
 );
 assert(
@@ -345,6 +351,11 @@ assert(
 assert(
     uiSchema.backend_url === undefined,
     "fields without overrides should not receive unnecessary UI schema"
+);
+assert(
+    JSON.stringify(uiSchema.log_level) ===
+        JSON.stringify({ "ui:components": { stringField: "enumField" } }),
+    "log level must use the enum/select widget override"
 );
 
 const contentUi = buildSettingsUiSchema(
@@ -396,4 +407,4 @@ assert(
     "Plex updater token must use the masked secret widget"
 );
 
-console.log("settings-schema-transform.test.ts: ok");
+console.log("settings schema transform tests: ok");

@@ -128,6 +128,9 @@ export class RealDebridTransfersStore {
         try {
             this.#isLoading = true;
             this.#error = null;
+            if (forceRefresh) {
+                this.#detailsMap = {};
+            }
 
             const query: Record<string, string | boolean> = {};
             if (this.#selectedStatus) {

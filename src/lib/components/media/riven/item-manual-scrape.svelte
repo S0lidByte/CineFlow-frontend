@@ -55,6 +55,7 @@
     import ExternalLink from "@lucide/svelte/icons/external-link";
     import StreamItem from "./stream-item.svelte";
     import SeasonSelector, { type SeasonInfo } from "./season-selector.svelte";
+    import { runManualScrapeActions } from "./manual-scrape-actions";
     import { createScopedLogger } from "$lib/logger";
 
     const logger = createScopedLogger("manual-scrape");
@@ -132,18 +133,9 @@
             if (!sessionData?.session_id) {
                 throw new Error("No active session found");
             }
+            const sessionId = sessionData.session_id;
 
             // Action 1: Select Files
-            await providers.riven.POST("/api/v1/scrape/session/{session_id}", {
-                params: {
-                    path: { session_id: sessionData.session_id }
-                },
-                body: {
-                    action: "select_files",
-                    files: container
-                }
-            });
-
             // Action 1.5: Update Attributes (Map files to episodes/movies)
             let fileDataPayload:
                 | components["schemas"]["DebridFile"]
@@ -184,40 +176,46 @@
                 }
             }
 
-            if (fileDataPayload) {
-                await providers.riven.POST("/api/v1/scrape/session/{session_id}", {
-                    params: {
-                        path: { session_id: sessionData.session_id }
-                    },
-                    body: {
-                        action: "update_attributes",
-                        file_data: fileDataPayload
-                    }
-                });
-            }
+            await runManualScrapeActions({
+                selectFiles: () =>
+                    providers.riven.POST("/api/v1/scrape/session/{session_id}", {
+                        params: {
+                            path: { session_id: sessionId }
+                        },
+                        body: {
+                            action: "select_files",
+                            files: container
+                        }
+                    }),
+                updateAttributes: fileDataPayload
+                    ? () =>
+                          providers.riven.POST("/api/v1/scrape/session/{session_id}", {
+                              params: {
+                                  path: { session_id: sessionId }
+                              },
+                              body: {
+                                  action: "update_attributes",
+                                  file_data: fileDataPayload
+                              }
+                          })
+                    : undefined,
+                complete: () =>
+                    providers.riven.POST("/api/v1/scrape/session/{session_id}", {
+                        params: {
+                            path: { session_id: sessionId }
+                        },
+                        body: {
+                            action: "complete"
+                        }
+                    })
+            });
 
-            // Action 2: Complete Session
-            const { data: selectData, error: selectErr } = await providers.riven.POST(
-                "/api/v1/scrape/session/{session_id}",
-                {
-                    params: {
-                        path: { session_id: sessionData.session_id }
-                    },
-                    body: {
-                        action: "complete"
-                    }
-                }
-            );
-
-            if (!selectData) {
-                const errorMsg =
-                    (selectErr as { message?: string; detail?: string })?.message ||
-                    (selectErr as { message?: string; detail?: string })?.detail ||
-                    "Failed to start download";
-                error = errorMsg;
-                toast.error(errorMsg);
-                return;
-            }
+            /*
+             * All required action results were successful. The backend complete
+             * action finalizes its session; it does not itself prove VFS/Plex
+             * registration, so the toast wording is intentionally limited to
+             * the manual download workflow.
+             */
 
             toast.success("Download started successfully!");
             open = false;
