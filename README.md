@@ -179,17 +179,28 @@ Then restart CineFlow.
 
 ## CineFlow VFS and Caching
 
-CineFlow ships with a built-in virtual filesystem (VFS) optimised for streaming, intelligent caching, and media organisation.
+CineFlow ships with a high-performance built-in virtual filesystem (VFS) powered by `pyfuse3` on Linux, featuring an adaptive prefetch engine, multi-tier LRU caching, and direct streaming optimizations.
 
-| Setting              | Description                                     |
-| -------------------- | ----------------------------------------------- |
-| `cache_dir`          | Directory where cached data is stored           |
-| `cache_max_size_mb`  | Maximum total cache size in MB                  |
-| `chunk_size_mb`      | Size of each CDN request chunk                  |
-| `fetch_ahead_chunks` | Number of chunks prefetched ahead of playback   |
-| `ttl_seconds`        | Optional TTL-based expiration for cached blocks |
+### Streaming & Cache Settings
 
-By default, CineFlow uses **LRU eviction** — the least recently used cache blocks are automatically removed when space runs low. Set `ttl_seconds` to switch to time-based expiration instead.
+| Setting                            | Type / Range      | Default                | Description                                                                  |
+| ---------------------------------- | ----------------- | ---------------------- | ---------------------------------------------------------------------------- |
+| `filesystem.cache_dir`             | string            | `/dev/shm/riven-cache` | Directory where cached media chunks are stored (tmpfs or disk)               |
+| `filesystem.cache_hot_dir`         | string / null     | `null`                 | Optional high-speed NVMe directory for two-tier cache demotion               |
+| `filesystem.cache_max_size_mb`     | integer           | `10240` (10 GiB)       | Maximum total cache capacity in MB across tiers                              |
+| `filesystem.tmpfs_cache_max_mb`    | integer           | `1024` (1 GiB)         | Hard safety cap when cache resides on tmpfs (`/dev/shm`) to prevent OOM      |
+| `filesystem.cache_ttl_seconds`     | integer           | `7200` (2h)            | Expiration window when eviction policy is set to `TTL`                       |
+| `filesystem.cache_eviction`        | `LRU` \| `TTL`    | `LRU`                  | Cache eviction policy (least recently used or time-to-live)                  |
+| `stream.chunk_size_mb`             | integer (1–16)    | `1`                    | Size of each on-demand CDN request chunk (4 MiB recommended for 4K)          |
+| `stream.prefetch_chunks`           | integer (0–128)   | `12`                   | Base sequential chunks prefetched ahead of the active read position          |
+| `stream.target_buffer_seconds`     | float (5.0–120.0) | `15.0`                 | Target playback buffer runway maintained continuously by prefetch            |
+| `stream.min_safe_runway_seconds`   | float (2.0–60.0)  | `8.0`                  | Minimum safe cached buffer before starvation warning or burst refill         |
+| `stream.parallel_prefetch_workers` | `1` \| `2` \| `4` | `1`                    | Concurrent prefetch workers (`1` recommended to avoid CDN rate contention)   |
+| `stream.autotune_mode`             | enum              | `balanced`             | Dynamic prefetch mode (`disabled`, `conservative`, `balanced`, `aggressive`) |
+
+### Settings & Automatic Restart
+
+All streaming and operational settings can be tuned directly from the web interface under **Settings > Operations**. When saving operational changes, the web client prompts and triggers a graceful background restart of the backend engine to ensure all new buffer targets and prefetch bounds take effect immediately.
 
 ---
 
