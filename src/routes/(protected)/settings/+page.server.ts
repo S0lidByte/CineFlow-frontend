@@ -785,12 +785,31 @@ export const actions = {
             return fail(500, { form });
         }
 
+        let restartTriggered = false;
+        if (tab.id === "ops") {
+            try {
+                logger.info("Triggering backend restart after saving operations settings");
+                const restartRes = await providers.riven.POST("/api/v1/system/restart", {
+                    baseUrl: locals.backendUrl,
+                    headers: { "x-api-key": locals.apiKey, ...actorHeaders },
+                    fetch
+                });
+                if (!restartRes.error) {
+                    restartTriggered = true;
+                }
+            } catch (err) {
+                logger.warn("Failed to trigger backend restart for operations save", {
+                    error: err
+                });
+            }
+        }
+
         endPerfMark(mark, {
             tab: tab.id,
             valid: true,
             success: true
         });
 
-        return { form };
+        return { form, restartTriggered };
     }
 } satisfies Actions;

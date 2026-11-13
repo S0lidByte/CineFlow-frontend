@@ -64,10 +64,14 @@
         icons,
         delayedMs: 500,
         timeoutMs: 30000,
-        onSuccess: (result: { type: string }) => {
+        onSuccess: (result: { type: string; data?: { restartTriggered?: boolean } }) => {
             if (result.type === "success") {
                 const tab = getTabById(activeTabId);
-                if (tab?.restartRequired) {
+                if (result.data?.restartTriggered || activeTabId === "ops") {
+                    toast.success(
+                        "Settings saved. Backend is restarting to apply operational changes..."
+                    );
+                } else if (tab?.restartRequired) {
                     toast.success("Settings saved. Some changes may take effect after restart.");
                 } else {
                     toast.success("Settings saved");

@@ -171,7 +171,8 @@ export const SETTINGS_TABS: SectionTab[] = [
         icon: "activity",
         group: "tuning",
         description: "Post-processing, logging verbosity, and stream proxy configuration.",
-        keys: ["post_processing", "logging", "stream"]
+        keys: ["post_processing", "logging", "stream"],
+        restartRequired: true
     }
 ];
 
