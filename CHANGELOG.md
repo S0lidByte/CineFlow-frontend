@@ -1,11 +1,16 @@
 # Changelog
 
-## [Unreleased](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.39.0...HEAD)
+## [1.40.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.39.0...riven-frontend-v1.40.0) (2026-11-13)
+
 
 ### Features
 
-* **settings:** trigger backend restart on operations save, mark ops tab restartRequired, and display restart feedback toast ([271b7bc](https://github.com/S0lidByte/CineFlow-frontend/commit/271b7bc))
-* **api:** sync generated API types for system and settings restart endpoints ([271b7bc](https://github.com/S0lidByte/CineFlow-frontend/commit/271b7bc))
+* **settings:** trigger backend restart on operations save and mark ops tab restartRequired ([271b7bc](https://github.com/S0lidByte/CineFlow-frontend/commit/271b7bc917698421b04f587d70029a49366f4eeb))
+
+
+### Documentation
+
+* update VFS caching and prefetch settings guide and changelog ([680f548](https://github.com/S0lidByte/CineFlow-frontend/commit/680f5488405cbdd9b4489a8ee85e53d00f03cc38))
 
 ## [1.39.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.38.0...riven-frontend-v1.39.0) (2026-11-11)
 
