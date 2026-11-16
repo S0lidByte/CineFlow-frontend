@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.40.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.40.0...riven-frontend-v1.40.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* **scrape:** refine uncached badge presentation and Real-Debrid cloud caching feedback ([bd94966](https://github.com/S0lidByte/CineFlow-frontend/commit/bd949661fff2c735c4aae7f7c35181adc62467a7))
+
 ## [1.40.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.39.0...riven-frontend-v1.40.0) (2026-11-13)
 
 
