@@ -5,7 +5,7 @@ export interface Stream {
     raw_title: string;
     rank: number;
     parsed_data: ParsedTitleData;
-    is_cached: boolean;
+    is_cached?: boolean | null;
     magnet: string;
     size: number;
     [key: string]: unknown;

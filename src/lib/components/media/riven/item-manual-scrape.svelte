@@ -830,7 +830,13 @@
                 }
 
                 sessionData = data;
-                toast.success("Session started successfully!");
+                if (allowUncached) {
+                    toast.success(
+                        "Stream is already cached on Real-Debrid! Proceeding to file selection."
+                    );
+                } else {
+                    toast.success("Session started successfully!");
+                }
                 await handleSelectAllFiles();
                 // No longer need to check step, handleSelectAllFiles will move to step 3
             } else {
@@ -840,6 +846,19 @@
                     "Failed to start session";
                 error = errorMsg;
                 toast.error(errorMsg);
+                if (errorMsg.toLowerCase().includes("not cached")) {
+                    const cleanHash = magnet.includes("btih:")
+                        ? magnet.split("btih:")[1]?.split("&")[0]?.toLowerCase()
+                        : magnet.toLowerCase();
+                    const s = streams.find(
+                        (st) =>
+                            st.magnet.toLowerCase() === magnet.toLowerCase() ||
+                            (cleanHash && st.magnet.toLowerCase().includes(cleanHash))
+                    );
+                    if (s) {
+                        s.stream.is_cached = false;
+                    }
+                }
             }
         } catch (e) {
             const errorMsg = e instanceof Error ? e.message : "An error occurred";

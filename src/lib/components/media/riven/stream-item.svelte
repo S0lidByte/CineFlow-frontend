@@ -86,15 +86,15 @@
                                 >{lang.toUpperCase()}</Badge>
                         {/each}
                     {/if}
-                    {#if stream.is_cached}
+                    {#if stream.is_cached === true}
                         <Badge class="bg-chart-1 text-primary-foreground">Cached</Badge>
-                    {:else}
+                    {:else if stream.is_cached === false}
                         <Badge variant="outline" class="border-amber-500/40 text-amber-400"
                             >Uncached</Badge>
                     {/if}
                 </div>
 
-                {#if !stream.is_cached && onCacheOnDebrid}
+                {#if stream.is_cached !== true && onCacheOnDebrid}
                     <div class="flex items-center justify-end pt-1">
                         <Button
                             type="button"
