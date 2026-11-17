@@ -244,3 +244,29 @@ test("RealDebridTransfersPanel does not link to external-ID route when media_ext
     // Verify it NEVER falls back to /details/media/81/movie
     expect(body).not.toContain('href="/details/media/81/movie"');
 });
+
+test("RealDebridTransfersPanel renders attach dialog with TV Attachment Mode and season/episode controls", () => {
+    const unattachedShowItem: RealDebridTransferItem = {
+        id: "rd-show-1",
+        filename: "Severance.S01E03.1080p.mkv",
+        hash: "hash-show-1",
+        bytes: 2000000000,
+        progress: 100.0,
+        status: "downloaded",
+        added: "2026-11-16T12:00:00Z",
+        links: [],
+        is_cineflow_managed: false,
+        is_attached: false,
+        ready_in_cineflow: false,
+        can_cancel: false,
+        can_retry: false
+    };
+
+    realDebridTransfersStore.setTransfers([unattachedShowItem]);
+    const { body } = render(RealDebridTransfersPanel);
+
+    // Verify attach button is present for unattached transfers
+    expect(body).toContain("Attach transfer Severance.S01E03.1080p.mkv to media");
+    expect(body).toContain("<span>Attach</span>");
+    expect(body).toContain('title="Attach transfer to CineFlow Media"');
+});

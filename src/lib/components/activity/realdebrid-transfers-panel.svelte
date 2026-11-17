@@ -76,6 +76,31 @@
         state: string;
     } | null>(null);
 
+    interface EpisodeOption {
+        id: number;
+        number: number;
+        title?: string;
+        state?: string;
+    }
+
+    interface SeasonOption {
+        id: number;
+        number: number;
+        title?: string;
+        episodes: EpisodeOption[];
+    }
+
+    let tvTargetMode = $state<"episode" | "show">("episode");
+    let loadingShowDetails = $state(false);
+    let showSeasons = $state<SeasonOption[]>([]);
+    let selectedSeasonNumber = $state<number | null>(null);
+    let selectedEpisodeId = $state<number | null>(null);
+
+    const currentSeason = $derived(showSeasons.find((s) => s.number === selectedSeasonNumber));
+    const currentEpisode = $derived(
+        currentSeason?.episodes.find((ep) => ep.id === selectedEpisodeId)
+    );
+
     const {
         transfers,
         stats,
@@ -207,13 +232,131 @@
         }
     }
 
-    async function promptAttach(item: RealDebridTransferItem) {
-        pendingAttachItem = item;
+    function resetAttachState() {
+        pendingAttachItem = null;
         selectedMediaItem = null;
-        attachModalOpen = true;
-        searchingMedia = true;
         searchResults = [];
         parsedTorrent = null;
+        showSeasons = [];
+        selectedSeasonNumber = null;
+        selectedEpisodeId = null;
+        tvTargetMode = "episode";
+        loadingShowDetails = false;
+    }
+
+    async function handleSelectMediaItem(mItem: {
+        id: number;
+        title: string;
+        year?: number;
+        type: string;
+        state: string;
+    }) {
+        selectedMediaItem = mItem;
+        showSeasons = [];
+        selectedSeasonNumber = null;
+        selectedEpisodeId = null;
+
+        if (mItem.type === "show") {
+            loadingShowDetails = true;
+            try {
+                const res = await providers.riven.GET("/api/v1/items/{id}", {
+                    params: {
+                        path: { id: mItem.id.toString() },
+                        query: { media_type: "item", extended: true }
+                    }
+                });
+                const rawSeasons = Array.isArray((res.data as Record<string, unknown>)?.seasons)
+                    ? ((res.data as Record<string, unknown>).seasons as Record<string, unknown>[])
+                    : [];
+                const parsedSeasons: SeasonOption[] = rawSeasons.map((s) => ({
+                    id: Number(s.id),
+                    number: Number(s.number ?? 0),
+                    title:
+                        (typeof s.title === "string" && s.title) ||
+                        (s.number === 0 ? "Specials" : `Season ${s.number}`),
+                    episodes: (Array.isArray(s.episodes)
+                        ? (s.episodes as Record<string, unknown>[])
+                        : []
+                    ).map((ep) => ({
+                        id: Number(ep.id),
+                        number: Number(ep.number ?? 0),
+                        title: typeof ep.title === "string" ? ep.title : undefined,
+                        state: typeof ep.state === "string" ? ep.state : undefined
+                    }))
+                }));
+
+                parsedSeasons.sort((a, b) => a.number - b.number);
+                for (const s of parsedSeasons) {
+                    s.episodes.sort((a, b) => a.number - b.number);
+                }
+                showSeasons = parsedSeasons;
+
+                const hasParsedEps = Boolean(
+                    parsedTorrent?.episodes && parsedTorrent.episodes.length > 0
+                );
+                const hasParsedSeasons = Boolean(
+                    parsedTorrent?.seasons && parsedTorrent.seasons.length > 0
+                );
+
+                if (hasParsedEps) {
+                    tvTargetMode = "episode";
+                } else if (hasParsedSeasons && !hasParsedEps) {
+                    tvTargetMode = "show";
+                } else {
+                    tvTargetMode = "episode";
+                }
+
+                let targetSeason: SeasonOption | undefined;
+                if (hasParsedSeasons && parsedTorrent?.seasons?.[0] !== undefined) {
+                    targetSeason = showSeasons.find((s) => s.number === parsedTorrent!.seasons![0]);
+                }
+                if (!targetSeason) {
+                    targetSeason =
+                        showSeasons.find((s) => s.number === 1 && s.episodes.length > 0) ||
+                        showSeasons.find((s) => s.episodes.length > 0) ||
+                        showSeasons[0];
+                }
+
+                if (targetSeason) {
+                    selectedSeasonNumber = targetSeason.number;
+
+                    let targetEp: EpisodeOption | undefined;
+                    if (hasParsedEps && parsedTorrent?.episodes?.[0] !== undefined) {
+                        targetEp = targetSeason.episodes.find(
+                            (ep) => ep.number === parsedTorrent!.episodes![0]
+                        );
+                    }
+                    if (!targetEp && targetSeason.episodes.length > 0) {
+                        targetEp = targetSeason.episodes[0];
+                    }
+                    if (targetEp) {
+                        selectedEpisodeId = targetEp.id;
+                    }
+                }
+            } catch (err) {
+                logger.error("Failed to load show seasons and episodes for attach:", err);
+                showSeasons = [];
+            } finally {
+                loadingShowDetails = false;
+            }
+        }
+    }
+
+    function handleSeasonChange(newSeasonNum: number) {
+        selectedSeasonNumber = newSeasonNum;
+        const season = showSeasons.find((s) => s.number === newSeasonNum);
+        if (season && season.episodes.length > 0) {
+            selectedEpisodeId = season.episodes[0].id;
+        } else {
+            selectedEpisodeId = null;
+        }
+    }
+
+    async function promptAttach(item: RealDebridTransferItem) {
+        resetAttachState();
+        pendingAttachItem = item;
+        attachModalOpen = true;
+        searchingMedia = true;
 
         try {
             const parseRes = await providers.riven.POST("/api/v1/scrape/parse", {
@@ -293,7 +436,7 @@
             searchResults = scored.map((s) => s.item);
 
             if (scored.length > 0 && scored[0].score >= 70) {
-                selectedMediaItem = scored[0].item;
+                void handleSelectMediaItem(scored[0].item);
             }
         } catch (e) {
             logger.error("Search media items failed:", e);
@@ -307,16 +450,21 @@
         if (!pendingAttachItem || !selectedMediaItem) return;
         try {
             isAttaching = true;
-            await realDebridTransfersStore.attachTransfer(
-                pendingAttachItem.id,
-                selectedMediaItem.id
-            );
-            toast.success(
-                `Attached '${pendingAttachItem.filename}' to '${selectedMediaItem.title}'!`
-            );
+            const targetMediaId =
+                selectedMediaItem.type === "show" && tvTargetMode === "episode" && selectedEpisodeId
+                    ? selectedEpisodeId
+                    : selectedMediaItem.id;
+
+            await realDebridTransfersStore.attachTransfer(pendingAttachItem.id, targetMediaId);
+
+            const targetDesc =
+                selectedMediaItem.type === "show" && tvTargetMode === "episode" && currentEpisode
+                    ? `${selectedMediaItem.title} S${selectedSeasonNumber?.toString().padStart(2, "0")}E${currentEpisode.number.toString().padStart(2, "0")}`
+                    : selectedMediaItem.title;
+
+            toast.success(`Attached '${pendingAttachItem.filename}' to '${targetDesc}'!`);
             attachModalOpen = false;
-            pendingAttachItem = null;
-            selectedMediaItem = null;
+            resetAttachState();
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : "Failed to attach transfer";
             toast.error(msg);
@@ -1131,7 +1279,7 @@
                                         ? 'border-purple-500/60 bg-purple-500/10'
                                         : 'border-white/5 hover:bg-white/5'}"
                                     onclick={() => {
-                                        selectedMediaItem = mItem;
+                                        void handleSelectMediaItem(mItem);
                                     }}>
                                     <div class="min-w-0 flex-1">
                                         <div class="flex items-center gap-2">
@@ -1161,6 +1309,138 @@
                     </div>
                 </div>
 
+                <!-- TV Season & Episode Selection for Shows -->
+                {#if selectedMediaItem && selectedMediaItem.type === "show"}
+                    <div
+                        class="space-y-2.5 rounded-lg border border-purple-500/20 bg-purple-950/20 p-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-foreground text-[11px] font-medium"
+                                >TV Attachment Mode</span>
+                            <div
+                                class="flex gap-1 rounded-md border border-white/10 bg-black/40 p-0.5 text-[11px]">
+                                <button
+                                    type="button"
+                                    class="rounded px-2.5 py-1 font-medium transition-colors {tvTargetMode ===
+                                    'episode'
+                                        ? 'bg-purple-600 text-white shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'}"
+                                    onclick={() => (tvTargetMode = "episode")}>
+                                    Specific Episode
+                                </button>
+                                <button
+                                    type="button"
+                                    class="rounded px-2.5 py-1 font-medium transition-colors {tvTargetMode ===
+                                    'show'
+                                        ? 'bg-purple-600 text-white shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'}"
+                                    onclick={() => (tvTargetMode = "show")}>
+                                    Whole Show / Season Pack
+                                </button>
+                            </div>
+                        </div>
+
+                        {#if tvTargetMode === "episode"}
+                            {#if loadingShowDetails}
+                                <div
+                                    class="text-muted-foreground flex items-center justify-center gap-2 py-3 text-xs">
+                                    <LoaderCircle class="size-3.5 animate-spin text-purple-400" />
+                                    <span>Loading seasons and episodes...</span>
+                                </div>
+                            {:else if showSeasons.length === 0}
+                                <div class="text-muted-foreground py-2 text-center text-xs">
+                                    No seasons found for this show in your library. Attachment will
+                                    default to the show level.
+                                </div>
+                            {:else}
+                                <div class="grid grid-cols-2 gap-3 pt-0.5">
+                                    <div class="space-y-1">
+                                        <label
+                                            for="attach-season-select"
+                                            class="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+                                            Season
+                                        </label>
+                                        <select
+                                            id="attach-season-select"
+                                            class="text-foreground h-8 w-full rounded-md border border-white/10 bg-zinc-900 px-2 py-1 text-xs focus:ring-1 focus:ring-purple-500 focus:outline-none"
+                                            value={selectedSeasonNumber}
+                                            onchange={(e) =>
+                                                handleSeasonChange(
+                                                    Number((e.target as HTMLSelectElement).value)
+                                                )}>
+                                            {#each showSeasons as season (season.id)}
+                                                <option value={season.number}>
+                                                    {season.number === 0
+                                                        ? "Specials (S00)"
+                                                        : `Season ${season.number}`}
+                                                    ({season.episodes.length} eps)
+                                                </option>
+                                            {/each}
+                                        </select>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <label
+                                            for="attach-episode-select"
+                                            class="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+                                            Episode
+                                        </label>
+                                        <select
+                                            id="attach-episode-select"
+                                            class="text-foreground h-8 w-full rounded-md border border-white/10 bg-zinc-900 px-2 py-1 text-xs focus:ring-1 focus:ring-purple-500 focus:outline-none"
+                                            value={selectedEpisodeId}
+                                            onchange={(e) => {
+                                                selectedEpisodeId = Number(
+                                                    (e.target as HTMLSelectElement).value
+                                                );
+                                            }}>
+                                            {#if !currentSeason || currentSeason.episodes.length === 0}
+                                                <option value="" disabled
+                                                    >No episodes available</option>
+                                            {:else}
+                                                {#each currentSeason.episodes as ep (ep.id)}
+                                                    <option value={ep.id}>
+                                                        E{ep.number
+                                                            .toString()
+                                                            .padStart(2, "0")}{ep.title
+                                                            ? ` - ${ep.title}`
+                                                            : ""}
+                                                        {ep.state ? `[${ep.state}]` : ""}
+                                                    </option>
+                                                {/each}
+                                            {/if}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {#if currentEpisode}
+                                    <div class="pt-0.5 text-[11px] text-purple-300/90">
+                                        Target:
+                                        <strong
+                                            >Season {selectedSeasonNumber}, Episode
+                                            {currentEpisode.number}</strong>
+                                        {#if currentEpisode.title}
+                                            <span> &mdash; "{currentEpisode.title}"</span>
+                                        {/if}
+                                        <span
+                                            class="text-muted-foreground ml-1 font-mono text-[10px]"
+                                            >(ID: #{currentEpisode.id})</span>
+                                    </div>
+                                {/if}
+                            {/if}
+                        {:else}
+                            <div class="text-muted-foreground rounded bg-black/30 p-2 text-xs">
+                                <p>
+                                    Associating with entire show
+                                    <strong class="text-foreground"
+                                        >{selectedMediaItem.title}</strong>
+                                    (ID: #{selectedMediaItem.id}). CineFlow will parse filenames in
+                                    the torrent and auto-match episodes upon download completion.
+                                </p>
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
+
                 <!-- Explicit Confirmation Step -->
                 {#if selectedMediaItem}
                     <div
@@ -1173,12 +1453,24 @@
                             Associate Real-Debrid transfer <strong class="text-foreground"
                                 >{pendingAttachItem?.id}</strong>
                             with
-                            <strong class="text-foreground"
-                                >{selectedMediaItem.title}
-                                {selectedMediaItem.year
-                                    ? `(${selectedMediaItem.year})`
-                                    : ""}</strong
-                            >?
+                            {#if selectedMediaItem.type === "show" && tvTargetMode === "episode" && currentEpisode}
+                                <strong class="text-foreground">
+                                    {selectedMediaItem.title} S{selectedSeasonNumber
+                                        ?.toString()
+                                        .padStart(2, "0")}E{currentEpisode.number
+                                        .toString()
+                                        .padStart(2, "0")}{currentEpisode.title
+                                        ? ` (${currentEpisode.title})`
+                                        : ""}
+                                </strong>
+                            {:else}
+                                <strong class="text-foreground"
+                                    >{selectedMediaItem.title}
+                                    {selectedMediaItem.year
+                                        ? `(${selectedMediaItem.year})`
+                                        : ""}</strong>
+                            {/if}
+                            ?
                             {#if pendingAttachItem?.status === "downloaded"}
                                 CineFlow will immediately ingest the completed media into your
                                 virtual filesystem.
@@ -1195,14 +1487,16 @@
             <AlertDialog.Cancel
                 onclick={() => {
                     attachModalOpen = false;
-                    pendingAttachItem = null;
-                    selectedMediaItem = null;
-                    searchResults = [];
+                    resetAttachState();
                 }}>
                 Cancel
             </AlertDialog.Cancel>
             <AlertDialog.Action
-                disabled={isAttaching || !selectedMediaItem}
+                disabled={isAttaching ||
+                    !selectedMediaItem ||
+                    (selectedMediaItem.type === "show" &&
+                        tvTargetMode === "episode" &&
+                        !selectedEpisodeId)}
                 class="bg-purple-600 text-white hover:bg-purple-700"
                 onclick={handleExecuteAttach}>
                 {isAttaching ? "Attaching..." : "Confirm & Attach"}
