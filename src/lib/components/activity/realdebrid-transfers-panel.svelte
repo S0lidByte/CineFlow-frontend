@@ -268,22 +268,28 @@
                 const rawSeasons = Array.isArray((res.data as Record<string, unknown>)?.seasons)
                     ? ((res.data as Record<string, unknown>).seasons as Record<string, unknown>[])
                     : [];
-                const parsedSeasons: SeasonOption[] = rawSeasons.map((s) => ({
-                    id: Number(s.id),
-                    number: Number(s.number ?? 0),
-                    title:
-                        (typeof s.title === "string" && s.title) ||
-                        (s.number === 0 ? "Specials" : `Season ${s.number}`),
-                    episodes: (Array.isArray(s.episodes)
-                        ? (s.episodes as Record<string, unknown>[])
-                        : []
-                    ).map((ep) => ({
-                        id: Number(ep.id),
-                        number: Number(ep.number ?? 0),
-                        title: typeof ep.title === "string" ? ep.title : undefined,
-                        state: typeof ep.state === "string" ? ep.state : undefined
-                    }))
-                }));
+                const parsedSeasons: SeasonOption[] = rawSeasons.map((s) => {
+                    const seasonNum = Number(s.season_number ?? s.number ?? 0);
+                    return {
+                        id: Number(s.id),
+                        number: seasonNum,
+                        title:
+                            (typeof s.title === "string" && s.title) ||
+                            (seasonNum === 0 ? "Specials" : `Season ${seasonNum}`),
+                        episodes: (Array.isArray(s.episodes)
+                            ? (s.episodes as Record<string, unknown>[])
+                            : []
+                        ).map((ep) => {
+                            const epNum = Number(ep.episode_number ?? ep.number ?? 0);
+                            return {
+                                id: Number(ep.id),
+                                number: epNum,
+                                title: typeof ep.title === "string" ? ep.title : undefined,
+                                state: typeof ep.state === "string" ? ep.state : undefined
+                            };
+                        })
+                    };
+                });
 
                 parsedSeasons.sort((a, b) => a.number - b.number);
                 for (const s of parsedSeasons) {
