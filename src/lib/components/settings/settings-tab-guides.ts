@@ -110,15 +110,24 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         headline: "Real-Debrid and downloader credentials plus download policy.",
         howToUse: [
             "Paste your debrid API token — this unlocks cached torrent streaming.",
+            "For 4K / Remux streaming without buffering, ensure your Real-Debrid account uses Cloudflare CDN (real-debrid.com/account) and test edge latency at real-debrid.com/speedtest.",
             "Configure proxy URL if the backend must reach providers through a VPN or SOCKS proxy.",
             "Set download limits and timeouts appropriate for your connection and provider tier."
         ],
         cautions: [
-            "Invalid debrid tokens cause the entire scrape→download pipeline to fail silently until logs are checked."
+            "Invalid debrid tokens cause the entire scrape→download pipeline to fail silently until logs are checked.",
+            "Non-Cloudflare CDNs (OVH/Online.net) frequently shape and throttle concurrent range requests, cutting streaming throughput in half."
         ],
-        tips: ["After token rotation, save here and retry a single failed item from the Library."],
+        tips: [
+            "After token rotation, save here and retry a single failed item from the Library.",
+            "In Operations > Stream, leave Parallel Prefetch Workers set to 1 (single sequential stream) to prevent CDN range chunk contention."
+        ],
         highlights: [
             { title: "Real Debrid", detail: "Primary path for instant cached releases." },
+            {
+                title: "Cloudflare CDN",
+                detail: "Recommended for high-bitrate 4K streaming to avoid chunk contention."
+            },
             {
                 title: "Proxy",
                 detail: "Optional; required in some restricted network environments."
@@ -258,6 +267,7 @@ export const SETTINGS_TAB_GUIDES: Record<SectionTabId, SettingsTabGuide> = {
         ],
         tips: [
             "Increase stream read timeout if Plex buffers at the start of 4K remux content.",
+            "Parallel Prefetch Workers defaults to 1 (sequential stream). Values of 2 or 4 split throughput on non-Cloudflare CDNs.",
             "Post-processing scripts run as the container user — verify file permissions."
         ],
         highlights: [

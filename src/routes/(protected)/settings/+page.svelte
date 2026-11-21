@@ -33,6 +33,7 @@
     import SettingsFormContent from "$lib/components/settings/settings-form-content.svelte";
     import TraktConnectPanel from "$lib/components/settings/trakt-connect-panel.svelte";
     import ConnectionTestPanel from "$lib/components/settings/connection-test-panel.svelte";
+    import RealDebridCdnCard from "$lib/components/settings/real-debrid-cdn-card.svelte";
     import type { ConnectionService } from "$lib/components/settings/connection-test-panel.svelte";
     import SettingsTabGuide from "$lib/components/settings/settings-tab-guide.svelte";
     import VfsStatisticsPanel from "$lib/components/settings/vfs-statistics-panel.svelte";
@@ -667,6 +668,9 @@
                         {:else if $page.data.form}
                             {#if $page.data.activeTabId === "content"}
                                 <TraktConnectPanel />
+                            {/if}
+                            {#if $page.data.activeTabId === "downloaders"}
+                                <RealDebridCdnCard />
                             {/if}
                             {#if CONNECTION_TESTS_BY_TAB[$page.data.activeTabId]}
                                 <ConnectionTestPanel

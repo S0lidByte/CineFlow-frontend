@@ -4830,7 +4830,7 @@ export interface components {
             min_safe_runway_seconds: number;
             /**
              * Parallel Prefetch Workers
-             * @description Maximum simultaneous per-stream body transfers including the foreground connection (1, 2, or 4).
+             * @description Recommended: 1. A single sequential stream avoids CDN chunk contention and delivers full line speed (100–300 Mbps). Setting to 2 or 4 divides per-worker throughput in half on non-Cloudflare CDNs.
              * @default 1
              * @enum {integer}
              */
