@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.41.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.40.1...riven-frontend-v1.41.0) (2026-11-21)
+
+
+### Features
+
+* **activity:** enable TV show season and episode selection in attach transfer modal ([d013027](https://github.com/S0lidByte/CineFlow-frontend/commit/d013027fd5c493dc9a659300fe672ab2dacd8638))
+* **settings:** add Real-Debrid Cloudflare CDN guidance card and tab recommendations ([4495991](https://github.com/S0lidByte/CineFlow-frontend/commit/44959917928af1aa728b25a073b7fea25d4c6c26))
+
+
+### Bug Fixes
+
+* **activity:** extract season_number and episode_number from extended item details ([6ac0784](https://github.com/S0lidByte/CineFlow-frontend/commit/6ac0784b33f1106f22bf8912597bb00b8609e269))
+
 ## [1.40.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.40.0...riven-frontend-v1.40.1) (2026-11-16)
 
 
