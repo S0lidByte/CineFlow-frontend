@@ -15,6 +15,7 @@ function makeMockStream(overrides: Partial<StreamSessionMetric> = {}): StreamSes
         bytes_from_cache: 52428800, // 50 MB
         cache_hit_rate_pct: 50.0,
         current_throughput_mbps: 24.5,
+        upstream_throughput_mbps: 24.5,
         started_at: "2026-09-25T12:00:00Z",
         last_read_at: "2026-09-25T12:05:00Z",
         is_active: true,
@@ -55,6 +56,10 @@ function makeMockSnapshot(
             aggregate_cache_hit_rate_pct: streams.length > 0 ? 50.0 : 0.0,
             current_total_throughput_mbps: streams.reduce(
                 (acc, s) => acc + (s.current_throughput_mbps || 0),
+                0
+            ),
+            current_total_upstream_throughput_mbps: streams.reduce(
+                (acc, s) => acc + (s.upstream_throughput_mbps || 0),
                 0
             ),
             active_pool_connections: streams.length,
@@ -169,6 +174,7 @@ function makeMockSnapshot(
         bytes_from_cache: 0,
         cache_hit_rate_pct: 0.0,
         current_throughput_mbps: 3.5,
+        upstream_throughput_mbps: 3.5,
         started_at: "2026-09-25T12:00:00Z",
         last_read_at: "2026-09-25T12:00:05Z",
         is_active: true,
@@ -191,6 +197,8 @@ function makeMockSnapshot(
 
     store.updateSnapshot(makeMockSnapshot([anonymousStream]));
     assert.strictEqual(store.activeStreams.length, 1);
+    assert.strictEqual(store.activeStreams[0].upstream_throughput_mbps, 3.5);
+    assert.strictEqual(store.aggregate?.current_total_upstream_throughput_mbps, 3.5);
     assert.strictEqual(store.activeStreams[0].user_name, null);
     assert.strictEqual(store.activeStreams[0].player_device, null);
     assert.strictEqual(store.activeStreams[0].decision, null);

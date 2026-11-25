@@ -49,6 +49,7 @@ export const GET: RequestHandler = async ({ params, locals, fetch, url }) => {
         if (file.endsWith(".ts")) {
             responseHeaders.set("cache-control", "public, max-age=3600");
         }
+        responseHeaders.set("x-accel-buffering", "no");
 
         return new Response(response.body, {
             status: 200,

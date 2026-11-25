@@ -248,6 +248,9 @@
                 <span class="text-foreground mt-0.5 font-mono text-sm font-bold">
                     {formatThroughput(stream.current_throughput_mbps)}
                 </span>
+                <span class="text-muted-foreground font-mono text-[10px]">
+                    CDN: {formatThroughput(stream.upstream_throughput_mbps ?? 0)}
+                </span>
             </div>
 
             <!-- Metric 2: Bytes Streamed -->

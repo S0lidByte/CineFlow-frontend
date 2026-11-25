@@ -18,6 +18,7 @@ export const GET: RequestHandler = async ({ params, locals, request, fetch, url 
     // Forward range header if present for seeking support
     const headers: Record<string, string> = {
         "x-api-key": locals.apiKey,
+        "accept-encoding": "identity",
         ...actorHeaders
     };
 
@@ -52,6 +53,10 @@ export const GET: RequestHandler = async ({ params, locals, request, fetch, url 
                 responseHeaders.set(header, value);
             }
         });
+
+        // Prevent reverse proxies (e.g. nginx) from buffering streamed chunks
+        responseHeaders.set("x-accel-buffering", "no");
+        responseHeaders.set("cache-control", "no-transform");
 
         return new Response(response.body, {
             status: response.status,
