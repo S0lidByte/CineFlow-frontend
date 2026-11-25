@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.1](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.41.0...riven-frontend-v1.41.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* **settings:** remove forced restart on ops settings save to align with dynamic runtime propagation ([2899c15](https://github.com/S0lidByte/CineFlow-frontend/commit/2899c1568c7f545e3ca6992f60dc191f19e94348))
+
 ## [1.41.0](https://github.com/S0lidByte/CineFlow-frontend/compare/riven-frontend-v1.40.1...riven-frontend-v1.41.0) (2026-11-21)
 
 
