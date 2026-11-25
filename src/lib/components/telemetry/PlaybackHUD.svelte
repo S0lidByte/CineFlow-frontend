@@ -110,6 +110,9 @@
                 <span class="text-foreground font-mono text-2xl font-bold tracking-tight">
                     {formatThroughput(aggregate?.current_total_throughput_mbps ?? 0)}
                 </span>
+                <span class="text-muted-foreground font-mono text-xs">
+                    CDN {formatThroughput(aggregate?.current_total_upstream_throughput_mbps ?? 0)}
+                </span>
             </div>
             <div class="text-muted-foreground mt-1 flex items-center justify-between text-[11px]">
                 <span>Active Pool Conns:</span>
@@ -244,7 +247,9 @@
                                     {formatThroughput(stream.current_throughput_mbps)}
                                 </span>
                                 <span class="text-muted-foreground text-[11px]">
-                                    {formatBytes(stream.bytes_transferred)} transferred
+                                    CDN {formatThroughput(stream.upstream_throughput_mbps ?? 0)} · {formatBytes(
+                                        stream.bytes_transferred
+                                    )}
                                 </span>
                             </div>
                             <div class="flex w-20 flex-col text-right font-mono text-xs">

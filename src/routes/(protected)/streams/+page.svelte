@@ -164,6 +164,11 @@
                     <span class="text-foreground font-mono text-2xl font-bold tracking-tight">
                         {formatThroughput(aggregate?.current_total_throughput_mbps ?? 0)}
                     </span>
+                    <span class="text-muted-foreground font-mono text-xs">
+                        CDN {formatThroughput(
+                            aggregate?.current_total_upstream_throughput_mbps ?? 0
+                        )}
+                    </span>
                 </div>
             </div>
 

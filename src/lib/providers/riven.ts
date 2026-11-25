@@ -1894,6 +1894,12 @@ export interface components {
              */
             current_total_throughput_mbps: number;
             /**
+             * Current Total Upstream Throughput Mbps
+             * @description Total aggregate upstream CDN download throughput across all active streams (MB/s)
+             * @default 0
+             */
+            current_total_upstream_throughput_mbps: number;
+            /**
              * Stream Error Count
              * @description Total number of stream errors recorded
              * @default 0
@@ -2028,7 +2034,7 @@ export interface components {
             stream_tracing_sample_every: number;
             /**
              * Tracemalloc
-             * @description Enable Python memory tracking (debug)
+             * @description Enable Python memory tracking (debug). Requires a backend restart: saving this value does not start or stop the tracer in the running process. Memory tracking adds allocation overhead.
              * @default false
              */
             tracemalloc: boolean;
@@ -5029,6 +5035,12 @@ export interface components {
              * @default 0
              */
             upstream_bytes: number;
+            /**
+             * Upstream Throughput Mbps
+             * @description Instantaneous upstream CDN download throughput in megabytes per second (MB/s) over rolling window
+             * @default 0
+             */
+            upstream_throughput_mbps: number;
             /**
              * Upstream Transfer Seconds
              * @description Summed transport service seconds across body responses
